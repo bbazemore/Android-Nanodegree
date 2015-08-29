@@ -1,11 +1,9 @@
 package com.android.bazemom.appportfolio;
 
+import android.content.Context;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.Toast;
 import java.util.concurrent.ConcurrentHashMap; // thread safe
 import java.lang.String;
@@ -14,52 +12,33 @@ import java.lang.Integer;
 
 public class MainActivity extends AppCompatActivity {
 
-
-protected static final ConcurrentHashMap<Integer, String> buttonToasts;
-static  // Create constant message for each button on the app
-{
-    buttonToasts = new ConcurrentHashMap<Integer, String>();
-    buttonToasts.put(R.id.buttonMovies1, "This button will launch Movies App part 1");
-    buttonToasts.put(R.id.buttonMovies2, "This button will launch Movies App part 2");
-    buttonToasts.put(R.id.buttonBuildBigger , "This button will launch Movies App part 2");
-    buttonToasts.put(R.id.buttonCapstone , "This button will launch my capstone project");
-    buttonToasts.put(R.id.buttonLibrary , "This button will launch my Library App");
-    buttonToasts.put(R.id.buttonScoresApp , "This button will launch my Scores App");
-    buttonToasts.put(R.id.buttonXYZReader, "This button will launch the XYZ Reader App");
-}
+    protected ConcurrentHashMap<Integer, String> mButtonToasts;
+    protected void initButtonText() // Create constant message for each button on the app
+    {
+        Context app = getApplicationContext();
+        mButtonToasts = new ConcurrentHashMap<Integer, String>();
+        System.out.println("Initializing buttonToasts");
+        mButtonToasts.put(R.id.buttonMovies1, app.getString(R.string.strMovies1));
+        mButtonToasts.put(R.id.buttonMovies2, app.getString(R.string.strMovies2));
+        mButtonToasts.put(R.id.buttonBuildBigger , app.getString(R.string.strBuildBigger));
+        mButtonToasts.put(R.id.buttonCapstone , app.getString(R.string.strCapstone));
+        mButtonToasts.put(R.id.buttonLibrary , app.getString(R.string.strLibrary));
+        mButtonToasts.put(R.id.buttonScoresApp ,app.getString(R.string.strScoresApp));
+        mButtonToasts.put(R.id.buttonXYZReader, app.getString(R.string.strXYZReader));
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        initButtonText();
         setContentView(R.layout.activity_main);
 
         // Button callbacks set up via activity_main.xml to buttonShowToast
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
     public void buttonShowToast(View view)
     {
-        CharSequence message = buttonToasts.get(view.getId());
+        CharSequence message =  mButtonToasts.get(view.getId());
         Toast toast = Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT);
         toast.show();
     }
