@@ -6,97 +6,77 @@
                 android:paddingRight="@dimen/activity_horizontal_margin"
                 android:paddingTop="@dimen/activity_vertical_margin"
                 android:paddingBottom="@dimen/activity_vertical_margin"
+                android:background="@color/Sand"
                 tools:context=".MainActivity">
 
     <LinearLayout
-        android:orientation="vertical"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_alignParentTop="true"
+    android:layout_alignParentLeft="true"
+    android:layout_alignParentStart="true"
+    android:weightSum="1">
+
+    <TextView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:background="#eedd82"
-        android:weightSum="1">
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/app_title"
+        android:textColor="@android:color/black"
+        android:id="@+id/Title"
+        android:layout_marginTop="12dp"
+        android:layout_margin="12dp"
+        android:textIsSelectable="true"/>
 
-        <TextView
-            android:layout_width="375dp"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="My Nanodegree Apps"
-            android:id="@+id/Title"
-            android:layout_weight="0.07"
-            android:textAlignment="center"
-            android:textIsSelectable="true"/>
+    <Button
+        android:text="@string/btnMovies1"
+        android:id="@+id/buttonMovies1"
+        android:onClick="buttonShowToast"
+        style="@style/AppLaunchButton"
+        />
 
-        <Button
-            android:layout_width="220dp"
-            android:layout_height="wrap_content"
-            android:text="Movies Part 1"
-            android:id="@+id/buttonMovies1"
-            android:layout_gravity="center_horizontal"
-            android:background="#20b2aa"
-            android:onClick="buttonShowToast"
-            />
+    <Button
+        android:text="@string/btnMovies2"
+        android:id="@+id/buttonMovies2"
+        android:onClick="buttonShowToast"
+        style="@style/AppLaunchButton"
+        />
 
-        <Button
-            android:layout_width="220dp"
-            android:layout_height="wrap_content"
-            android:text="Movies Part 2"
-            android:id="@+id/buttonMovies2"
-            android:layout_gravity="center_horizontal"
-            android:background="#20b2aa"
-            android:onClick="buttonShowToast"
-            />
+    <Button
+        android:text="@string/btnScores"
+        android:id="@+id/buttonScoresApp"
+        android:onClick="buttonShowToast"
+        style="@style/AppLaunchButton"
+        />
 
-        <Button
-            android:layout_width="220dp"
-            android:layout_height="wrap_content"
-            android:text="Scores App"
-            android:id="@+id/buttonScoresApp"
-            android:layout_gravity="center_horizontal"
-            android:background="#20b2aa"
-            android:onClick="buttonShowToast"
-            />
+    <Button
+        android:text="@string/btnLibrary"
+        android:id="@+id/buttonLibrary"
+        android:onClick="buttonShowToast"
+        style="@style/AppLaunchButton"
+        />
 
-        <Button
-            android:layout_width="220dp"
-            android:layout_height="wrap_content"
-            android:text="Library App"
-            android:id="@+id/buttonLibrary"
-            android:layout_gravity="center_horizontal"
-            android:background="#20b2aa"
-            android:onClick="buttonShowToast"
-            />
+    <Button
+        style="@style/AppLaunchButton"
+        android:text="@string/btnBuildBigger"
+        android:id="@+id/buttonBuildBigger"
+        android:onClick="buttonShowToast"
+        />
 
-        <Button
-            android:layout_width="220dp"
-            android:layout_height="wrap_content"
-            android:text="Build It Bigger"
-            android:id="@+id/buttonBuildBigger"
-            android:layout_gravity="center_horizontal"
-            android:background="#20b2aa"
-            android:onClick="buttonShowToast"
-            />
+    <Button
+        android:text="@string/btnXYZ"
+        android:id="@+id/buttonXYZReader"
+        android:onClick="buttonShowToast"
+        style="@style/AppLaunchButton"
+        />
 
-        <Button
-            android:layout_width="220dp"
-            android:layout_height="wrap_content"
-            android:text="XYZ Reader"
-            android:id="@+id/buttonXYZReader"
-            android:layout_gravity="center_horizontal"
-            android:background="#20b2aa"
-            android:onClick="buttonShowToast"
-            />
-
-        <Button
-            android:layout_width="220dp"
-            android:layout_height="wrap_content"
-            android:text="Capstone: My Own App"
-            android:id="@+id/buttonCapstone"
-            android:layout_gravity="center_horizontal"
-            android:background="#00ced1"
-            android:onClick="buttonShowToast"
-            />
-    </LinearLayout>
-
+    <Button
+        android:text="@string/btnCapstone"
+        android:id="@+id/buttonCapstone"
+        android:onClick="buttonShowToast"
+        style="@style/AppLaunchButton"
+        android:centerColor="@color/Turquoise"
+        />
+</LinearLayout>
 </RelativeLayout>

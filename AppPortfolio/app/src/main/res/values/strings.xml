@@ -1,12 +1,20 @@
 <resources>
     <string name="app_name">App Portfolio</string>
+    <string name="app_title">My Nanodegree Apps</string>
 
     <string name="action_settings">Settings</string>
+    <string name="btnMovies1">"Movies Part 1"</string>
     <string name="strMovies1">This button will launch Movies App part 1</string>
+    <string name="btnMovies2">"Movies Part 2"</string>
     <string name="strMovies2">This button will launch Movies App part 2</string>
-    <string name="strBuildBigger">This button will launch Movies App part 2</string>
+    <string name="btnBuildBigger">"Build It Bigger"</string>
+    <string name="strBuildBigger">This button will launch Build it Bigger App</string>
+    <string name="btnCapstone">"Capstone: My Own App"</string>
     <string name="strCapstone">This button will launch my capstone project</string>
+    <string name="btnLibrary">"Library App"</string>
     <string name="strLibrary">This button will launch my Library App</string>
+    <string name="btnScores">"Scores App"</string>
     <string name="strScoresApp">This button will launch my Scores App</string>
+    <string name="btnXYZ">"XYZ Reader App"</string>
     <string name="strXYZReader">This button will launch the XYZ Reader App</string>
 </resources>
