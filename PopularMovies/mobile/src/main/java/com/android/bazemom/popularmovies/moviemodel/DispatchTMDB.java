@@ -68,7 +68,7 @@ public class DispatchTMDB {
         mAPIRequestInProcess = true;
         mPageRequested = event.page;
 
-        movieDBService.getMoviesList(event.sortType, event.page, event.api_key, new retrofit.Callback<MovieResults>() {
+        movieDBService.getMoviesList(/*event.sortType,*/ event.page, event.api_key, new retrofit.Callback<MovieResults>() {
             @Override
             public void success (MovieResults response, Response rawResponse){
                 mLastMovieSet = response;

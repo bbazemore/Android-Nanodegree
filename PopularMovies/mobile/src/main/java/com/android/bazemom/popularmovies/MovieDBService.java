@@ -17,7 +17,7 @@ import retrofit.http.Query;
 public interface MovieDBService {
     // Request method and URL specified in the annotation
     // Callback for the parsed response is the last parameter
-    String movieSelectURL = "discover/movie"; // get pages of movie results
+    String movieSelectURL = "/discover/movie"; // get pages of movie results
     enum MovieSortType {POPULAR, UPCOMING, TOP_RATED}
 
     //final String movieSelectURL =  "movie/550";
@@ -26,10 +26,12 @@ public interface MovieDBService {
     //final String SORT_PARAM = "sort_by";
     //final String SORT_POPULAR = .getString(R.string.movie_sort_by_popularity); //// apparently the "popular.desc" sort does not return expected results. Let's go with the tried and true capitalist method - who made the most money?
     //final String posterSizeURL = "w185";  // todo make the size a setting:  "w92", "w154", "w185", "w342", "w500", "w780", or "original"
-
+    @GET(movieSelectURL)
+    void getMoviesList(/*@Path("movieType") MovieSortType sortType,*/ @Query(PAGE_LIMIT_PARAM) int page, @Query(KEY_PARAM) String apiKey, @NonNull Callback<MovieResults> callback);
+/*
     @GET("/movie/{movieType}")
     void getMoviesList(@Path("movieType") MovieSortType sortType, @Query(PAGE_LIMIT_PARAM) int page, @Query(KEY_PARAM) String apiKey, @NonNull Callback<MovieResults> callback);
-
+*/
     @GET("/movie/{movieId}")
     void getMovieDetails(@Path("movieId") long movieId, @Query(KEY_PARAM) String apiKey, @NonNull Callback<MovieModel> callback);
 }

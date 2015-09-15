@@ -10,8 +10,8 @@ public class MoviesLoadedEvent {
     public MovieResults movieResults;
     public MoviesLoadedEvent(MovieResults moviesReturned)
     {
-        Log.i(TAG, "MoviesLoadedEvent created with " + movieResults.getTotalResults() + " results");
         movieResults = moviesReturned;
+        Log.i(TAG, "MoviesLoadedEvent created with " + movieResults.getTotalResults() + " results");
     }
 }
 
