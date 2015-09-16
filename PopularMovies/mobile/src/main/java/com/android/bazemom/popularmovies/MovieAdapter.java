@@ -35,9 +35,9 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
     public void addAll(MovieResults movieResults) {
         // because we add one page worth of data at a time, this is incremental.
         // don't clear the old data from previous pages
-        for ( Object movieData : movieResults.getResults())
+        for ( MovieModel movieData : movieResults.getResults())
         {
-            add(new Movie((MovieModel) movieData));
+            add(new Movie(movieData));
         }
     }
 
@@ -65,8 +65,12 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
 
         ImageView posterView = (ImageView) convertView.findViewById(R.id.list_item_movie_imageview);
 
+        // To build an image URL, we need 3 pieces of data. The baseurl, size and filepath.
+        String posterURL = "http://image.tmdb.org/t/p/w500" + movie.posterPath;
+
+        // Here’s an example URL: http://image.tmdb.org/t/p/w500/8uO0gUM8aNqYLs1OsTBQiXu0fEv.jpg
         Picasso.with(getContext())
-        .load(movie.posterPath)
+        .load(posterURL)
         .placeholder(R.mipmap.ic_launcher)
         .error(R.mipmap.ic_error_fallback)         // optional
         .into(posterView);

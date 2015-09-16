@@ -1,38 +1,52 @@
 package com.android.bazemom.popularmovies.moviemodel;
+
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+//import javax.annotation.Generated;
 
 //@Generated("org.jsonschema2pojo")
 public class MovieModel {
 
+    @Expose
     private boolean adult;
+    @SerializedName("backdrop_path")
+    @Expose
     private String backdropPath;
-    private Object belongsToCollection;
-    private int budget;
-    private List<Genre> genres = new ArrayList<Genre>();
-    private String homepage;
+    @SerializedName("genre_ids")
+    @Expose
+    private List<Integer> genreIds = new ArrayList<Integer>();
+    @Expose
     private int id;
-    private String imdbId;
+    @SerializedName("original_language")
+    @Expose
     private String originalLanguage;
+    @SerializedName("original_title")
+    @Expose
     private String originalTitle;
+    @Expose
     private String overview;
-    private float popularity;
-    private String posterPath;
-    private List<ProductionCompany> productionCompanies = new ArrayList<ProductionCompany>();
-    private List<ProductionCountry> productionCountries = new ArrayList<ProductionCountry>();
+    @SerializedName("release_date")
+    @Expose
     private String releaseDate;
-    private int revenue;
-    private int runtime;
-    private List<SpokenLanguage> spokenLanguages = new ArrayList<SpokenLanguage>();
-    private String status;
-    private String tagline;
+    @SerializedName("poster_path")
+    @Expose
+    private String posterPath;
+    @Expose
+    private double popularity;
+    @Expose
     private String title;
+    @Expose
     private boolean video;
-    private float voteAverage;
+    @SerializedName("vote_average")
+    @Expose
+    private double voteAverage;
+    @SerializedName("vote_count")
+    @Expose
     private int voteCount;
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      *
@@ -73,73 +87,19 @@ public class MovieModel {
     /**
      *
      * @return
-     * The belongsToCollection
+     * The genreIds
      */
-    public Object getBelongsToCollection() {
-        return belongsToCollection;
+    public List<Integer> getGenreIds() {
+        return genreIds;
     }
 
     /**
      *
-     * @param belongsToCollection
-     * The belongs_to_collection
+     * @param genreIds
+     * The genre_ids
      */
-    public void setBelongsToCollection(Object belongsToCollection) {
-        this.belongsToCollection = belongsToCollection;
-    }
-
-    /**
-     *
-     * @return
-     * The budget
-     */
-    public int getBudget() {
-        return budget;
-    }
-
-    /**
-     *
-     * @param budget
-     * The budget
-     */
-    public void setBudget(int budget) {
-        this.budget = budget;
-    }
-
-    /**
-     *
-     * @return
-     * The genres
-     */
-    public List<Genre> getGenres() {
-        return genres;
-    }
-
-    /**
-     *
-     * @param genres
-     * The genres
-     */
-    public void setGenres(List<Genre> genres) {
-        this.genres = genres;
-    }
-
-    /**
-     *
-     * @return
-     * The homepage
-     */
-    public String getHomepage() {
-        return homepage;
-    }
-
-    /**
-     *
-     * @param homepage
-     * The homepage
-     */
-    public void setHomepage(String homepage) {
-        this.homepage = homepage;
+    public void setGenreIds(List<Integer> genreIds) {
+        this.genreIds = genreIds;
     }
 
     /**
@@ -158,24 +118,6 @@ public class MovieModel {
      */
     public void setId(int id) {
         this.id = id;
-    }
-
-    /**
-     *
-     * @return
-     * The imdbId
-     */
-    public String getImdbId() {
-        return imdbId;
-    }
-
-    /**
-     *
-     * @param imdbId
-     * The imdb_id
-     */
-    public void setImdbId(String imdbId) {
-        this.imdbId = imdbId;
     }
 
     /**
@@ -235,19 +177,19 @@ public class MovieModel {
     /**
      *
      * @return
-     * The popularity
+     * The releaseDate
      */
-    public float getPopularity() {
-        return popularity;
+    public String getReleaseDate() {
+        return releaseDate;
     }
 
     /**
      *
-     * @param popularity
-     * The popularity
+     * @param releaseDate
+     * The release_date
      */
-    public void setPopularity(float popularity) {
-        this.popularity = popularity;
+    public void setReleaseDate(String releaseDate) {
+        this.releaseDate = releaseDate;
     }
 
     /**
@@ -271,145 +213,19 @@ public class MovieModel {
     /**
      *
      * @return
-     * The productionCompanies
+     * The popularity
      */
-    public List<ProductionCompany> getProductionCompanies() {
-        return productionCompanies;
+    public double getPopularity() {
+        return popularity;
     }
 
     /**
      *
-     * @param productionCompanies
-     * The production_companies
+     * @param popularity
+     * The popularity
      */
-    public void setProductionCompanies(List<ProductionCompany> productionCompanies) {
-        this.productionCompanies = productionCompanies;
-    }
-
-    /**
-     *
-     * @return
-     * The productionCountries
-     */
-    public List<ProductionCountry> getProductionCountries() {
-        return productionCountries;
-    }
-
-    /**
-     *
-     * @param productionCountries
-     * The production_countries
-     */
-    public void setProductionCountries(List<ProductionCountry> productionCountries) {
-        this.productionCountries = productionCountries;
-    }
-
-    /**
-     *
-     * @return
-     * The releaseDate
-     */
-    public String getReleaseDate() {
-        return releaseDate;
-    }
-
-    /**
-     *
-     * @param releaseDate
-     * The release_date
-     */
-    public void setReleaseDate(String releaseDate) {
-        this.releaseDate = releaseDate;
-    }
-
-    /**
-     *
-     * @return
-     * The revenue
-     */
-    public int getRevenue() {
-        return revenue;
-    }
-
-    /**
-     *
-     * @param revenue
-     * The revenue
-     */
-    public void setRevenue(int revenue) {
-        this.revenue = revenue;
-    }
-
-    /**
-     *
-     * @return
-     * The runtime
-     */
-    public int getRuntime() {
-        return runtime;
-    }
-
-    /**
-     *
-     * @param runtime
-     * The runtime
-     */
-    public void setRuntime(int runtime) {
-        this.runtime = runtime;
-    }
-
-    /**
-     *
-     * @return
-     * The spokenLanguages
-     */
-    public List<SpokenLanguage> getSpokenLanguages() {
-        return spokenLanguages;
-    }
-
-    /**
-     *
-     * @param spokenLanguages
-     * The spoken_languages
-     */
-    public void setSpokenLanguages(List<SpokenLanguage> spokenLanguages) {
-        this.spokenLanguages = spokenLanguages;
-    }
-
-    /**
-     *
-     * @return
-     * The status
-     */
-    public String getStatus() {
-        return status;
-    }
-
-    /**
-     *
-     * @param status
-     * The status
-     */
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    /**
-     *
-     * @return
-     * The tagline
-     */
-    public String getTagline() {
-        return tagline;
-    }
-
-    /**
-     *
-     * @param tagline
-     * The tagline
-     */
-    public void setTagline(String tagline) {
-        this.tagline = tagline;
+    public void setPopularity(double popularity) {
+        this.popularity = popularity;
     }
 
     /**
@@ -453,7 +269,7 @@ public class MovieModel {
      * @return
      * The voteAverage
      */
-    public float getVoteAverage() {
+    public double getVoteAverage() {
         return voteAverage;
     }
 
@@ -462,7 +278,7 @@ public class MovieModel {
      * @param voteAverage
      * The vote_average
      */
-    public void setVoteAverage(float voteAverage) {
+    public void setVoteAverage(double voteAverage) {
         this.voteAverage = voteAverage;
     }
 
@@ -482,14 +298,6 @@ public class MovieModel {
      */
     public void setVoteCount(int voteCount) {
         this.voteCount = voteCount;
-    }
-
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
     }
 
 }

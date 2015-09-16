@@ -9,7 +9,7 @@ import java.util.Map;
 public class MovieResults {
 
     private int page;
-    private List<Object> results = new ArrayList<Object>();
+    private List<MovieModel> results = new ArrayList<MovieModel>();
     private int totalPages;
     private int totalResults;
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
@@ -37,7 +37,7 @@ public class MovieResults {
      * @return
      * The results
      */
-    public List<Object> getResults() {
+    public List<MovieModel> getResults() {
         return results;
     }
 
@@ -46,7 +46,7 @@ public class MovieResults {
      * @param results
      * The results
      */
-    public void setResults(List<Object> results) {
+    public void setResults(List<MovieModel> results) {
         this.results = results;
     }
 

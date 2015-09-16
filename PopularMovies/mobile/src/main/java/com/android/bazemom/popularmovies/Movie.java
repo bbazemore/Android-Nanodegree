@@ -15,13 +15,13 @@ public class Movie implements Parcelable {
     String overview;
     String posterPath;
     String backdropPath;
-    int runtime;
+    //int runtime;
 
     // sort related items
-    float  popularity;
-    float voteAverage;
+    double  popularity;
+    double voteAverage;
     int voteCount;
-    int revenue;
+    //int revenue;
     int favorite;  // 0, not a favorite, 1 or larger leaves room for ranking
 
     public Movie(MovieModel movieInput)
@@ -33,11 +33,11 @@ public class Movie implements Parcelable {
         posterPath = movieInput.getPosterPath();
         backdropPath = movieInput.getBackdropPath();
 
-        runtime = movieInput.getRuntime();
+        //runtime = movieInput.getRuntime();
         popularity = movieInput.getPopularity();
         voteAverage = movieInput.getVoteAverage();
         voteCount = movieInput.getVoteCount();
-        revenue = movieInput.getRevenue();
+       // revenue = movieInput.getRevenue();
         favorite = 0; // not a favorite by default
     }
 
@@ -49,11 +49,11 @@ public class Movie implements Parcelable {
         posterPath = in.readString();
         backdropPath = in.readString();
 
-        runtime = in.readInt();
-        popularity = in.readFloat();
-        voteAverage = in.readFloat();
+       // runtime = in.readInt();
+        popularity = in.readDouble();
+        voteAverage = in.readDouble();
         voteCount = in.readInt();
-        revenue = in.readInt();
+       // revenue = in.readInt();
         favorite =  in.readInt();
     }
 
@@ -73,11 +73,11 @@ public class Movie implements Parcelable {
         parcel.writeString(overview);
         parcel.writeString(posterPath);
         parcel.writeString(backdropPath);
-        parcel.writeInt(runtime);
-        parcel.writeFloat(popularity);
-        parcel.writeFloat(voteAverage);
+     //   parcel.writeInt(runtime);
+        parcel.writeDouble(popularity);
+        parcel.writeDouble(voteAverage);
         parcel.writeInt(voteCount);
-        parcel.writeInt(revenue);
+      //  parcel.writeInt(revenue);
         parcel.writeInt(favorite);
     }
 
