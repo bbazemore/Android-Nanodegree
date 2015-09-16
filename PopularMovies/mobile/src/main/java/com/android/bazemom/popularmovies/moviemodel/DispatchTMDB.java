@@ -31,7 +31,7 @@ public class DispatchTMDB {
 
     private MovieResults mLastMovieSet = null; // cache results for now
     private Boolean mAPIRequestInProcess = false;
-    private int mPageRequested = 0;
+    private int mPageRequested = 1;  // request the next page each time
 
     public synchronized static DispatchTMDB getInstance(@NonNull  MovieDBService movieAPI, Bus bus) {
         if (sInstance == null) {
@@ -61,14 +61,15 @@ public class DispatchTMDB {
         {
             // I think we are going to end up asking for all the movies, regardless
             // of sort order. So for now let's skip checking which sort order was requested.
-            if (mPageRequested == event.page)
+           // if (mPageRequested == event.page)
                 return;
         }
         // Keep track of the last outstanding request
         mAPIRequestInProcess = true;
-        mPageRequested = event.page;
+       // mPageRequested = event.page;
 
-        movieDBService.getMoviesList(/*event.sortType,*/ event.page, event.api_key, new retrofit.Callback<MovieResults>() {
+        // Get the next page worth of data, and prep to advance to the next page
+        movieDBService.getMoviesList(/*event.sortType,*/ mPageRequested++, event.api_key, new retrofit.Callback<MovieResults>() {
             @Override
             public void success (MovieResults response, Response rawResponse){
                 mLastMovieSet = response;
