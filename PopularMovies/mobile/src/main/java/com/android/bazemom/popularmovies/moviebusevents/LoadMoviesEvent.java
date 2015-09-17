@@ -13,14 +13,14 @@ public class LoadMoviesEvent {
     private final static String TAG = LoadMoviesEvent.class.getSimpleName();
 
     public MovieDBService.MovieSortType sortType;
-    public int page;  // must be between 1 and 1000
+    //public int page;  // must be between 1 and 1000
     public String api_key;
 
-        public LoadMoviesEvent(String key, MovieDBService.MovieSortType sortTypeIn, int pageIn)
+        public LoadMoviesEvent(String key, MovieDBService.MovieSortType sortTypeIn /*, int pageIn */)
         {
             Log.i(TAG, "LoadMoviesEvent created");
             sortType = sortTypeIn;
-            page = pageIn;
+           // page = pageIn;
             api_key = key;
         }
 }

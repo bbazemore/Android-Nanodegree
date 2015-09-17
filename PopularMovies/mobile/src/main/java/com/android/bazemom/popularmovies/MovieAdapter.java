@@ -71,7 +71,7 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
         // Here’s an example URL: http://image.tmdb.org/t/p/w500/8uO0gUM8aNqYLs1OsTBQiXu0fEv.jpg
         Picasso.with(getContext())
         .load(posterURL)
-        .placeholder(R.mipmap.ic_launcher)
+        //.placeholder(R.mipmap.ic_launcher) too busy looking
         .error(R.mipmap.ic_error_fallback)         // optional
         .into(posterView);
 
