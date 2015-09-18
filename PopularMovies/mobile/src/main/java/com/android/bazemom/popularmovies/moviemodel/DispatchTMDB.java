@@ -4,8 +4,10 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.android.bazemom.popularmovies.MovieDBService;
+import com.android.bazemom.popularmovies.moviebusevents.LoadMovieDetailEvent;
 import com.android.bazemom.popularmovies.moviebusevents.LoadMoviesEvent;
 import com.android.bazemom.popularmovies.moviebusevents.MovieApiErrorEvent;
+import com.android.bazemom.popularmovies.moviebusevents.MovieDetailLoadedEvent;
 import com.android.bazemom.popularmovies.moviebusevents.MoviesAvailableEvent;
 import com.android.bazemom.popularmovies.moviebusevents.MoviesLoadedEvent;
 import com.squareup.otto.Bus;
@@ -94,4 +96,36 @@ public class DispatchTMDB {
         // Assuming 'lastMovieSet' exists.
         return new MoviesAvailableEvent(this.mLastMovieSet);
     }
+
+    ////////////////////////////////////////////
+    // Start of Movie Detail support
+    ///////////////////////////////////////////
+    @Subscribe
+    public void onLoadMovieDetail(LoadMovieDetailEvent event) {
+
+        // Get the detailed info for one movie
+        movieDBService.getMovieDetails(event.movieId, event.api_key, new retrofit.Callback<MovieDetailModel>() {
+            @Override
+            public void success (MovieDetailModel response, Response rawResponse){
+                //mLastMovieDetail = response;
+                mBus.post(new MovieDetailLoadedEvent(response));
+            }
+
+            @Override
+            public void failure (RetrofitError error){
+                mAPIRequestInProcess = false;
+                mBus.post(new MovieApiErrorEvent(error));
+            }
+        });
+
+    }
+    /* When subscribing to events it is often desired to also fetch the current known value for
+     * specific events (e.g., current list of movies). To address this common paradigm,
+     * Otto adds the concept of 'Producers' which provide an immediate callback to any subscribers upon their registration.
+
+    @Produce
+    public MovieDetailLoadedEvent getMoviesNow() {
+        // Assuming 'lastMovieSet' exists.
+        return new MoviesAvailableEvent(this.mLastMovieDetail);
+    } */
 }

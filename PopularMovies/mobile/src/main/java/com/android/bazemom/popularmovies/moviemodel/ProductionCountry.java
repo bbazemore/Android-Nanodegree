@@ -1,15 +1,16 @@
 package com.android.bazemom.popularmovies.moviemodel;
 
-import java.util.HashMap;
-import java.util.Map;
-//import javax.annotation.Generated;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 
 //@Generated("org.jsonschema2pojo")
 public class ProductionCountry {
 
+    @SerializedName("iso_3166_1")
+    @Expose
     private String iso31661;
+    @Expose
     private String name;
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      *
@@ -45,14 +46,6 @@ public class ProductionCountry {
      */
     public void setName(String name) {
         this.name = name;
-    }
-
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
     }
 
 }

@@ -1,15 +1,14 @@
 package com.android.bazemom.popularmovies.moviemodel;
 
-import java.util.HashMap;
-import java.util.Map;
-//import javax.annotation.Generated;
+import com.google.gson.annotations.Expose;
 
 //@Generated("org.jsonschema2pojo")
 public class ProductionCompany {
 
+    @Expose
     private String name;
+    @Expose
     private int id;
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      *
@@ -45,14 +44,6 @@ public class ProductionCompany {
      */
     public void setId(int id) {
         this.id = id;
-    }
-
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
     }
 
 }

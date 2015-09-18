@@ -1,38 +1,78 @@
 package com.android.bazemom.popularmovies.moviemodel;
+
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+// Response that comes back from TMDB for Movie details comes back in GSON format
+// Use this structure to capture the data, then map it to our MovieDetail constructor.
 //@Generated("org.jsonschema2pojo")
-public class MovieDetail {
+public class MovieDetailModel {
 
+    @Expose
     private boolean adult;
+    @SerializedName("backdrop_path")
+    @Expose
     private String backdropPath;
-    private Object belongsToCollection;
+    @SerializedName("belongs_to_collection")
+    @Expose
+    private BelongsToCollection belongsToCollection;
+    @Expose
     private int budget;
+    @Expose
     private List<Genre> genres = new ArrayList<Genre>();
+    @Expose
     private String homepage;
+    @Expose
     private int id;
+    @SerializedName("imdb_id")
+    @Expose
     private String imdbId;
+    @SerializedName("original_language")
+    @Expose
     private String originalLanguage;
+    @SerializedName("original_title")
+    @Expose
     private String originalTitle;
+    @Expose
     private String overview;
-    private float popularity;
+    @Expose
+    private double popularity;
+    @SerializedName("poster_path")
+    @Expose
     private String posterPath;
+    @SerializedName("production_companies")
+    @Expose
     private List<ProductionCompany> productionCompanies = new ArrayList<ProductionCompany>();
+    @SerializedName("production_countries")
+    @Expose
     private List<ProductionCountry> productionCountries = new ArrayList<ProductionCountry>();
+    @SerializedName("release_date")
+    @Expose
     private String releaseDate;
+    @Expose
     private int revenue;
+    @Expose
     private int runtime;
+    @SerializedName("spoken_languages")
+    @Expose
     private List<SpokenLanguage> spokenLanguages = new ArrayList<SpokenLanguage>();
+    @Expose
     private String status;
+    @Expose
     private String tagline;
+    @Expose
     private String title;
+    @Expose
     private boolean video;
-    private float voteAverage;
+    @SerializedName("vote_average")
+    @Expose
+    private double voteAverage;
+    @SerializedName("vote_count")
+    @Expose
     private int voteCount;
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      *
@@ -75,7 +115,7 @@ public class MovieDetail {
      * @return
      * The belongsToCollection
      */
-    public Object getBelongsToCollection() {
+    public BelongsToCollection getBelongsToCollection() {
         return belongsToCollection;
     }
 
@@ -84,7 +124,7 @@ public class MovieDetail {
      * @param belongsToCollection
      * The belongs_to_collection
      */
-    public void setBelongsToCollection(Object belongsToCollection) {
+    public void setBelongsToCollection(BelongsToCollection belongsToCollection) {
         this.belongsToCollection = belongsToCollection;
     }
 
@@ -237,7 +277,7 @@ public class MovieDetail {
      * @return
      * The popularity
      */
-    public float getPopularity() {
+    public double getPopularity() {
         return popularity;
     }
 
@@ -246,7 +286,7 @@ public class MovieDetail {
      * @param popularity
      * The popularity
      */
-    public void setPopularity(float popularity) {
+    public void setPopularity(double popularity) {
         this.popularity = popularity;
     }
 
@@ -453,7 +493,7 @@ public class MovieDetail {
      * @return
      * The voteAverage
      */
-    public float getVoteAverage() {
+    public double getVoteAverage() {
         return voteAverage;
     }
 
@@ -462,7 +502,7 @@ public class MovieDetail {
      * @param voteAverage
      * The vote_average
      */
-    public void setVoteAverage(float voteAverage) {
+    public void setVoteAverage(double voteAverage) {
         this.voteAverage = voteAverage;
     }
 
@@ -482,14 +522,6 @@ public class MovieDetail {
      */
     public void setVoteCount(int voteCount) {
         this.voteCount = voteCount;
-    }
-
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
     }
 
 }
