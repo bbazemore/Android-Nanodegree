@@ -1,6 +1,10 @@
 package com.android.bazemom.popularmovies;
 
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -10,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.android.bazemom.popularmovies.moviebusevents.LoadMovieDetailEvent;
@@ -18,6 +23,7 @@ import com.android.bazemom.popularmovies.moviemodel.DispatchTMDB;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
 /**
  * Display Movie Details.  Send intent with extra text containing the Movie id
@@ -90,19 +96,26 @@ public class DetailActivity extends AppCompatActivity {
                 // slow to initialize, I will go that route.
                 return;
 
+            final Context context = mRootView.getContext();
             TextView titleView = (TextView) mRootView.findViewById(R.id.detail_movie_title);
             titleView.setText(mMovieDetail.title);
             TextView overview = (TextView) mRootView.findViewById(R.id.detail_movie_overview);
             overview.setText(mMovieDetail.overview);
 
+            TextView releaseDate = (TextView) mRootView.findViewById(R.id.detail_movie_release_date);
+            releaseDate.setText(context.getString(R.string.detail_release_date) + mMovieDetail.releaseDate);
             // A little convoluted here to support internationalization later. Stuff the runtime
             // in minutes into a formatted string.  The placement of the number may vary in other languages.
             TextView runtime = (TextView) mRootView.findViewById(R.id.detail_movie_runtime);
-            String runtimeText = String.format(mRootView.getContext().getString(R.string.detail_runtime_format), mMovieDetail.runtime);
+            String runtimeText = String.format(context.getString(R.string.detail_runtime_format), mMovieDetail.runtime);
             runtime.setText(runtimeText);
 
+            TextView rating = (TextView) mRootView.findViewById(R.id.detail_movie_user_rating);
+            rating.setText(context.getString(R.string.detail_movie_user_rating) + Double.toString(mMovieDetail.voteAverage));
+
+
             // To build an image URL, we need 3 pieces of data. The baseurl, size and filepath.
-            String posterURL = "http://image.tmdb.org/t/p/w500" + mMovieDetail.posterPath;
+            String posterURL = context.getString(R.string.TMDB_image_base_url) + mMovieDetail.posterPath;
             ImageView posterView = (ImageView) mRootView.findViewById(R.id.detail_movie_poster);
 
             // Here’s an example URL: http://image.tmdb.org/t/p/w500/8uO0gUM8aNqYLs1OsTBQiXu0fEv.jpg
@@ -111,6 +124,30 @@ public class DetailActivity extends AppCompatActivity {
                             //.placeholder(R.mipmap.ic_launcher) too busy looking
                     .error(R.mipmap.ic_error_fallback)         // optional
                     .into(posterView);
+
+            // Now set the background image for the whole frame
+            // Stolen from http://stackoverflow.com/questions/29777354/how-do-i-set-background-image-with-picasso-in-code
+            final RelativeLayout detailLayout = (RelativeLayout) mRootView.findViewById(R.id.detail_movie_background);
+            String backgroundURL = context.getString(R.string.TMDB_image_base_url) + mMovieDetail.backdropPath;
+            Picasso.with(getActivity()).load(backgroundURL).into(new Target() {
+
+                @Override
+                public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                    // use deprecated setBackgroundDrawable for API 11 compatibility.
+                    // setBackground requires 16 which is a bit too new for now
+                    detailLayout.setBackgroundDrawable(new BitmapDrawable(context.getResources(), bitmap));
+                }
+
+                @Override
+                public void onBitmapFailed(final Drawable errorDrawable) {
+                    Log.d("TAG", "Picasso background image load failed");
+                }
+
+                @Override
+                public void onPrepareLoad(final Drawable placeHolderDrawable) {
+                    Log.d("TAG", "Prepare background image Load");
+                }
+            });
         }
 
         // Use some kind of injection, so that we can swap in a mock for tests.

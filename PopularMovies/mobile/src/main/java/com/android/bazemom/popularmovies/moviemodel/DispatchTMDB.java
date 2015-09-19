@@ -33,6 +33,7 @@ public class DispatchTMDB {
 
     private MovieResults mLastMovieSet = null; // cache results for now
     private Boolean mAPIRequestInProcess = false;
+    private int mAPIDetailRequestMovieId = 0;
     private int mPageRequested = 1;  // request the next page each time
 
     public synchronized static DispatchTMDB getInstance(@NonNull  MovieDBService movieAPI, Bus bus) {
@@ -103,18 +104,25 @@ public class DispatchTMDB {
     @Subscribe
     public void onLoadMovieDetail(LoadMovieDetailEvent event) {
 
+        if (mAPIDetailRequestMovieId == event.movieId)
+            // If we already have an outstanding request for this movie, don't send out a duplicate request
+            // There is no sense in having multiple network calls and updating the UI multiple times
+            return;
+        mAPIDetailRequestMovieId = event.movieId;
+
         // Get the detailed info for one movie
         movieDBService.getMovieDetails(event.movieId, event.api_key, new retrofit.Callback<MovieDetailModel>() {
             @Override
             public void success (MovieDetailModel response, Response rawResponse){
                 //mLastMovieDetail = response;
                 mBus.post(new MovieDetailLoadedEvent(response));
+                mAPIDetailRequestMovieId = 0;  // request is no longer outstanding
             }
 
             @Override
             public void failure (RetrofitError error){
-                mAPIRequestInProcess = false;
                 mBus.post(new MovieApiErrorEvent(error));
+                mAPIDetailRequestMovieId = 0;  // request is no longer outstanding
             }
         });
 
