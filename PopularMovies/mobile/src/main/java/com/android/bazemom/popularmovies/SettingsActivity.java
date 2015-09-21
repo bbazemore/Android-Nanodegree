@@ -9,9 +9,9 @@ import android.preference.PreferenceManager;
 /**
         * A {@link PreferenceActivity} that presents a set of application settings.
         * <p>
-* See <a href="http://developer.android.com/design/patterns/settings.html">
+        * See <a href="http://developer.android.com/design/patterns/settings.html">
         * Android Design: Settings</a> for design guidelines and the <a
-* href="http://developer.android.com/guide/topics/ui/settings.html">Settings
+        * href="http://developer.android.com/guide/topics/ui/settings.html">Settings
         * API Guide</a> for more information on developing a Settings UI.
         */
 public class SettingsActivity extends PreferenceActivity
@@ -20,15 +20,18 @@ public class SettingsActivity extends PreferenceActivity
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Add 'general' preferences, defined in the XML file
-       // addPreferencesFromResource(R.xml.pref_general);
+        // Add 'general' preferences, defined in the XML file.
+        // Todo: this old style addPreferences is only needed if we are supporting API 10 or earlier.
+        // Since this app claims 11 or better this should get updated to use PreferenceFragments
+        // http://developer.android.com/reference/android/preference/PreferenceActivity.html
+        addPreferencesFromResource(R.xml.pref_general);
 
-        //PreferenceManager.setDefaultValues(this, R.xml.pref_general, false);
+        PreferenceManager.setDefaultValues(this, R.xml.pref_general, false);
 
         // For all preferences, attach an OnPreferenceChangeListener so the UI summary can be
         // updated when the preference changes.
-       // bindPreferenceSummaryToValue(findPreference(getString(R.string.settings_location_key)));
-      //  bindPreferenceSummaryToValue(findPreference(getString(R.string.settings_unit_key)));
+       bindPreferenceSummaryToValue(findPreference(getString(R.string.settings_sort_key)));
+       bindPreferenceSummaryToValue(findPreference(getString(R.string.settings_image_quality_key)));
     }
 
     /**
@@ -64,7 +67,7 @@ public class SettingsActivity extends PreferenceActivity
             // For other preferences, set the summary to the value's simple string representation.
             preference.setSummary(stringValue);
         }
-        // Refresh forecast with new preferences??
+        // Refresh UI with new preferences??
         return true;
     }
 

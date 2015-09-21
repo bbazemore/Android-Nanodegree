@@ -38,6 +38,7 @@ public class MovieApplication extends Application {
         bus.register(this); //listen for "global" events
     }
 
+    // Connect to the TMDB movie api in a RESTful way using a Retrofit adapter
     private MovieDBService buildApi() {
         String baseUrl = getString(R.string.TMDB_endpoint_url);
 
@@ -58,7 +59,7 @@ public class MovieApplication extends Application {
         StringBuilder message = new StringBuilder(retrofitError.getMessage())
                     .append(retrofitError.getKind().toString())
                     .append(retrofitError.getUrl())
-                    .append(retrofitError.getStackTrace());
+                    .append(retrofitError.getStackTrace().toString());
         Log.e(TAG, message.toString() );
     }
 }

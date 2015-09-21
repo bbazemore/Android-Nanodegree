@@ -59,20 +59,37 @@ public class DispatchTMDB {
 
     @Subscribe
     public void onLoadMovies(LoadMoviesEvent event) {
+
         // Avoid having multiple calls out at once. Patience is a virtue.
         if (mAPIRequestInProcess)
         {
-            // I think we are going to end up asking for all the movies, regardless
-            // of sort order. So for now let's skip checking which sort order was requested.
-           // if (mPageRequested == event.page)
+            // Special case, we don't want to miss a start over request
+            if (!(event.page == 1 && mPageRequested != 2))
+                // Just a duplicate run-of-the-mill request
+                // The pages requested from the UI could get out of synch with
+                // the pages requested from this dispatch, no worries. It will work anyway.
                 return;
         }
         // Keep track of the last outstanding request
         mAPIRequestInProcess = true;
-       // mPageRequested = event.page;
+
+        // The UI might ask us to start over from the beginning.
+        // If it doesn't, then page=2+ and we keep on with the next page requested, which this class tracks.
+        if (event.page == 1) {
+            // If we've just requested page 1, then our pageRequested counter will show 2.
+            // Only request page 1 if we haven't just requested it.
+            if (mPageRequested != 2)
+                mPageRequested = 1;
+        }
+
+        // We could check here to make sure we don't request more than the maximum number of pages from TMDB,
+        // but we'll let TMDB tell us that in the failure, in case the limit changes later.
+        /*if (mPageRequested > 1000)
+            return;
+        */
 
         // Get the next page worth of data, and prep to advance to the next page
-        movieDBService.getMoviesList(/*event.sortType,*/ mPageRequested++, event.api_key, new retrofit.Callback<MovieResults>() {
+        movieDBService.getMoviesList(event.sortType, mPageRequested++, event.api_key, new retrofit.Callback<MovieResults>() {
             @Override
             public void success (MovieResults response, Response rawResponse){
                 mLastMovieSet = response;

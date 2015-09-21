@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <ListPreference
+        android:title="@string/settings_sort_label"
+        android:key="@string/settings_sort_key"
+        android:entries="@array/settings_sort_labels"
+        android:entryValues="@array/settings_sort_values"
+        android:defaultValue="@string/settings_sort_popular"/>
+    <ListPreference
+        android:title="@string/settings_image_quality_label"
+        android:key="@string/settings_image_quality_key"
+        android:entries="@array/settings_image_quality"
+        android:entryValues="@array/settings_image_quality_values"
+        android:defaultValue="@string/settings_poster_quality_high"/>
+</PreferenceScreen>
+

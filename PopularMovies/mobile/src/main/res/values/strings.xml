@@ -1,0 +1,61 @@
+<resources>
+    <string name="app_name">PopularMovies</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="date_format">yyyy-MM-dd</string>
+    <string name="movie_sort_by_popularity" translatable="false">popular.desc</string>
+    <string name="movie_sort_by_revenue" translatable="false">revenue.desc</string>
+    <string name="movie_sort_by_release_date" translatable="false">release_date.desc</string>
+    <string name="movie_sort_by_vote" translatable="false">vote_average.desc</string>
+
+    <string name="detail_runtime_format">Runtime: %d minutes</string>
+    <string name="detail_movie_default_overview">Overview</string>
+    <string name="detail_movie_default_rating">Rating</string>
+    <string name="detail_movie_default_runtime">Runtime</string>
+    <string name="detail_movie_default_release">Release</string>
+    <string name="detail_release_date">"Release Date: "</string>
+    <string name="detail_movie_user_rating">TMDB user rating:</string>
+
+    <string name="key_movielist" translatable="false">com.android.bazemom.popularmovies.movielist</string>
+    <string name="TMDB_endpoint_url" translatable="false">https://api.themoviedb.org/3</string>
+    <string name="TMDB_image_base_url" translatable="false">http://image.tmdb.org/t/p/w500</string>
+
+    <string name="settings_sort_popular" translatable="false">popular</string>
+    <string name="settings_sort_top_rated" translatable="false">top_rated</string>
+    <string name="settings_sort_now_playing" translatable="false">now_playing</string>
+    <string name="settings_sort_latest" translatable="false">latest</string>
+
+    <string name="settings_poster_quality_low" translatable="false">w92</string>
+    <string name="settings_poster_quality_medium" translatable="false">w185</string>
+    <string name="settings_poster_quality_high" translatable="false">w500</string>
+
+    <string name="settings_backdrop_quality_low" translatable="false">w300</string>
+    <string name="settings_backdrop_quality_medium" translatable="false">w500</string>
+    <string name="settings_backddrop_quality_high" translatable="false">w1280</string>
+
+    <string name="settings_sort_label">Populate and sort the movies by:</string>
+    <string name="settings_sort_key">com.android.bazemom.popularmovies.sort_order</string>
+    <string-array name="settings_sort_labels">
+        <item name="settings_sort_popular_label">Popular</item>
+        <item name="settings_sort_top_rated_label">Top Rated</item>
+        <item name="settings_sort_now_playing_label">Now Playing</item>
+    </string-array>
+    <string-array name="settings_sort_values">
+        <item>@string/settings_sort_popular</item>
+        <item>@string/settings_sort_top_rated</item>
+        <item>@string/settings_sort_now_playing</item>
+    </string-array>
+
+    <string name="settings_image_quality_label">Pick High if you want big high quality movie posters. Pick Low if you want to see them fast or over a slow internet connection.</string>
+    <string name="settings_image_quality_key">com.android.bazemom.popularmovies.image_quality</string>
+    <string-array name="settings_image_quality">
+        <item name="settings_image_quality_low_label">Low</item>
+        <item name="settings_image_quality_medium_label">Medium</item>
+        <item name="settings_image_quality_high_label">High</item>
+    </string-array>
+    <string-array name="settings_image_quality_values">
+        <item>@string/settings_poster_quality_low</item>
+        <item>@string/settings_poster_quality_medium</item>
+        <item>@string/settings_poster_quality_high</item>
+    </string-array>
+</resources>
