@@ -18,12 +18,11 @@
 
     <string name="key_movielist" translatable="false">com.android.bazemom.popularmovies.movielist</string>
     <string name="TMDB_endpoint_url" translatable="false">https://api.themoviedb.org/3</string>
-    <string name="TMDB_image_base_url" translatable="false">http://image.tmdb.org/t/p/w500</string>
+    <string name="TMDB_image_base_url" translatable="false">http://image.tmdb.org/t/p/</string>
 
     <string name="settings_sort_popular" translatable="false">popular</string>
     <string name="settings_sort_top_rated" translatable="false">top_rated</string>
     <string name="settings_sort_now_playing" translatable="false">now_playing</string>
-    <string name="settings_sort_latest" translatable="false">latest</string>
 
     <string name="settings_poster_quality_low" translatable="false">w92</string>
     <string name="settings_poster_quality_medium" translatable="false">w185</string>
@@ -46,7 +45,7 @@
         <item>@string/settings_sort_now_playing</item>
     </string-array>
 
-    <string name="settings_image_quality_label">Pick High if you want big high quality movie posters. Pick Low if you want to see them fast or over a slow internet connection.</string>
+    <string name="settings_image_quality_label">Image quality. Pick Low for slow internet connection.</string>
     <string name="settings_image_quality_key">com.android.bazemom.popularmovies.image_quality</string>
     <string-array name="settings_image_quality">
         <item name="settings_image_quality_low_label">Low</item>

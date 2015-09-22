@@ -60,8 +60,14 @@ public class SettingsActivity extends PreferenceActivity
             // the preference's 'entries' list (since they have separate labels/values).
             ListPreference listPreference = (ListPreference) preference;
             int prefIndex = listPreference.findIndexOfValue(stringValue);
+
             if (prefIndex >= 0) {
-                preference.setSummary(listPreference.getEntries()[prefIndex]);
+                // Avoid tripping extra UI updates if nothing changed.
+                CharSequence oldValue = listPreference.getSummary();
+                CharSequence newValue = listPreference.getEntries()[prefIndex];
+                if (oldValue != null && !newValue.equals(oldValue)) {
+                    preference.setSummary(newValue);
+                }
             }
         } else {
             // For other preferences, set the summary to the value's simple string representation.

@@ -1,6 +1,9 @@
 package com.android.bazemom.popularmovies;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -66,7 +69,10 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
         ImageView posterView = (ImageView) convertView.findViewById(R.id.list_item_movie_imageview);
 
         // To build an image URL, we need 3 pieces of data. The baseurl, size and filepath.
-        String posterURL = "http://image.tmdb.org/t/p/w500" + movie.posterPath;
+        Context context = convertView.getContext();
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        String posterSize = prefs.getString(context.getString(R.string.settings_image_quality_key), context.getString(R.string.settings_poster_quality_high));
+        String posterURL = context.getString(R.string.TMDB_image_base_url)  + posterSize + movie.posterPath;
 
         // Here’s an example URL: http://image.tmdb.org/t/p/w500/8uO0gUM8aNqYLs1OsTBQiXu0fEv.jpg
         Picasso.with(getContext())

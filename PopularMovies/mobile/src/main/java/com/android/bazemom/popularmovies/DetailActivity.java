@@ -2,10 +2,12 @@ package com.android.bazemom.popularmovies;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
@@ -61,7 +63,7 @@ public class DetailActivity extends AppCompatActivity {
 
         public DetailFragment() {
             //setHasOptionsMenu(true);
-           // receiveEvents();
+            receiveEvents();
         }
 
         @Nullable
@@ -85,7 +87,24 @@ public class DetailActivity extends AppCompatActivity {
             return mRootView;
         }
 
-        private void UpdateUI() {
+        @Override
+        public void onResume(){
+            super.onResume();
+
+            // We are back on display. Pay attention to movie results again.
+            receiveEvents();
+            updateUI();
+        }
+
+        @Override
+        public void onPause() {
+            super.onPause();
+
+            // Don't bother processing results when we aren't on display.
+            stopReceivingEvents();
+        }
+
+        private void updateUI() {
             if (mRootView == null)
                 return;
 
@@ -115,39 +134,58 @@ public class DetailActivity extends AppCompatActivity {
 
 
             // To build an image URL, we need 3 pieces of data. The baseurl, size and filepath.
-            String posterURL = context.getString(R.string.TMDB_image_base_url) + mMovieDetail.posterPath;
-            ImageView posterView = (ImageView) mRootView.findViewById(R.id.detail_movie_poster);
+            // First get the size from the preferences, user can select high, medium or low
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            String posterSize = prefs.getString(getString(R.string.settings_image_quality_key), getString(R.string.settings_poster_quality_high));
 
-            // Here’s an example URL: http://image.tmdb.org/t/p/w500/8uO0gUM8aNqYLs1OsTBQiXu0fEv.jpg
-            Picasso.with(mRootView.getContext())
-                    .load(posterURL)
-                            //.placeholder(R.mipmap.ic_launcher) too busy looking
-                    .error(R.mipmap.ic_error_fallback)         // optional
-                    .into(posterView);
+            if (mMovieDetail.posterPath != null && !mMovieDetail.posterPath.isEmpty()) {
+                String posterURL = context.getString(R.string.TMDB_image_base_url) + posterSize + mMovieDetail.posterPath;
+                ImageView posterView = (ImageView) mRootView.findViewById(R.id.detail_movie_poster);
 
-            // Now set the background image for the whole frame
+                // Here’s an example URL: http://image.tmdb.org/t/p/w500/8uO0gUM8aNqYLs1OsTBQiXu0fEv.jpg
+                Picasso.with(context)
+                        .load(posterURL)
+                                //.placeholder(R.mipmap.ic_launcher) too busy looking
+                        .error(R.mipmap.ic_error_fallback)         // optional
+                        .into(posterView);
+            }
+
+            // Now set the background image for the whole frame in the Detail View
             // Stolen from http://stackoverflow.com/questions/29777354/how-do-i-set-background-image-with-picasso-in-code
-            final RelativeLayout detailLayout = (RelativeLayout) mRootView.findViewById(R.id.detail_movie_background);
-            String backgroundURL = context.getString(R.string.TMDB_image_base_url) + mMovieDetail.backdropPath;
-            Picasso.with(getActivity()).load(backgroundURL).into(new Target() {
-
-                @Override
-                public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                    // use deprecated setBackgroundDrawable for API 11 compatibility.
-                    // setBackground requires 16 which is a bit too new for now
-                    detailLayout.setBackgroundDrawable(new BitmapDrawable(context.getResources(), bitmap));
+            // Note the image quality values are different for posters and backdrops, so fix up equivalent high, medium, and low values here.
+            if (mMovieDetail.backdropPath != null && !mMovieDetail.backdropPath.isEmpty()) {
+                final RelativeLayout detailLayout = (RelativeLayout) mRootView.findViewById(R.id.detail_movie_background);
+                int backgroundSizeId = R.string.settings_poster_quality_high;
+                if (posterSize.equals(getString(R.string.settings_poster_quality_medium))) {
+                    backgroundSizeId = R.string.settings_backdrop_quality_medium;
+                } else if (posterSize.equals(getString(R.string.settings_poster_quality_low))) {
+                    backgroundSizeId = R.string.settings_backdrop_quality_low;
                 }
 
-                @Override
-                public void onBitmapFailed(final Drawable errorDrawable) {
-                    Log.d("TAG", "Picasso background image load failed");
-                }
+                String backgroundURL = context.getString(R.string.TMDB_image_base_url);
+                backgroundURL +=  context.getString(backgroundSizeId);
+                backgroundURL +=  mMovieDetail.backdropPath;
 
-                @Override
-                public void onPrepareLoad(final Drawable placeHolderDrawable) {
-                    Log.d("TAG", "Prepare background image Load");
-                }
-            });
+                Picasso.with(getActivity()).load(backgroundURL).into(new Target() {
+
+                    @Override
+                    public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                        // use deprecated setBackgroundDrawable for API 11 compatibility.
+                        // setBackground requires 16 which is a bit too new for now
+                        detailLayout.setBackgroundDrawable(new BitmapDrawable(context.getResources(), bitmap));
+                    }
+
+                    @Override
+                    public void onBitmapFailed(final Drawable errorDrawable) {
+                        Log.d("TAG", "Picasso background image load failed");
+                    }
+
+                    @Override
+                    public void onPrepareLoad(final Drawable placeHolderDrawable) {
+                        Log.d("TAG", "Prepare background image Load");
+                    }
+                });
+            }
         }
 
         // Use some kind of injection, so that we can swap in a mock for tests.
@@ -194,6 +232,6 @@ public class DetailActivity extends AppCompatActivity {
             // load the movie data into our movies list
             mMovieDetail = event.movieResult;
             Log.i(TAG, "movie detail Loaded ");
-            UpdateUI();
+            updateUI();
         }
     }}

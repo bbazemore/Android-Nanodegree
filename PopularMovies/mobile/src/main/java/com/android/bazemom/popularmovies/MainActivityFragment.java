@@ -66,9 +66,7 @@ public class MainActivityFragment extends Fragment {
         }
         else {
             // Restore the movie list as we last saw it.
-            mMovieList = savedInstanceState.getParcelableArrayList(getString(R.string.key_movielist));
-            mCurrentlyDisplayedSortType = savedInstanceState.getString(getString(R.string.settings_sort_key));
-            mCurrentlyDisplayedPosterQuality = savedInstanceState.getString(getString(R.string.settings_image_quality_key));
+            restoreState(savedInstanceState);
         }
 
         // Connect the UI with our fine list of movies
@@ -125,6 +123,12 @@ public class MainActivityFragment extends Fragment {
         super.onSaveInstanceState(outState);
     }
 
+    @Override
+    public void onViewStateRestored(Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+        restoreState(savedInstanceState);
+        receiveEvents();
+    }
 
     public void updateMovies() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
@@ -153,6 +157,7 @@ public class MainActivityFragment extends Fragment {
         // Mash new movie results into the View that is displayed to user
         mAdapter.addAll(event.movieResults);
     }
+
 
     @Override
     public void onPause() {
@@ -200,6 +205,13 @@ public class MainActivityFragment extends Fragment {
             } catch (Exception e) {
                 Log.i(TAG, "stopReceivingEvents could not unregister with Otto bus");
             }
+        }
+    }
+    private void restoreState(Bundle savedInstanceState){
+        if (savedInstanceState != null) {
+            mMovieList = savedInstanceState.getParcelableArrayList(getString(R.string.key_movielist));
+            mCurrentlyDisplayedSortType = savedInstanceState.getString(getString(R.string.settings_sort_key));
+            mCurrentlyDisplayedPosterQuality = savedInstanceState.getString(getString(R.string.settings_image_quality_key));
         }
     }
 }
