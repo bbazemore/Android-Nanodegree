@@ -3,7 +3,6 @@ package com.android.bazemom.popularmovies;
 import android.app.Application;
 import android.util.Log;
 
-import com.android.bazemom.popularmovies.moviemodel.DispatchTMDB;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.squareup.otto.Bus;
@@ -21,6 +20,8 @@ import retrofit.converter.GsonConverter;
  * This is using Retrofit to access The Movie Database, TMDB, in a RESTful manner.
  * Then it uses Otto to send messages around via the bus to any activity subscribed.
  * Design based on an article by Matt Swanson: http://www.mdswanson.com/blog/2014/04/07/durable-android-rest-clients.html
+ *
+ * More details in About.txt
  */
 public class MovieApplication extends Application {
     private final static String TAG = MovieApplication.class.getSimpleName();

@@ -15,7 +15,10 @@ import com.android.bazemom.popularmovies.moviemodel.MovieResults;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
-
+// Take a list of movies (Model), mash (control) the poster image for each one into an ImageGridView
+// A nice clean implementation of the Model View Controller (MVC) pattern.
+// I love that components exist that make this so easy.
+//
 public class MovieAdapter extends ArrayAdapter<Movie> {
     private static final String LOG_TAG = MovieAdapter.class.getSimpleName();
 

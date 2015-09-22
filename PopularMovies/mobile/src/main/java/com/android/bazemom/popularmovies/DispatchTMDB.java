@@ -1,15 +1,16 @@
-package com.android.bazemom.popularmovies.moviemodel;
+package com.android.bazemom.popularmovies;
 
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.android.bazemom.popularmovies.MovieDBService;
 import com.android.bazemom.popularmovies.moviebusevents.LoadMovieDetailEvent;
 import com.android.bazemom.popularmovies.moviebusevents.LoadMoviesEvent;
 import com.android.bazemom.popularmovies.moviebusevents.MovieApiErrorEvent;
 import com.android.bazemom.popularmovies.moviebusevents.MovieDetailLoadedEvent;
 import com.android.bazemom.popularmovies.moviebusevents.MoviesAvailableEvent;
 import com.android.bazemom.popularmovies.moviebusevents.MoviesLoadedEvent;
+import com.android.bazemom.popularmovies.moviemodel.MovieDetailModel;
+import com.android.bazemom.popularmovies.moviemodel.MovieResults;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Produce;
 import com.squareup.otto.Subscribe;
@@ -20,7 +21,7 @@ import retrofit.client.Response;
 /**
  * Singleton class to create one connection to the movie database service, since
  * it is expensive to set up.
- * This class also stores the GSON from the most recent fetch of the Movie list.
+ * This class also stores the MovieResults object from the most recent fetch of the Movie list.
  * Based on article by Josip Jurisic https://medium.com/android-news/so-retrofit-6e00670aaeb2
  */
 public class DispatchTMDB {

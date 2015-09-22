@@ -20,7 +20,6 @@ public class SettingsActivity extends PreferenceActivity
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Add 'general' preferences, defined in the XML file.
         // Todo: this old style addPreferences is only needed if we are supporting API 10 or earlier.
         // Since this app claims 11 or better this should get updated to use PreferenceFragments
         // http://developer.android.com/reference/android/preference/PreferenceActivity.html

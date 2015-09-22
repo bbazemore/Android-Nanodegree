@@ -6,8 +6,16 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.android.bazemom.popularmovies.moviemodel.DispatchTMDB;
-
+// Welcome to the Main Activity for Popular Movies
+// Not much happens here except:
+// 1. Setting up the application-wide connection to the TMDB database
+// and the event bus that is used to request Movies and send back the results
+// between the background worker threads and the main UI
+//
+// 2. Setting up the Settings menu item
+//
+// 3. Launching the MainActivityFragment that contains the Movie Poster gridview
+//
 
 public class MainActivity extends AppCompatActivity {
     private final static String TAG = MainActivity.class.getSimpleName();

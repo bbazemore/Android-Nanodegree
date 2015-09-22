@@ -33,7 +33,7 @@
     <string name="settings_backddrop_quality_high" translatable="false">w1280</string>
 
     <string name="settings_sort_label">Populate and sort the movies by:</string>
-    <string name="settings_sort_key">com.android.bazemom.popularmovies.sort_order</string>
+    <string name="settings_sort_key" translatable="false">com.android.bazemom.popularmovies.sort_order</string>
     <string-array name="settings_sort_labels">
         <item name="settings_sort_popular_label">Popular</item>
         <item name="settings_sort_top_rated_label">Top Rated</item>
@@ -46,7 +46,7 @@
     </string-array>
 
     <string name="settings_image_quality_label">Image quality. Pick Low for slow internet connection.</string>
-    <string name="settings_image_quality_key">com.android.bazemom.popularmovies.image_quality</string>
+    <string name="settings_image_quality_key" translatable="false">com.android.bazemom.popularmovies.image_quality</string>
     <string-array name="settings_image_quality">
         <item name="settings_image_quality_low_label">Low</item>
         <item name="settings_image_quality_medium_label">Medium</item>

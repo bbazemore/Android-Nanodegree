@@ -21,14 +21,13 @@ import android.widget.TextView;
 
 import com.android.bazemom.popularmovies.moviebusevents.LoadMovieDetailEvent;
 import com.android.bazemom.popularmovies.moviebusevents.MovieDetailLoadedEvent;
-import com.android.bazemom.popularmovies.moviemodel.DispatchTMDB;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
 /**
- * Display Movie Details.  Send intent with extra text containing the Movie id
+ * Display Movie Details.  Send intent with extra integer containing the Movie id
  */
 public class DetailActivity extends AppCompatActivity {
     private final static String TAG = DetailActivity.class.getSimpleName();
@@ -53,13 +52,17 @@ public class DetailActivity extends AppCompatActivity {
 
         private Bus mBus; // the bus that is used to deliver messages to the TMDB dispatcher
         private DispatchTMDB mDispatchTMDB;
+
+        // Otto gets upset if the Fragment disappears while still subscribed to outstanding events
+        // Turn event notification off when we are shutting down, register for events once when
+        // starting back up.
         private boolean mReceivingEvents;
 
         private int mMovieId;
         private View mRootView;
         private MovieDetail mMovieDetail;
 
-        // private ShareActionProvider mShareActionProvider;
+        // private ShareActionProvider mShareActionProvider;  // V2?
 
         public DetailFragment() {
             //setHasOptionsMenu(true);
@@ -155,7 +158,7 @@ public class DetailActivity extends AppCompatActivity {
             // Note the image quality values are different for posters and backdrops, so fix up equivalent high, medium, and low values here.
             if (mMovieDetail.backdropPath != null && !mMovieDetail.backdropPath.isEmpty()) {
                 final RelativeLayout detailLayout = (RelativeLayout) mRootView.findViewById(R.id.detail_movie_background);
-                int backgroundSizeId = R.string.settings_poster_quality_high;
+                int backgroundSizeId = R.string.settings_backddrop_quality_high;
                 if (posterSize.equals(getString(R.string.settings_poster_quality_medium))) {
                     backgroundSizeId = R.string.settings_backdrop_quality_medium;
                 } else if (posterSize.equals(getString(R.string.settings_poster_quality_low))) {

@@ -15,7 +15,6 @@ import android.widget.GridView;
 
 import com.android.bazemom.popularmovies.moviebusevents.LoadMoviesEvent;
 import com.android.bazemom.popularmovies.moviebusevents.MoviesLoadedEvent;
-import com.android.bazemom.popularmovies.moviemodel.DispatchTMDB;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
@@ -24,6 +23,7 @@ import java.util.ArrayList;
 
 /**
  * This is where we will display a grid view of movies
+ * See About.txt for more detail.
  */
 public class MainActivityFragment extends Fragment {
     private final static String TAG = MainActivityFragment.class.getSimpleName();

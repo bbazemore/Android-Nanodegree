@@ -6,13 +6,10 @@ import android.os.Parcelable;
 import com.android.bazemom.popularmovies.moviemodel.MovieDetailModel;
 
 /**
- * All the Movie Details we care to display
+ * All the Movie Details we care to display for one movie
+ * It is parcelable so we can pass it in an event or stash it in the saved instance if we so choose.
  */
 public class MovieDetail implements  Parcelable{
-
-/*
- *  Movie holds all the data we care about for one movie.
- */
 
     String title;
     int id;
