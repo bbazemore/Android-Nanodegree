@@ -84,6 +84,10 @@ General design and dependencies:
     the mMovieList is cleared and a new LoadMovies event requesting page 1 is sent to
     DispatchTMDB via the bus to get that type of movie list from TMDB.
 
+Build Note:
+    You must add a file app.properties next to the ./mobile/build.gradle that contains the line:
+    apiKEY=<your TMDB key #>
+
 Future:
     The MoviesAvailable event is intended for better performance to fetch whatever is
     available / cached at the moment when the UI is first started.
