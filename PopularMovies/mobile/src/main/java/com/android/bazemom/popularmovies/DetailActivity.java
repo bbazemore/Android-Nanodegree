@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -80,6 +81,15 @@ public class DetailActivity extends AppCompatActivity {
             mViewHolder = new DetailViewHolder();
             // slide nerd was doing mRootView.setTag(mViewHolder) - I'm just keeping it in a member variable
 
+            // Set up the click listeners for the Detail fragment.  Unfortunately the
+            // onClick attribute in the xml can only be used if the handler is in the Activity proper,
+            // not the fragment
+            mViewHolder.favoriteButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onClickFavoriteButton(v);
+                }
+            });
             int movieId;
 
             Intent intent = getActivity().getIntent();
@@ -98,7 +108,7 @@ public class DetailActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onResume(){
+        public void onResume() {
             super.onResume();
 
             // We are back on display. Pay attention to movie results again.
@@ -165,8 +175,8 @@ public class DetailActivity extends AppCompatActivity {
                 }
 
                 String backgroundURL = context.getString(R.string.TMDB_image_base_url);
-                backgroundURL +=  context.getString(backgroundSizeId);
-                backgroundURL +=  mMovieDetail.backdropPath;
+                backgroundURL += context.getString(backgroundSizeId);
+                backgroundURL += mMovieDetail.backdropPath;
 
                 Picasso.with(getActivity()).load(backgroundURL).into(new Target() {
 
@@ -190,6 +200,7 @@ public class DetailActivity extends AppCompatActivity {
             }
         }
 
+
         // Handy dandy little class to cache the View ids so we don't keep looking for them every
         // time we refresh the UI.  We only need to fetch them after the inflate in onCreateView
         class DetailViewHolder {
@@ -199,6 +210,7 @@ public class DetailActivity extends AppCompatActivity {
             TextView runtime;
             TextView rating;
             ImageView posterView;
+            ImageButton favoriteButton;
             RelativeLayout detailLayout;
 
             DetailViewHolder() {
@@ -208,6 +220,7 @@ public class DetailActivity extends AppCompatActivity {
                 runtime = (TextView) mRootView.findViewById(R.id.detail_movie_runtime);
                 rating = (TextView) mRootView.findViewById(R.id.detail_movie_user_rating);
                 posterView = (ImageView) mRootView.findViewById(R.id.detail_movie_poster);
+                favoriteButton = (ImageButton) mRootView.findViewById(R.id.detail_favorite_button);
                 detailLayout = (RelativeLayout) mRootView.findViewById(R.id.detail_movie_background);
             }
         }
@@ -258,4 +271,29 @@ public class DetailActivity extends AppCompatActivity {
             Log.i(TAG, "movie detail Loaded ");
             updateUI();
         }
-    }}
+
+        public void onClickFavoriteButton(View view) {
+            // TODO: toggle favorite on/off in database
+            ImageButton favoriteButton = (ImageButton) view;
+            int favoriteId = 0;
+            Object tag = favoriteButton.getTag();
+            if (null != tag)
+                favoriteId = (int) tag;
+
+            if (favoriteId == 0)
+            {
+                Log.d(TAG, "buttonFavoriteClick  add Favorite");
+                favoriteButton.setTag(1);
+                favoriteButton.setBackgroundDrawable(getResources().getDrawable(R.drawable.ic_favorite_on));
+            }
+            else
+            {
+                Log.d(TAG, "buttonFavoriteClick  remove Favorite");
+                favoriteButton.setTag(0);
+                favoriteButton.setBackgroundDrawable(getResources().getDrawable(R.drawable.ic_favorite_off));
+            }
+        }
+
+    }
+
+}
