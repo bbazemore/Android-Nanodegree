@@ -16,7 +16,8 @@
     <string name="detail_release_date">"Release Date: "</string>
     <string name="detail_movie_user_rating">TMDB user rating:</string>
 
-    <string name="key_movielist" translatable="false">com.android.bazemom.popularmovies.movielist</string>
+    <string name="key_movielist" translatable="false">com.android.bazemom.popularmovies.movielist
+    </string>
     <string name="TMDB_endpoint_url" translatable="false">https://api.themoviedb.org/3</string>
     <string name="TMDB_image_base_url" translatable="false">http://image.tmdb.org/t/p/</string>
 
@@ -30,10 +31,12 @@
 
     <string name="settings_backdrop_quality_low" translatable="false">w300</string>
     <string name="settings_backdrop_quality_medium" translatable="false">w500</string>
-    <string name="settings_backddrop_quality_high" translatable="false">w1280</string>
+    <string name="settings_backddrop_quality_high" translatable="false">w780</string>
 
     <string name="settings_sort_label">Populate and sort the movies by:</string>
-    <string name="settings_sort_key" translatable="false">com.android.bazemom.popularmovies.sort_order</string>
+    <string name="settings_sort_key" translatable="false">
+        com.android.bazemom.popularmovies.sort_order
+    </string>
     <string-array name="settings_sort_labels">
         <item name="settings_sort_popular_label">Popular</item>
         <item name="settings_sort_top_rated_label">Top Rated</item>
@@ -45,8 +48,12 @@
         <item>@string/settings_sort_now_playing</item>
     </string-array>
 
-    <string name="settings_image_quality_label">Image quality. Pick Low for slow internet connection.</string>
-    <string name="settings_image_quality_key" translatable="false">com.android.bazemom.popularmovies.image_quality</string>
+    <string name="settings_image_quality_label">Image quality. Pick Low for slow internet
+        connection.
+    </string>
+    <string name="settings_image_quality_key" translatable="false">
+        com.android.bazemom.popularmovies.image_quality
+    </string>
     <string-array name="settings_image_quality">
         <item name="settings_image_quality_low_label">Low</item>
         <item name="settings_image_quality_medium_label">Medium</item>
