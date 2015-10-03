@@ -22,6 +22,7 @@ import android.widget.TextView;
 
 import com.android.bazemom.popularmovies.moviebusevents.LoadMovieDetailEvent;
 import com.android.bazemom.popularmovies.moviebusevents.MovieDetailLoadedEvent;
+import com.android.bazemom.popularmovies.movielocaldb.LocalDBHelper;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 import com.squareup.picasso.Picasso;
@@ -81,6 +82,14 @@ public class DetailActivity extends AppCompatActivity {
             mViewHolder = new DetailViewHolder();
             // slide nerd was doing mRootView.setTag(mViewHolder) - I'm just keeping it in a member variable
 
+            // Set the title frame to be partially opaque so the star will show up better
+            View titleBackground = mRootView.findViewById(R.id.detail_movie_title_frame);
+            Drawable background = titleBackground.getBackground();
+            // 0-255, 255 is opaque, 204 = 80%
+            if (null != background) {
+                background.setAlpha(0xCC);
+            }
+
             // Set up the click listeners for the Detail fragment.  Unfortunately the
             // onClick attribute in the xml can only be used if the handler is in the Activity proper,
             // not the fragment
@@ -96,13 +105,24 @@ public class DetailActivity extends AppCompatActivity {
             if (intent != null && intent.hasExtra(MainActivityFragment.EXTRA_MOVIE_ID)) {
                 mMovieId = intent.getIntExtra(MainActivityFragment.EXTRA_MOVIE_ID, GUARDIANS_OF_GALAXY_ID);
 
-                // Start listening for the Movie Detail loaded event
-                receiveEvents();
+                // Is this movie cached in the local DB?
+                LocalDBHelper dbHelper = new LocalDBHelper(mRootView.getContext());
+                mMovieDetail = dbHelper.getMovieDetailFromDB(mMovieId);
+                if (null != mMovieDetail) {
+                    // We are in luck, we have the movie details handy already.
+                    // We can update the UI right away
+                    updateUI();
+                }
+                else {
+                    // We have to get the movie from the cloud
+                    // Start listening for the Movie Detail loaded event
+                    receiveEvents();
 
-                //  Now request that the movie details be loaded
-                String apiKey = mRootView.getContext().getString(R.string.movie_api_key);
-                LoadMovieDetailEvent loadMovieRequest = new LoadMovieDetailEvent(apiKey, mMovieId);
-                getBus().post(loadMovieRequest);
+                    //  Now request that the movie details be loaded
+                    String apiKey = mRootView.getContext().getString(R.string.movie_api_key);
+                    LoadMovieDetailEvent loadMovieRequest = new LoadMovieDetailEvent(apiKey, mMovieId);
+                    getBus().post(loadMovieRequest);
+                }
             }
             return mRootView;
         }
@@ -146,6 +166,8 @@ public class DetailActivity extends AppCompatActivity {
             mViewHolder.runtime.setText(runtimeText);
 
             mViewHolder.rating.setText(context.getString(R.string.detail_movie_user_rating) + Double.toString(mMovieDetail.voteAverage));
+
+            updateFavoriteButton(mViewHolder.favoriteButton);
 
             // To build an image URL, we need 3 pieces of data. The baseurl, size and filepath.
             // First get the size from the preferences, user can select high, medium or low
@@ -273,27 +295,33 @@ public class DetailActivity extends AppCompatActivity {
         }
 
         public void onClickFavoriteButton(View view) {
-            // TODO: toggle favorite on/off in database
-            ImageButton favoriteButton = (ImageButton) view;
-            int favoriteId = 0;
-            Object tag = favoriteButton.getTag();
-            if (null != tag)
-                favoriteId = (int) tag;
+            // toggle favorite on/off in database
 
-            if (favoriteId == 0)
-            {
+            if (mMovieDetail.getFavorite() == 0) {
                 Log.d(TAG, "buttonFavoriteClick  add Favorite");
-                favoriteButton.setTag(1);
-                favoriteButton.setBackgroundDrawable(getResources().getDrawable(R.drawable.ic_favorite_on));
-            }
-            else
-            {
+                mMovieDetail.setFavorite(1);  // we may order favorites later so this is an int, for now it is just on/off
+
+            } else {
                 Log.d(TAG, "buttonFavoriteClick  remove Favorite");
-                favoriteButton.setTag(0);
+                mMovieDetail.setFavorite(0);
+            }
+            updateFavoriteButton((ImageButton) view);
+
+            // Persist the favorite setting in the local database
+            LocalDBHelper dbHelper = new LocalDBHelper(mRootView.getContext());
+            dbHelper.updateMovieInLocalDB(mMovieDetail);
+        }
+
+        private void updateFavoriteButton(ImageButton favoriteButton) {
+
+            if (mMovieDetail.getFavorite() == 1) {
+                favoriteButton.setBackgroundDrawable(getResources().getDrawable(R.drawable.ic_favorite_on));
+
+            } else {
                 favoriteButton.setBackgroundDrawable(getResources().getDrawable(R.drawable.ic_favorite_off));
             }
         }
 
-    }
+    } // end DetailFragment
 
-}
+} // end class DetailActivity

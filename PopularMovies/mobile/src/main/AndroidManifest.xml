@@ -35,6 +35,16 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.android.bazemom.popularmovies.MainActivity" />
         </activity>
+        <provider
+            android:authorities="com.android.bazemom.popularmovies"
+            android:name=".movielocaldb.LocalDBProvider"
+            android:enabled="true"
+            android:exported="true"
+            android:permission="com.android.bazemom.popularmovies.movielocaldb.LICENSE_TO_WRITE"/>
+        <permission
+            android:name="com.android.bazemom.popularmovies.movielocaldb.LICENSE_TO_WRITE"
+            android:protectionLevel="normal"
+            android:label="Permission to write / change movie favorites data" />
     </application>
 
 </manifest>

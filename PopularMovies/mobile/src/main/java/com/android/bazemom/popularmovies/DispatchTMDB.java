@@ -24,6 +24,11 @@ import retrofit.client.Response;
  * This class also stores the MovieResults object from the most recent fetch of the Movie list.
  * Based on article by Josip Jurisic https://medium.com/android-news/so-retrofit-6e00670aaeb2
  */
+/*
+ * Next up - connect to a local database, store the movies that are favorites,
+ * Use ContentProvider, SyncAdapter, Loader, Cursor
+ * http://www.svenkapudija.com/2014/08/14/restful-android/
+ */
 public class DispatchTMDB {
     private final static String TAG = DispatchTMDB.class.getSimpleName();
 

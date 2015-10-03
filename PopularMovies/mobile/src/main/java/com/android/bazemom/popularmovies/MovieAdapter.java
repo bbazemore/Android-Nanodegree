@@ -77,6 +77,11 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
         String posterSize = prefs.getString(context.getString(R.string.settings_image_quality_key), context.getString(R.string.settings_poster_quality_high));
         String posterURL = context.getString(R.string.TMDB_image_base_url)  + posterSize + movie.posterPath;
 
+        /* Todo: store poster locally, Picasso load from local path first, if that image file does not
+         * exist, get the poster from the internet TMDB and then stash it locally.
+         * See http://stackoverflow.com/questions/27729976/download-and-save-images-using-picasso
+         */
+
         // Here’s an example URL: http://image.tmdb.org/t/p/w500/8uO0gUM8aNqYLs1OsTBQiXu0fEv.jpg
         Picasso.with(getContext())
         .load(posterURL)

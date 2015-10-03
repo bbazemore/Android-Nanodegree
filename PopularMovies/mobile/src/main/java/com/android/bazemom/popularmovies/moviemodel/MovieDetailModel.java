@@ -39,7 +39,7 @@ public class MovieDetailModel {
     @Expose
     private String overview;
     @Expose
-    private double popularity;
+    private float popularity;
     @SerializedName("poster_path")
     @Expose
     private String posterPath;
@@ -69,7 +69,7 @@ public class MovieDetailModel {
     private boolean video;
     @SerializedName("vote_average")
     @Expose
-    private double voteAverage;
+    private float voteAverage;
     @SerializedName("vote_count")
     @Expose
     private int voteCount;
@@ -286,7 +286,7 @@ public class MovieDetailModel {
      * @param popularity
      * The popularity
      */
-    public void setPopularity(double popularity) {
+    public void setPopularity(float popularity) {
         this.popularity = popularity;
     }
 
@@ -502,7 +502,7 @@ public class MovieDetailModel {
      * @param voteAverage
      * The vote_average
      */
-    public void setVoteAverage(double voteAverage) {
+    public void setVoteAverage(float voteAverage) {
         this.voteAverage = voteAverage;
     }
 
