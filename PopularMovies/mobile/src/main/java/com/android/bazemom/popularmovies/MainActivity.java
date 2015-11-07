@@ -6,6 +6,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.android.debug.hv.ViewServer;
+
 // Welcome to the Main Activity for Popular Movies
 // Not much happens here except:
 // 1. Setting up the application-wide connection to the TMDB database
@@ -25,6 +27,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // For debugging - View Hierarchy
+        ViewServer.get(this).addWindow(this);
 
         // Set up the RESTful connection to the movie database
         // using our buddies Retrofit and Otto.
@@ -57,6 +62,15 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+    public void onPause() {
+        super.onPause();
+        ViewServer.get(this).removeWindow(this);
+    }
+
+    public void onResume() {
+        super.onResume();
+        ViewServer.get(this).setFocusedWindow(this);
     }
 
 }
