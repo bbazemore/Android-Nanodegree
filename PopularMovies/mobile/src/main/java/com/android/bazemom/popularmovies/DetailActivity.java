@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
@@ -112,8 +113,7 @@ public class DetailActivity extends AppCompatActivity {
                     // We are in luck, we have the movie details handy already.
                     // We can update the UI right away
                     updateUI();
-                }
-                else {
+                } else {
                     // We have to get the movie from the cloud
                     // Start listening for the Movie Detail loaded event
                     receiveEvents();
@@ -165,7 +165,7 @@ public class DetailActivity extends AppCompatActivity {
             String runtimeText = String.format(context.getString(R.string.detail_runtime_format), mMovieDetail.runtime);
             mViewHolder.runtime.setText(runtimeText);
 
-            mViewHolder.rating.setText(context.getString(R.string.detail_movie_user_rating) + Double.toString(mMovieDetail.voteAverage));
+            mViewHolder.rating.setText(String.format(context.getString(R.string.detail_movie_user_rating), mMovieDetail.voteAverage));
 
             updateFavoriteButton(mViewHolder.favoriteButton);
 
@@ -180,7 +180,7 @@ public class DetailActivity extends AppCompatActivity {
                 // Here’s an example URL: http://image.tmdb.org/t/p/w500/8uO0gUM8aNqYLs1OsTBQiXu0fEv.jpg
                 Picasso.with(context)
                         .load(posterURL)
-                                //.placeholder(R.mipmap.ic_launcher) too busy looking
+                        //.placeholder(R.mipmap.ic_launcher) too busy looking
                         .error(R.mipmap.ic_error_fallback)         // optional
                         .into(mViewHolder.posterView);
             }
@@ -188,7 +188,8 @@ public class DetailActivity extends AppCompatActivity {
             // Now set the background image for the whole frame in the Detail View
             // Stolen from http://stackoverflow.com/questions/29777354/how-do-i-set-background-image-with-picasso-in-code
             // Note the image quality values are different for posters and backdrops, so fix up equivalent high, medium, and low values here.
-            if (mMovieDetail.backdropPath != null && !mMovieDetail.backdropPath.isEmpty()) {
+            if (mMovieDetail.backdropPath != null && !mMovieDetail.backdropPath.isEmpty()
+                    && mViewHolder.backgroundWidth > 0) {
                 int backgroundSizeId = R.string.settings_backddrop_quality_high;
                 if (posterSize.equals(getString(R.string.settings_poster_quality_medium))) {
                     backgroundSizeId = R.string.settings_backdrop_quality_medium;
@@ -200,25 +201,11 @@ public class DetailActivity extends AppCompatActivity {
                 backgroundURL += context.getString(backgroundSizeId);
                 backgroundURL += mMovieDetail.backdropPath;
 
-                Picasso.with(getActivity()).load(backgroundURL).into(new Target() {
 
-                    @Override
-                    public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                        // use deprecated setBackgroundDrawable for API 11 compatibility.
-                        // setBackground requires 16 which is a bit too new for now
-                        mViewHolder.detailLayout.setBackgroundDrawable(new BitmapDrawable(context.getResources(), bitmap));
-                    }
-
-                    @Override
-                    public void onBitmapFailed(final Drawable errorDrawable) {
-                        Log.d("TAG", "Picasso background image load failed");
-                    }
-
-                    @Override
-                    public void onPrepareLoad(final Drawable placeHolderDrawable) {
-                        Log.d("TAG", "Prepare background image Load");
-                    }
-                });
+                Picasso.with(getActivity()).load(backgroundURL)
+                        .resize(mViewHolder.backgroundWidth, mViewHolder.backgroundHeight)
+                        .centerInside()
+                        .into(mViewHolder.backgroundTarget);
             }
         }
 
@@ -232,8 +219,12 @@ public class DetailActivity extends AppCompatActivity {
             TextView runtime;
             TextView rating;
             ImageView posterView;
+            //FloatingActionButton favoriteButton;
             ImageButton favoriteButton;
             RelativeLayout detailLayout;
+            int backgroundWidth;
+            int backgroundHeight;
+            Target backgroundTarget;
 
             DetailViewHolder() {
                 titleView = (TextView) mRootView.findViewById(R.id.detail_movie_title);
@@ -244,7 +235,47 @@ public class DetailActivity extends AppCompatActivity {
                 posterView = (ImageView) mRootView.findViewById(R.id.detail_movie_poster);
                 favoriteButton = (ImageButton) mRootView.findViewById(R.id.detail_favorite_button);
                 detailLayout = (RelativeLayout) mRootView.findViewById(R.id.detail_movie_background);
+
+                backgroundTarget = new Target() {
+                    @Override
+                    public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                        // use deprecated setBackgroundDrawable for API 11 compatibility.
+                        // setBackground requires 16 which is a bit too new for now
+
+                        Drawable poster = new BitmapDrawable(mRootView.getContext().getResources(),
+                                bitmap);
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+                            mViewHolder.detailLayout.setBackgroundDrawable(poster);
+                        } else {
+                            mViewHolder.detailLayout.setBackground(poster);
+                        }
+                    }
+
+                    @Override
+                    public void onBitmapFailed(final Drawable errorDrawable) {
+                        Log.d("TAG", "Picasso background image load failed");
+                    }
+
+                    @Override
+                    public void onPrepareLoad(final Drawable placeHolderDrawable) {
+                        Log.d("TAG", "Prepare background image Load");
+                    }
+                };
+
+                // Get the height and width once, and only once after the fragment is laid out
+                detailLayout.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        backgroundHeight = detailLayout.getHeight(); //height is ready
+                        backgroundWidth = detailLayout.getWidth();
+                        Log.d("TAG", String.format("Background width, height from run: %d %d", backgroundWidth, backgroundHeight));
+
+                        // update the UI now we can put the poster up with the right aspect ratio
+                        updateUI();
+                    }
+                });
             }
+
         }
 
         // Use some kind of injection, so that we can swap in a mock for tests.
@@ -313,6 +344,7 @@ public class DetailActivity extends AppCompatActivity {
         }
 
         private void updateFavoriteButton(ImageButton favoriteButton) {
+            //favoriteButton.setPressed(mMovieDetail.getFavorite() == 1 ? true : false);
 
             if (mMovieDetail.getFavorite() == 1) {
                 favoriteButton.setBackgroundDrawable(getResources().getDrawable(R.drawable.ic_favorite_on));

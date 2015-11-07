@@ -2,6 +2,7 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!--item name="colorAccent">@color/floating_action_button_color</item-->
         <!-- Customize your theme here. -->
     </style>
     <!--Display  White text over a background image with black shadow to make it stand out -->
