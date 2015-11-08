@@ -27,7 +27,12 @@ public class LocalDBContract {
         public static final String PATH_MOVIE = "movie";
         public static final String PATH_TRAILER = "trailer";
         public static final String PATH_REVIEW = "review";
+        public static final String PATH_FAVORITE = "favorites";
 
+        public static Uri getFavoriteUri() {
+            return Uri.parse(CONTENT_AUTHORITY).buildUpon()
+                    .appendPath(PATH_FAVORITE).build();
+        }
 
         /* Inner class that defines the table contents of the movie table */
         public static final class MovieEntry implements BaseColumns {
@@ -93,6 +98,7 @@ public class LocalDBContract {
 
             public static final Uri CONTENT_URI =
                     BASE_CONTENT_URI.buildUpon().appendPath(PATH_TRAILER).build();
+                    }
    */
 
 }

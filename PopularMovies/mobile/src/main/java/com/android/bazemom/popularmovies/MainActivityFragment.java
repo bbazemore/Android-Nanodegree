@@ -1,10 +1,15 @@
 package com.android.bazemom.popularmovies;
 
-import android.app.Fragment;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,9 +17,12 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.TextView;
 
 import com.android.bazemom.popularmovies.moviebusevents.LoadMoviesEvent;
 import com.android.bazemom.popularmovies.moviebusevents.MoviesLoadedEvent;
+import com.android.bazemom.popularmovies.movielocaldb.LocalDBContract;
+import com.android.bazemom.popularmovies.movielocaldb.LocalDBHelper;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
@@ -25,12 +33,17 @@ import java.util.ArrayList;
  * This is where we will display a grid view of movies
  * See About.txt for more detail.
  */
-public class MainActivityFragment extends Fragment {
+public class MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
     private final static String TAG = MainActivityFragment.class.getSimpleName();
     public final static String EXTRA_MOVIE_ID = "com.android.bazemom.popularmovies.app.MovieId";
+
+    private static final int FAVORITE_LOADER = 0;
+
     private ArrayList<Movie> mMovieList;
     private MovieAdapter mAdapter;
     private GridView mGridView;
+    private TextView mHintView;
+
     DispatchTMDB dispatchTMDB = null;
     View mRootView = null;
     Bus mBus = null;
@@ -57,9 +70,11 @@ public class MainActivityFragment extends Fragment {
                              Bundle savedInstanceState) {
         mRootView =  inflater.inflate(R.layout.fragment_main, container, false);
 
+        mHintView = (TextView) mRootView.findViewById(R.id.favorite_hint);
+
         if(savedInstanceState == null || !savedInstanceState.containsKey(getString(R.string.key_movielist))) {
             // MoviesAvailableEvent (load whatever we have now)
-            mMovieList = new ArrayList<Movie>();
+            mMovieList = new ArrayList<>();
 
             // Fill the list with movies from TMDB
             updateMovies();
@@ -143,12 +158,19 @@ public class MainActivityFragment extends Fragment {
             mPageRequest = 1; // start from the beginning of the new movie type
             mCurrentlyDisplayedSortType = sortType;
         }
-        // Create an event requesting that the movie list be updated
-        LoadMoviesEvent loadMoviesRequest = new LoadMoviesEvent(apiKey, sortType, mPageRequest++);
-        getBus().post(loadMoviesRequest);
+        if (sortType.equals(getString(R.string.settings_sort_favorite))) {
+            // populate the movies from the database
+            loadFavoriteMovies();
+        }
+        else {
+            // Create an event requesting that the movie list be updated
+            LoadMoviesEvent loadMoviesRequest = new LoadMoviesEvent(apiKey, sortType, mPageRequest++);
+            getBus().post(loadMoviesRequest);
 
-        // When the request finishes we'll get called at onMoviesLoaded
+            // When the request finishes we'll get called at onMoviesLoaded
+        }
     }
+
 
     @Subscribe
     public void onMoviesLoaded(MoviesLoadedEvent event) {
@@ -213,6 +235,79 @@ public class MainActivityFragment extends Fragment {
             mCurrentlyDisplayedSortType = savedInstanceState.getString(getString(R.string.settings_sort_key));
             mCurrentlyDisplayedPosterQuality = savedInstanceState.getString(getString(R.string.settings_image_quality_key));
         }
+    }
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        Log.d(TAG, "onActivityCreated");
+        getLoaderManager().initLoader(FAVORITE_LOADER, null, this);
+        super.onActivityCreated(savedInstanceState);
+    }
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        // This is called when a new Loader needs to be created.  This
+        // fragment only uses one loader for favorites, so we don't care about checking the id.
+        Log.d(TAG, "onCreateLoader ");
+
+        // Sort order:  Most recent first
+        String sortOrder = LocalDBContract.MovieEntry.COLUMN_RELEASE_DATE + " DSC";
+        Uri favoriteUri = LocalDBContract.getFavoriteUri();
+        return new CursorLoader(getActivity(), favoriteUri,null,null,null, sortOrder );
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        Log.d(TAG, "onLoadFinished ");
+
+        // add each movie in favorites to the adapter
+        displayFavoriteMovies(data);
+    }
+    private void loadFavoriteMovies() {
+
+        LocalDBHelper dbHelper = new LocalDBHelper(getContext());
+        mMovieList = dbHelper.getMovieFavoritesFromDB();
+        if (null != mAdapter)
+            mAdapter.addAll(mMovieList);
+        // Give the user a hint if the list is empty
+        mHintView.setVisibility(mMovieList.isEmpty() ? View.VISIBLE : View.GONE);
+        /*
+        String sortOrder = LocalDBContract.MovieEntry.COLUMN_RELEASE_DATE + " DSC";
+        Uri favoriteUri = LocalDBContract.getFavoriteUri();
+        Cursor cursor = getActivity().getContentResolver().query(favoriteUri,
+                null, null, null, sortOrder);
+
+        Log.d(TAG, "loadFavoriteMovies cursor  ");
+        displayFavoriteMovies(cursor);
+        */
+
+    }
+
+    private void displayFavoriteMovies(Cursor movieCursor) {
+        mMovieList.clear();
+        // Convert from rows of data to movie object
+        if (null!= movieCursor && movieCursor.moveToFirst() ) {
+            do {
+                mMovieList.add(new Movie(movieCursor));
+            } while (movieCursor.moveToNext());
+        }
+
+        if (null != mAdapter)
+            mAdapter.addAll(mMovieList);
+          /*  Gridview automatically takes care of position while switching
+            if (mPosition != ListView.INVALID_POSITION) {
+                // If we don't need to restart the loader, and there's a desired position to restore
+                // to, do so now.
+                mGridView.smoothScrollToPosition(mPosition);
+            } */
+        // Give the user a hint if the list is empty
+        mHintView.setVisibility( mMovieList.isEmpty() ? View.VISIBLE : View.GONE);
+    }
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        Log.d(TAG, "onLoaderReset, clearing display and movie list");
+        // ??
+        mAdapter.clear();
+        mMovieList.clear();
+        //mAdapter.swapCursor(null);
     }
 }
 

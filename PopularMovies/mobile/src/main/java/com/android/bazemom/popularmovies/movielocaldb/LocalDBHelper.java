@@ -7,8 +7,11 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import com.android.bazemom.popularmovies.Movie;
 import com.android.bazemom.popularmovies.MovieDetail;
 import com.android.bazemom.popularmovies.movielocaldb.LocalDBContract.MovieEntry;
+
+import java.util.ArrayList;
 
 /**
  * Manages a local database for movie data.
@@ -131,8 +134,80 @@ public class LocalDBHelper extends SQLiteOpenHelper {
     // If it is there, return the MovieDetail object, otherwise, return null.
     public MovieDetail getMovieDetailFromDB(long movieId) {
         MovieDetail favoriteMovie = null;
+        SQLiteDatabase db = null;
+
+        // Check if the database exists. It only gets created after we have
+        // a favorite to put in it.
+        if (getDatabaseExists() == 1) {
+            String selection =  MovieEntry.COLUMN_MOVIE_TMDB_ID + "=?";
+            String[] selectTmdbIdValue = {Long.toString(movieId)};
+
+            Cursor movieCursor = null;
+            try {
+                db = getReadableDatabase();
+                movieCursor = db.query(LocalDBContract.MovieEntry.TABLE_NAME,
+                        null, // leaving "columns" null just returns all the columns.
+                        selection, // cols for "where" clause
+                        selectTmdbIdValue, // values for "where" clause
+                        null, // columns to group by
+                        null, // columns to filter by row groups
+                        null); // sort order
+            }
+            catch (Exception e) {
+                Log.d(TAG, "Exception fetching movie by id '" + selectTmdbIdValue[0] + "' from movie table. " + e.getMessage());
+            }
+
+            if (null != movieCursor && movieCursor.moveToFirst()) {
+                favoriteMovie = new MovieDetail(movieCursor);
+            }
+        }
+        if (null != db) {
+            db.close();
+        }
+        return favoriteMovie;
+    }
+
+    // Given the TMDB id for a movie, try to find it in the local favorite database.
+    // If it is there, return the MovieDetail object, otherwise, return null.
+    public ArrayList<Movie> getMovieFavoritesFromDB() {
+        ArrayList<Movie> favoriteMovieList = new ArrayList<>();
         SQLiteDatabase db = getReadableDatabase();
 
+        // Check if the database exists. It only gets created after we have
+        // a favorite to put in it.
+        if (getDatabaseExists() == 1) {
+            String selection =  MovieEntry.COLUMN_FAVORITE + "=?";
+            String[] selectTmdbIdValue = {Long.toString(1)};
+
+            Cursor movieCursor = null;
+            try {
+                movieCursor = db.query(LocalDBContract.MovieEntry.TABLE_NAME,
+                        null, // leaving "columns" null just returns all the columns.
+                        selection, // cols for "where" clause
+                        selectTmdbIdValue, // values for "where" clause
+                        null, // columns to group by
+                        null, // columns to filter by row groups
+                        null); // sort order
+            }
+            catch (Exception e) {
+                Log.d(TAG, "Exception fetching movie favorites from movie table. " + e.getMessage());
+            }
+
+            if (null!= movieCursor && movieCursor.moveToFirst() ) {
+                Log.d(TAG, "getMovieFavoritesFromDB found favorites");
+                do {
+                    favoriteMovieList.add(new Movie(movieCursor));
+                } while (movieCursor.moveToNext());
+            }
+        }
+        if (null != db) {
+            db.close();
+        }
+        return favoriteMovieList;
+    }
+
+    private int getDatabaseExists() {
+        SQLiteDatabase db = getReadableDatabase();
         if (mDatabaseExists == -1) {
             // first time through, see if db has been created on local device
             Cursor dbCursor = db.rawQuery("SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name == '" +
@@ -147,32 +222,8 @@ public class LocalDBHelper extends SQLiteOpenHelper {
                 }
             }
         }
-        // Check if the database exists. It only gets created after we have
-        // a favorite to put in it.
-        if (mDatabaseExists == 1) {
-            String selection =  MovieEntry.COLUMN_MOVIE_TMDB_ID + "=?";
-            String[] selectTmdbIdValue = {Long.toString(movieId)};
-
-            Cursor movieCursor = null;
-            try {
-                movieCursor = db.query(LocalDBContract.MovieEntry.TABLE_NAME,
-                        null, // leaving "columns" null just returns all the columns.
-                        selection, // cols for "where" clause
-                        selectTmdbIdValue, // values for "where" clause
-                        null, // columns to group by
-                        null, // columns to filter by row groups
-                        null); // sort order
-            }
-            catch (Exception e) {
-                Log.d(TAG, "Exception fetching movie by id '" + selectTmdbIdValue + "' from movie table. " + e.getMessage());
-            }
-            if (null != movieCursor && movieCursor.moveToFirst()) {
-                favoriteMovie = new MovieDetail(movieCursor);
-            }
-        }
-        if (null != db) {
-            db.close();
-        }
-        return favoriteMovie;
+        // might as well leave the database open, something else is sure to follow
+        return mDatabaseExists;
     }
+
 }

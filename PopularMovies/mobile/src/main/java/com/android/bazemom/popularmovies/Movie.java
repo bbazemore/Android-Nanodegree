@@ -1,8 +1,10 @@
 package com.android.bazemom.popularmovies;
 
+import android.database.Cursor;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.android.bazemom.popularmovies.movielocaldb.LocalDBContract;
 import com.android.bazemom.popularmovies.moviemodel.MovieModel;
 
 /*
@@ -14,6 +16,7 @@ public class Movie implements Parcelable {
     String releaseDate;
     String overview;
     String posterPath;
+    String posterLocalPath;  // for when we aren't connected to the network
     String backdropPath;
     //int runtime;
 
@@ -32,6 +35,7 @@ public class Movie implements Parcelable {
         overview = movieInput.getOverview();
         posterPath = movieInput.getPosterPath();
         backdropPath = movieInput.getBackdropPath();
+        posterLocalPath = "";
 
         popularity = movieInput.getPopularity();
         voteAverage = movieInput.getVoteAverage();
@@ -46,6 +50,7 @@ public class Movie implements Parcelable {
         releaseDate = in.readString();
         overview = in.readString();
         posterPath = in.readString();
+        posterLocalPath = in.readString();
         backdropPath = in.readString();
 
         popularity = in.readDouble();
@@ -53,7 +58,27 @@ public class Movie implements Parcelable {
         voteCount = in.readInt();
         favorite =  in.readInt();
     }
+    // Initialize from local database
+    public Movie(Cursor favoriteCursor) {
+        if (null != favoriteCursor) {
+            title = favoriteCursor.getString(LocalDBContract.MovieEntry.COL_INDEX_MOVIE_TITLE);
+            id = favoriteCursor.getInt(LocalDBContract.MovieEntry.COL_INDEX_MOVIE_TMDB_ID);
+            releaseDate = favoriteCursor.getString(LocalDBContract.MovieEntry.COL_INDEX_RELEASE_DATE);
+            overview = favoriteCursor.getString(LocalDBContract.MovieEntry.COL_INDEX_OVERVIEW);
+            posterPath = favoriteCursor.getString(LocalDBContract.MovieEntry.COL_INDEX_POSTER_PATH);
+            posterLocalPath = favoriteCursor.getString(LocalDBContract.MovieEntry.COL_INDEX_POSTER_LOCAL_PATH);
+            backdropPath = favoriteCursor.getString(LocalDBContract.MovieEntry.COL_INDEX_BACKDROP_PATH);
 
+            popularity = favoriteCursor.getDouble(LocalDBContract.MovieEntry.COL_INDEX_POPULARITY);
+            voteAverage = favoriteCursor.getDouble(LocalDBContract.MovieEntry.COL_INDEX_VOTE_AVERAGE);
+            voteCount = favoriteCursor.getInt(LocalDBContract.MovieEntry.COL_INDEX_VOTE_COUNT);
+            favorite = favoriteCursor.getInt(LocalDBContract.MovieEntry.COL_INDEX_FAVORITE);
+        }
+        else
+        {
+            title = "*uninitialized*";  // no context to do the proper thing and use a resource string here.
+        }
+    }
     @Override
     public int describeContents() {
         // no special processing due to child classes or whatnot
@@ -69,6 +94,7 @@ public class Movie implements Parcelable {
         parcel.writeString(releaseDate);
         parcel.writeString(overview);
         parcel.writeString(posterPath);
+        parcel.writeString(posterLocalPath);
         parcel.writeString(backdropPath);
 
         parcel.writeDouble(popularity);

@@ -2,6 +2,7 @@ package com.android.bazemom.popularmovies.movielocaldb;
 
 import android.annotation.TargetApi;
 import android.content.ContentProvider;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
@@ -10,7 +11,7 @@ import android.net.Uri;
 
 /**
  * Expose the Movie database that lives on the phone / device to 
- * anyone implementing the stan
+ * anyone accessing it by the URIs
  */
 public class LocalDBProvider extends ContentProvider {
     
@@ -98,7 +99,7 @@ public class LocalDBProvider extends ContentProvider {
             final String authority = LocalDBContract.CONTENT_AUTHORITY;
 
             // For each type of URI you want to add, create a corresponding code.
-            matcher.addURI(authority, LocalDBContract.PATH_MOVIE, FAVORITE_MOVIE_LIST);
+            matcher.addURI(authority, LocalDBContract.PATH_FAVORITE, FAVORITE_MOVIE_LIST);
             matcher.addURI(authority, LocalDBContract.PATH_MOVIE + "/#", MOVIE_WITH_ID);
             matcher.addURI(authority, LocalDBContract.PATH_REVIEW + "/#", REVIEW);
             matcher.addURI(authority, LocalDBContract.PATH_TRAILER + "/#", TRAILER);
@@ -142,6 +143,7 @@ public class LocalDBProvider extends ContentProvider {
             }
         }
 
+
         @Override
         public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs,
                             String sortOrder) {
@@ -182,7 +184,9 @@ public class LocalDBProvider extends ContentProvider {
                 default:
                     throw new UnsupportedOperationException("Unknown uri: " + uri);
             }
-            retCursor.setNotificationUri(getContext().getContentResolver(), uri);
+            ContentResolver resolver = getContext().getContentResolver();
+            if (null != resolver)
+                retCursor.setNotificationUri(resolver, uri);
             return retCursor;
         }
 
@@ -209,7 +213,9 @@ public class LocalDBProvider extends ContentProvider {
                 default:
                     throw new UnsupportedOperationException("Unknown uri: " + uri);
             }
-            getContext().getContentResolver().notifyChange(uri, null);
+            ContentResolver resolver = getContext().getContentResolver();
+            if (null != resolver)
+                resolver.notifyChange(uri, null);
             return returnUri;
         }
 
@@ -231,8 +237,9 @@ public class LocalDBProvider extends ContentProvider {
                     throw new UnsupportedOperationException("Unknown uri: " + uri);
             }
             // Because a null deletes all rows
-            if (rowsDeleted != 0) {
-                getContext().getContentResolver().notifyChange(uri, null);
+            ContentResolver resolver = getContext().getContentResolver();
+            if (null != resolver && rowsDeleted != 0) {
+                resolver.notifyChange(uri, null);
             }
             return rowsDeleted;
         }
@@ -256,8 +263,9 @@ public class LocalDBProvider extends ContentProvider {
                 default:
                     throw new UnsupportedOperationException("Unsupported uri: " + uri);
             }
-            if (rowsUpdated != 0) {
-                getContext().getContentResolver().notifyChange(uri, null);
+            ContentResolver resolver = getContext().getContentResolver();
+            if (null != resolver && rowsUpdated != 0) {
+                resolver.notifyChange(uri, null);
             }
             return rowsUpdated;
         }
@@ -278,6 +286,7 @@ public class LocalDBProvider extends ContentProvider {
                                 returnCount++;
                             }
                         }
+
                         db.setTransactionSuccessful();
                     } finally {
                         db.endTransaction();

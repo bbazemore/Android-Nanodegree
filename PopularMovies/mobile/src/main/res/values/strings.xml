@@ -8,6 +8,9 @@
     <string name="movie_sort_by_release_date" translatable="false">release_date.desc</string>
     <string name="movie_sort_by_vote" translatable="false">vote_average.desc</string>
 
+    <string name="main_favorite_hint">You do not have any Favorite movies selected.
+        Select "Popular" or another movie type in the Settings menu. Then click on a movie.
+        In the movie detail view, click the Favorite button.  Now you will have a Favorite movie to view.</string>
     <string name="detail_runtime_format">Runtime: %d minutes</string>
     <string name="detail_movie_default_overview">Overview</string>
     <string name="detail_movie_default_rating">Rating</string>
@@ -24,6 +27,7 @@
     <string name="settings_sort_popular" translatable="false">popular</string>
     <string name="settings_sort_top_rated" translatable="false">top_rated</string>
     <string name="settings_sort_now_playing" translatable="false">now_playing</string>
+    <string name="settings_sort_favorite" translatable="false">favorite</string>
 
     <string name="settings_poster_quality_low" translatable="false">w92</string>
     <string name="settings_poster_quality_medium" translatable="false">w185</string>
@@ -41,11 +45,13 @@
         <item name="settings_sort_popular_label">Popular</item>
         <item name="settings_sort_top_rated_label">Top Rated</item>
         <item name="settings_sort_now_playing_label">Now Playing</item>
+        <item name="settings_sort_favorite_label">Favorites</item>
     </string-array>
     <string-array name="settings_sort_values">
         <item>@string/settings_sort_popular</item>
         <item>@string/settings_sort_top_rated</item>
         <item>@string/settings_sort_now_playing</item>
+        <item>@string/settings_sort_favorite</item>
     </string-array>
 
     <string name="settings_image_quality_label">Image quality. Pick Low for slow internet
