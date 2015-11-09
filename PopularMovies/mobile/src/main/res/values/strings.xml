@@ -61,6 +61,9 @@
         com.android.bazemom.popularmovies.image_quality
     </string>
     <string name="key_gridview_position">gridview_position</string>
+    <string name="tab_title_detail">DETAIL</string>
+    <string name="tab_title_review">REVIEW</string>
+    <string name="tab_title_trailer">TRAILER</string>
     <string-array name="settings_image_quality">
         <item name="settings_image_quality_low_label">Low</item>
         <item name="settings_image_quality_medium_label">Medium</item>

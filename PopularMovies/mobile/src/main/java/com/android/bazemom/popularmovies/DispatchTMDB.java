@@ -5,12 +5,15 @@ import android.util.Log;
 
 import com.android.bazemom.popularmovies.moviebusevents.LoadMovieDetailEvent;
 import com.android.bazemom.popularmovies.moviebusevents.LoadMoviesEvent;
+import com.android.bazemom.popularmovies.moviebusevents.LoadReviewsEvent;
 import com.android.bazemom.popularmovies.moviebusevents.MovieApiErrorEvent;
 import com.android.bazemom.popularmovies.moviebusevents.MovieDetailLoadedEvent;
 import com.android.bazemom.popularmovies.moviebusevents.MoviesAvailableEvent;
 import com.android.bazemom.popularmovies.moviebusevents.MoviesLoadedEvent;
+import com.android.bazemom.popularmovies.moviebusevents.ReviewsLoadedEvent;
 import com.android.bazemom.popularmovies.moviemodel.MovieDetailModel;
 import com.android.bazemom.popularmovies.moviemodel.MovieResults;
+import com.android.bazemom.popularmovies.moviemodel.MovieReviewListModel;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Produce;
 import com.squareup.otto.Subscribe;
@@ -40,7 +43,12 @@ public class DispatchTMDB {
     private MovieResults mLastMovieSet = null; // cache results for now
     private Boolean mAPIRequestInProcess = false;
     private int mAPIDetailRequestMovieId = 0;
+
     private int mPageRequested = 1;  // request the next page each time
+    private int mAPIReviewRequestMovieId = 0;
+    private int mReviewPageRequested = 1;
+    private int mAPITrailerRequestMovieId = 0;
+    private int mTrailerPageRequested = 1;
 
     public synchronized static DispatchTMDB getInstance(@NonNull  MovieDBService movieAPI, Bus bus) {
         if (sInstance == null) {
@@ -159,4 +167,48 @@ public class DispatchTMDB {
         // Assuming 'lastMovieSet' exists.
         return new MoviesAvailableEvent(this.mLastMovieDetail);
     } */
+    ////////////////////////////////////////////
+    // Start of Movie Reviews support
+    ///////////////////////////////////////////
+    @Subscribe
+    public void onLoadReviewsEvent(LoadReviewsEvent event) {
+        if (mAPIReviewRequestMovieId == event.movieId)
+            // If we already have an outstanding request for this movie, don't send out a duplicate request
+            // There is no sense in having multiple network calls and updating the UI multiple times
+            return;
+        mAPIReviewRequestMovieId = event.movieId;
+
+        // The UI might ask us to start over from the beginning.
+        // If it doesn't, then page=2+ and we keep on with the next page requested, which this class tracks.
+        if (event.page == 1) {
+            // If we've just requested page 1, then our pageRequested counter will show 2.
+            // Only request page 1 if we haven't just requested it.
+            if (mReviewPageRequested != 2)
+                mReviewPageRequested = 1;
+        }
+
+        // Get the detailed info for one movie, if we aren't already past the last page of results
+        if (mReviewPageRequested != -1) {
+            movieDBService.getMovieReviews(event.movieId, mReviewPageRequested, event.api_key, new retrofit.Callback<MovieReviewListModel>() {
+                @Override
+                public void success(MovieReviewListModel response, Response rawResponse) {
+                    Log.d(TAG, "Reviews received!");
+                    //mLastMovieDetail = response;
+                    mBus.post(new ReviewsLoadedEvent(response));
+                    mAPIReviewRequestMovieId = 0;  // request is no longer outstanding
+                    if ((response.getTotalPages() - response.getPage()) == 0)
+                        mReviewPageRequested = -1;  // end of the line
+                    else
+                        mReviewPageRequested++;
+                }
+
+                @Override
+                public void failure(RetrofitError error) {
+                    Log.d(TAG, "Reviews failed");
+                    mBus.post(new MovieApiErrorEvent(error));
+                    mAPIReviewRequestMovieId = 0;  // request is no longer outstanding
+                }
+            });
+        }
+    }
 }

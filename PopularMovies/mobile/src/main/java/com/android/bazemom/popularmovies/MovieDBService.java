@@ -4,6 +4,8 @@ import android.support.annotation.NonNull;
 
 import com.android.bazemom.popularmovies.moviemodel.MovieDetailModel;
 import com.android.bazemom.popularmovies.moviemodel.MovieResults;
+import com.android.bazemom.popularmovies.moviemodel.MovieReviewListModel;
+import com.android.bazemom.popularmovies.moviemodel.MovieVideoListModel;
 
 import retrofit.Callback;
 import retrofit.http.GET;
@@ -19,6 +21,9 @@ import retrofit.http.Query;
 public interface MovieDBService {
     // Callback for the parsed response is the last parameter
     //String videoRequest = "/videos";  // for V2 trailers
+    // http://api.themoviedb.org/3/movie/550/videos?api_key=
+    // http://api.themoviedb.org/3/movie/118340/reviews?api_key=
+    //
 
     String KEY_PARAM = "api_key";
     String PAGE_LIMIT_PARAM = "page"; // range = 1-1,000.
@@ -30,5 +35,11 @@ public interface MovieDBService {
     // Get details for an individual movie, identified in movieId
     @GET("/movie/{movieId}")
     void getMovieDetails(@Path("movieId") long movieId, @Query(KEY_PARAM) String apiKey, @NonNull Callback<MovieDetailModel> callback);
+
+    @GET("/movie/{movieId}/reviews")
+    void getMovieReviews(@Path("movieId") long movieId, @Query(PAGE_LIMIT_PARAM) int page, @Query(KEY_PARAM) String apiKey, @NonNull Callback<MovieReviewListModel> callback);
+
+    @GET("/movie/{movieId}/videos")
+    void getMovieVideos(@Path("movieId") long movieId, @Query(PAGE_LIMIT_PARAM) int page, @Query(KEY_PARAM) String apiKey, @NonNull Callback<MovieVideoListModel> callback);
 
 }

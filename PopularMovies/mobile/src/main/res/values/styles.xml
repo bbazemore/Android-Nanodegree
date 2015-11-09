@@ -2,6 +2,8 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="windowActionBar">false</item>  <!-- so we can do tab toolbar for reviews / videos -->
+        <item name="windowNoTitle">true</item>
         <!--item name="colorAccent">@color/floating_action_button_color</item-->
         <!-- Customize your theme here. -->
     </style>
