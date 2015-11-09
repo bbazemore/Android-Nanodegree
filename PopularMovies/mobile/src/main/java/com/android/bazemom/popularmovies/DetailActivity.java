@@ -9,9 +9,17 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 
+import com.android.bazemom.popularmovies.moviebusevents.LoadMovieDetailEvent;
+import com.android.bazemom.popularmovies.moviebusevents.LoadReviewsEvent;
+import com.android.bazemom.popularmovies.moviebusevents.MovieDetailLoadedEvent;
 import com.android.bazemom.popularmovies.moviebusevents.ReviewsLoadedEvent;
+import com.android.bazemom.popularmovies.movielocaldb.LocalDBHelper;
+import com.android.bazemom.popularmovies.moviemodel.ReviewModel;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -33,21 +41,20 @@ public class DetailActivity extends AppCompatActivity {
     private View mRootView;
     private DetailTabViewHolder mViewHolder;
 
+    protected int mReviewPageRequest = 0;
+    protected List<ReviewModel> mReviewList;
+
+    protected MovieDetail mMovieDetail;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_detail);
         mRootView = findViewById(R.id.detail_container);
-        //setHasOptionsMenu(true);
+        mReviewList = new ArrayList<ReviewModel>();
 
-        // First time through, fill in a fragment for each of the three detail tabs:
-        // Detail, Review, Trailers
-        /*if (savedInstanceState == null) {
-            getSupportFragmentManager().beginTransaction()
-                    .add(R.id.detail_container, new DetailFragment())
-                    .commit();
-        } */
+        //setHasOptionsMenu(true);
 
         // Get the ids of the View elements so we don't have to fetch them over and over
         mViewHolder = new DetailTabViewHolder();
@@ -56,16 +63,16 @@ public class DetailActivity extends AppCompatActivity {
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra(MainActivityFragment.EXTRA_MOVIE_ID)) {
             mMovieId = intent.getIntExtra(MainActivityFragment.EXTRA_MOVIE_ID, GUARDIANS_OF_GALAXY_ID);
-        }
-        else mMovieId = GUARDIANS_OF_GALAXY_ID;
+        } else mMovieId = GUARDIANS_OF_GALAXY_ID;
+
+        // Start the data cooking
+        getDetails(1);
+        getReviews(1);
 
         // Tab layout set up
         setSupportActionBar(mViewHolder.toolbar);
         setupViewPager(mViewHolder.viewPager);
         mViewHolder.tabLayout.setupWithViewPager(mViewHolder.viewPager);
-
-        // Allow the tabs to get movie details, reviews and trailers through our shared bus
-        receiveEvents();
     }
 
     // Handy dandy little class to cache the View ids so we don't keep looking for them every
@@ -74,6 +81,8 @@ public class DetailActivity extends AppCompatActivity {
         Toolbar toolbar;
         ViewPager viewPager;
         TabLayout tabLayout;
+        DetailFragment detailFragment;
+        ReviewFragment reviewFragment;
 
         DetailTabViewHolder() {
             toolbar = (Toolbar) mRootView.findViewById(R.id.tabanim_toolbar);
@@ -85,22 +94,27 @@ public class DetailActivity extends AppCompatActivity {
                 @Override
                 public void onTabSelected(TabLayout.Tab tab) {
                     viewPager.setCurrentItem(tab.getPosition());
-                   /* switch (tab.getPosition()) {
+                    switch (tab.getPosition()) {
                         case 0:
-                            showToast("One");
+                            Log.d(TAG, "Tab select detail");
+                            mViewHolder.detailFragment.updateUI();
                             break;
                         case 1:
-                            showToast("Two");
+                            Log.d(TAG, "Tab select review");
+                            mViewHolder.reviewFragment.updateUI();
                             break;
                         case 2:
-                            showToast("Three");
+                            Log.d(TAG, "Tab select video");
+                           // mViewHolder.videoFragment.updateUI();
                             break;
-                    } */
+                    }
 
                 }
+
                 @Override
                 public void onTabUnselected(TabLayout.Tab tab) {
                 }
+
                 @Override
                 public void onTabReselected(TabLayout.Tab tab) {
                 }
@@ -145,11 +159,15 @@ public class DetailActivity extends AppCompatActivity {
 
     private void setupViewPager(ViewPager viewPager) {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
-        adapter.addFrag(new DetailFragment(this, mMovieId), getString(R.string.tab_title_detail));
-        adapter.addFrag(new ReviewFragment(this, mMovieId), getString(R.string.tab_title_review));
+        mViewHolder.detailFragment = new DetailFragment(this, mMovieId);
+        mViewHolder.reviewFragment = new ReviewFragment(this, mMovieId);
+
+        adapter.addFrag(mViewHolder.detailFragment, getString(R.string.tab_title_detail));
+        adapter.addFrag(mViewHolder.reviewFragment, getString(R.string.tab_title_review));
         //adapter.addFrag(new TrailerFragment(), getString(R.string.tab_title_trailer));
         viewPager.setAdapter(adapter);
     }
+
     @Override
     public void onResume() {
         Log.d(TAG, "on resume");
@@ -208,9 +226,96 @@ public class DetailActivity extends AppCompatActivity {
             }
         }
     }
+
+    // moviesLoaded gets called when we get a list of movies back from TMDB
+    @Subscribe
+    public void movieDetailLoaded(MovieDetailLoadedEvent event) {
+        // load the movie data into our movies list
+        mMovieDetail = event.movieResult;
+        Log.i(TAG, "movie detail Loaded ");
+        updateDetailUI();
+    }
+
+    private void updateDetailUI() {
+        if (null != mViewHolder
+                && null != mViewHolder.detailFragment) {
+            try {
+                mViewHolder.detailFragment.updateUI();
+            } catch (Exception e) {
+                // not a big deal
+                Log.d(TAG, "DetailFragment not ready for update: " + e.getLocalizedMessage());
+            }
+        }
+    }
+
+
+    private void getDetails(int nextPage) {
+        // Is this movie cached in the local DB?
+        LocalDBHelper dbHelper = new LocalDBHelper(mRootView.getContext());
+        mMovieDetail = dbHelper.getMovieDetailFromDB(mMovieId);
+        if (null != mMovieDetail) {
+            // We are in luck, we have the movie details handy already.
+            // We can update the UI right away
+            updateDetailUI();
+        } else {
+            // We have to get the movie from the cloud
+            // Start listening for the Movie Detail loaded event
+            receiveEvents();
+
+            //  Now request that the movie details be loaded
+            String apiKey = mRootView.getContext().getString(R.string.movie_api_key);
+            LoadMovieDetailEvent loadMovieRequest = new LoadMovieDetailEvent(apiKey, mMovieId);
+
+            getBus().post(loadMovieRequest);
+        }
+    }
+
     // reviewsLoaded gets called when we get a list of reviews back from TMDB
     @Subscribe
     public void reviewsLoaded(ReviewsLoadedEvent event) {
-        Log.i(TAG, "reviews Loaded callback! ");
+        Log.i(TAG, "reviews Loaded callback! Number of reviews: " + event.reviewResults.size());
+
+        // load the movie data into our movies list
+        mReviewList.addAll(event.reviewResults);
+
+        if (null != mViewHolder
+                && null != mViewHolder.reviewFragment) {
+            try {
+                mViewHolder.reviewFragment.updateUI();
+            } catch (Exception e) {
+                // not a big deal
+                Log.d(TAG, "ReviewFragment not ready for update: " + e.getLocalizedMessage());
+            }
+        }
+
+        // if we know the number of reviews and they aren't going to change
+        if (event.endOfInput) {
+            //mViewHolder.recyclerView.setHasFixedSize(true);
+        } else {
+            // Ask for another page of reviews
+            getReviews(event.currentPage + 1);
+        }
+    }
+
+    protected void getReviews(int nextPage) {
+        //  TODO: Is this movie cached in the local DB?
+        /*LocalDBHelper dbHelper = new LocalDBHelper(mRootView.getContext());
+        mReviewList = dbHelper.getMovieReviewsFromDB(mMovieId);
+        if (null != mReviewList) {
+            // We are in luck, we have the movie details handy already.
+            // We can update the UI right away
+            updateUI();
+        } else { */
+        // We have to get the movie from the cloud
+        // Start listening for the Reviews loaded event
+        receiveEvents();
+
+        //  Now request that the reviews be loaded
+        String apiKey = mRootView.getContext().getString(R.string.movie_api_key);
+        LoadReviewsEvent loadReviewsRequest = new LoadReviewsEvent(apiKey, mMovieId, nextPage);
+
+        Log.i(TAG, "request reviews");
+        getBus().post(loadReviewsRequest);
+        //}
     }
 } // end class DetailActivity

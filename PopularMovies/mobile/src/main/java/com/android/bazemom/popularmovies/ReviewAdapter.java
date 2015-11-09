@@ -48,7 +48,7 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ViewHolder
                 .inflate(R.layout.list_item_review, parent, false);
         // TODO: set the view's size, margins, paddings and layout parameters
 
-        ViewHolder vh = new ViewHolder((TextView) v);
+        ViewHolder vh = new ViewHolder(v);
         return vh;
     }
 

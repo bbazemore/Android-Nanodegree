@@ -20,10 +20,7 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.android.bazemom.popularmovies.moviebusevents.LoadMovieDetailEvent;
-import com.android.bazemom.popularmovies.moviebusevents.MovieDetailLoadedEvent;
 import com.android.bazemom.popularmovies.movielocaldb.LocalDBHelper;
-import com.squareup.otto.Subscribe;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
@@ -37,7 +34,6 @@ import java.lang.ref.WeakReference;
     private int mMovieId;
     private View mRootView;
     private DetailViewHolder mViewHolder;
-    private MovieDetail mMovieDetail;
     final WeakReference< DetailActivity> mDetailActivity;
 
     // private ShareActionProvider mShareActionProvider;  // V2?
@@ -78,26 +74,7 @@ import java.lang.ref.WeakReference;
         });
         int movieId;
 
-    // Is this movie cached in the local DB?
-    LocalDBHelper dbHelper = new LocalDBHelper(mRootView.getContext());
-    mMovieDetail = dbHelper.getMovieDetailFromDB(mMovieId);
-    if (null != mMovieDetail) {
-        // We are in luck, we have the movie details handy already.
-        // We can update the UI right away
-        updateUI();
-    } else {
-        // We have to get the movie from the cloud
-        // Start listening for the Movie Detail loaded event
-       // mDetailActivity.receiveEvents();
-
-        //  Now request that the movie details be loaded
-        String apiKey = mRootView.getContext().getString(R.string.movie_api_key);
-        LoadMovieDetailEvent loadMovieRequest = new LoadMovieDetailEvent(apiKey, mMovieId);
-
-        final DetailActivity da = mDetailActivity.get();
-        da.getBus().post(loadMovieRequest);
-    }
-    return mRootView;
+        return mRootView;
     }
 
     public void onResume() {
@@ -105,11 +82,11 @@ import java.lang.ref.WeakReference;
         // We are back on display. Pay attention to movie results again.
         updateUI();
     }
-    private void updateUI() {
+    protected void updateUI() {
         if (mRootView == null)
             return;
-
-        if (mMovieDetail == null)
+        final DetailActivity da = mDetailActivity.get();
+        if (da.mMovieDetail == null)
             // not ready for any more detail right now
             // If I decided to pass the Movie object as the Extra in the intent,
             // I would be able to fill in most of the info now.  If the detail is too
@@ -117,16 +94,16 @@ import java.lang.ref.WeakReference;
             return;
 
         final Context context = mRootView.getContext();
-        mViewHolder.titleView.setText(mMovieDetail.title);
-        mViewHolder.overview.setText(mMovieDetail.overview);
-        mViewHolder.releaseDate.setText(context.getString(R.string.detail_release_date) + mMovieDetail.releaseDate);
+        mViewHolder.titleView.setText(da.mMovieDetail.title);
+        mViewHolder.overview.setText(da.mMovieDetail.overview);
+        mViewHolder.releaseDate.setText(context.getString(R.string.detail_release_date) + da.mMovieDetail.releaseDate);
 
         // A little convoluted here to support internationalization later. Stuff the runtime
         // in minutes into a formatted string.  The placement of the number may vary in other languages.
-        String runtimeText = String.format(context.getString(R.string.detail_runtime_format), mMovieDetail.runtime);
+        String runtimeText = String.format(context.getString(R.string.detail_runtime_format), da.mMovieDetail.runtime);
         mViewHolder.runtime.setText(runtimeText);
 
-        mViewHolder.rating.setText(String.format(context.getString(R.string.detail_movie_user_rating), mMovieDetail.voteAverage));
+        mViewHolder.rating.setText(String.format(context.getString(R.string.detail_movie_user_rating), da.mMovieDetail.voteAverage));
 
         updateFavoriteButton(mViewHolder.favoriteButton);
 
@@ -135,8 +112,8 @@ import java.lang.ref.WeakReference;
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
         String posterSize = prefs.getString(getString(R.string.settings_image_quality_key), getString(R.string.settings_poster_quality_high));
 
-        if (mMovieDetail.posterPath != null && !mMovieDetail.posterPath.isEmpty()) {
-            String posterURL = context.getString(R.string.TMDB_image_base_url) + posterSize + mMovieDetail.posterPath;
+        if (da.mMovieDetail.posterPath != null && !da.mMovieDetail.posterPath.isEmpty()) {
+            String posterURL = context.getString(R.string.TMDB_image_base_url) + posterSize + da.mMovieDetail.posterPath;
 
             // Here’s an example URL: http://image.tmdb.org/t/p/w500/8uO0gUM8aNqYLs1OsTBQiXu0fEv.jpg
             Picasso.with(context)
@@ -149,7 +126,7 @@ import java.lang.ref.WeakReference;
         // Now set the background image for the whole frame in the Detail View
         // Stolen from http://stackoverflow.com/questions/29777354/how-do-i-set-background-image-with-picasso-in-code
         // Note the image quality values are different for posters and backdrops, so fix up equivalent high, medium, and low values here.
-        if (mMovieDetail.backdropPath != null && !mMovieDetail.backdropPath.isEmpty()
+        if (da.mMovieDetail.backdropPath != null && !da.mMovieDetail.backdropPath.isEmpty()
                 && mViewHolder.backgroundWidth > 0) {
             int backgroundSizeId = R.string.settings_backddrop_quality_high;
             if (posterSize.equals(getString(R.string.settings_poster_quality_medium))) {
@@ -160,7 +137,7 @@ import java.lang.ref.WeakReference;
 
             String backgroundURL = context.getString(R.string.TMDB_image_base_url);
             backgroundURL += context.getString(backgroundSizeId);
-            backgroundURL += mMovieDetail.backdropPath;
+            backgroundURL += da.mMovieDetail.backdropPath;
 
 
             Picasso.with(getActivity()).load(backgroundURL)
@@ -240,38 +217,28 @@ import java.lang.ref.WeakReference;
     } // end DetailViewHolder
 
 
-
-    // moviesLoaded gets called when we get a list of movies back from TMDB
-    @Subscribe
-    public void movieDetailLoaded(MovieDetailLoadedEvent event) {
-        // load the movie data into our movies list
-        mMovieDetail = event.movieResult;
-        Log.i(TAG, "movie detail Loaded ");
-        updateUI();
-    }
-
     public void onClickFavoriteButton(View view) {
         // toggle favorite on/off in database
-
-        if (mMovieDetail.getFavorite() == 0) {
+        final DetailActivity da = mDetailActivity.get();
+        if (da.mMovieDetail.getFavorite() == 0) {
             Log.d(TAG, "buttonFavoriteClick  add Favorite");
-            mMovieDetail.setFavorite(1);  // we may order favorites later so this is an int, for now it is just on/off
+            da.mMovieDetail.setFavorite(1);  // we may order favorites later so this is an int, for now it is just on/off
 
         } else {
             Log.d(TAG, "buttonFavoriteClick  remove Favorite");
-            mMovieDetail.setFavorite(0);
+            da.mMovieDetail.setFavorite(0);
         }
         updateFavoriteButton((ImageButton) view);
 
         // Persist the favorite setting in the local database
         LocalDBHelper dbHelper = new LocalDBHelper(mRootView.getContext());
-        dbHelper.updateMovieInLocalDB(mMovieDetail);
+        dbHelper.updateMovieInLocalDB(da.mMovieDetail);
     }
 
     private void updateFavoriteButton(ImageButton favoriteButton) {
         //favoriteButton.setPressed(mMovieDetail.getFavorite() == 1 ? true : false);
-
-        if (mMovieDetail.getFavorite() == 1) {
+        final DetailActivity da = mDetailActivity.get();
+        if (da.mMovieDetail.getFavorite() == 1) {
             favoriteButton.setBackgroundDrawable(getResources().getDrawable(R.drawable.ic_favorite_on));
 
         } else {

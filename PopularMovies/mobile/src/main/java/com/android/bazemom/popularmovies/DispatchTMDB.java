@@ -145,9 +145,12 @@ public class DispatchTMDB {
         movieDBService.getMovieDetails(event.movieId, event.api_key, new retrofit.Callback<MovieDetailModel>() {
             @Override
             public void success (MovieDetailModel response, Response rawResponse){
-                //mLastMovieDetail = response;
-                mBus.post(new MovieDetailLoadedEvent(response));
                 mAPIDetailRequestMovieId = 0;  // request is no longer outstanding
+                try {
+                    mBus.post(new MovieDetailLoadedEvent(response));
+                } catch (Exception e) {
+                    Log.e(TAG, "MovieDetails Callback failed to post MovieDetailLoadedEvent: " + e.getLocalizedMessage());
+                }
             }
 
             @Override
@@ -193,13 +196,17 @@ public class DispatchTMDB {
                 @Override
                 public void success(MovieReviewListModel response, Response rawResponse) {
                     Log.d(TAG, "Reviews received!");
-                    //mLastMovieDetail = response;
-                    mBus.post(new ReviewsLoadedEvent(response));
                     mAPIReviewRequestMovieId = 0;  // request is no longer outstanding
                     if ((response.getTotalPages() - response.getPage()) == 0)
                         mReviewPageRequested = -1;  // end of the line
                     else
                         mReviewPageRequested++;
+                    try {
+                        //mLastMovieDetail = response;
+                        mBus.post(new ReviewsLoadedEvent(response));
+                    } catch (Exception e) {
+                        Log.e(TAG, "Reviews Callback failed to post ReviewsLoadedEvent: " + e.getLocalizedMessage());
+                    }
                 }
 
                 @Override

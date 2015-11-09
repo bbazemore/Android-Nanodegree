@@ -13,13 +13,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.android.bazemom.popularmovies.moviebusevents.LoadReviewsEvent;
-import com.android.bazemom.popularmovies.moviebusevents.ReviewsLoadedEvent;
-import com.android.bazemom.popularmovies.moviemodel.ReviewModel;
-import com.squareup.otto.Subscribe;
-
 import java.lang.ref.WeakReference;
-import java.util.List;
 
 /**
  * Tab that displays the reviews for the selected movie
@@ -32,8 +26,6 @@ public class ReviewFragment extends Fragment {
     private int mMovieId;
     private View mRootView;
     private ReviewViewHolder mViewHolder;
-    private int mPageRequest = 0;
-    private List<ReviewModel> mReviewList;
 
     ReviewAdapter adapter;
 
@@ -56,16 +48,14 @@ public class ReviewFragment extends Fragment {
         mViewHolder.recyclerView.setLayoutManager(linearLayoutManager);
         updateUI();
 
-        // get the reviews, starting at page 1
-        getReviews(1);
-
         return mRootView;
     }
 
     // Once mReviewList is filled in, get the adapter to fill in the recycler view
     void updateUI() {
         Log.d(TAG, "updateUI");
-        adapter = new ReviewAdapter(mReviewList);
+        final DetailActivity da = mDetailActivity.get();
+        adapter = new ReviewAdapter(da.mReviewList);
         mViewHolder.recyclerView.setAdapter(adapter);
     }
     class ReviewViewHolder {
@@ -92,43 +82,4 @@ public class ReviewFragment extends Fragment {
             });
         }
     } // end ReviewViewHolder
-
-    // reviewsLoaded gets called when we get a list of reviews back from TMDB
-    @Subscribe
-    public void reviewsLoaded(ReviewsLoadedEvent event) {
-        Log.i(TAG, "reviews Loaded callback! ");
-
-        // load the movie data into our movies list
-        mReviewList.addAll(event.reviewResults);
-
-        // if we know the number of reviews and they aren't going to change
-        if (event.endOfInput)
-            mViewHolder.recyclerView.setHasFixedSize(true);
-        else {
-            // Ask for another page of reviews
-            getReviews(event.currentPage+1);
-        }
-        updateUI();
-    }
-
-    private void getReviews(int nextPage) {
-        //  TODO: Is this movie cached in the local DB?
-        /*LocalDBHelper dbHelper = new LocalDBHelper(mRootView.getContext());
-        mReviewList = dbHelper.getMovieReviewsFromDB(mMovieId);
-        if (null != mReviewList) {
-            // We are in luck, we have the movie details handy already.
-            // We can update the UI right away
-            updateUI();
-        } else { */
-        // We have to get the movie reviews from the cloud
-        //  Now request that the reviews be loaded
-        String apiKey = mRootView.getContext().getString(R.string.movie_api_key);
-        LoadReviewsEvent loadReviewsRequest = new LoadReviewsEvent(apiKey, mMovieId, nextPage);
-
-        final DetailActivity da = mDetailActivity.get();
-        Log.i(TAG, "request reviews");
-        da.getBus().post(loadReviewsRequest);
-        //}
-
-    }
 }
