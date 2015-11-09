@@ -1,6 +1,5 @@
 package com.android.bazemom.popularmovies;
 
-import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -13,31 +12,24 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import java.lang.ref.WeakReference;
-
 /**
  * Tab that displays the reviews for the selected movie
+ * Requires the caller to support the MovieData interface
  */
-@SuppressLint("ValidFragment")
 public class ReviewFragment extends Fragment {
     private static final String TAG = ReviewFragment.class.getSimpleName();
-
-    final WeakReference< DetailActivity> mDetailActivity;
-    private int mMovieId;
     private View mRootView;
     private ReviewViewHolder mViewHolder;
 
     ReviewAdapter adapter;
 
-    @SuppressLint("ValidFragment")
-    public ReviewFragment(DetailActivity outer, int movieId) {
-        Log.d(TAG, "ReviewFragment constructor called");
-        mDetailActivity = new WeakReference<DetailActivity>( outer );
-        mMovieId = movieId;
+    public ReviewFragment() {
     }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         Log.d(TAG, "ReviewFragment.onCreateView called");
+
         mRootView = inflater.inflate(R.layout.fragment_review, container, false);
         mViewHolder = new ReviewViewHolder();
         //frameLayout.setBackgroundColor(color);
@@ -51,13 +43,15 @@ public class ReviewFragment extends Fragment {
         return mRootView;
     }
 
-    // Once mReviewList is filled in, get the adapter to fill in the recycler view
+    // Once ReviewList is filled in, get the adapter to fill in the recycler view
     void updateUI() {
         Log.d(TAG, "updateUI");
-        final DetailActivity da = mDetailActivity.get();
-        adapter = new ReviewAdapter(da.mReviewList);
+        MovieData data = (MovieData) getActivity();
+        adapter = new ReviewAdapter(data.getReviewList());
         mViewHolder.recyclerView.setAdapter(adapter);
     }
+
+
     class ReviewViewHolder {
         final TextView titleView;
         final RecyclerView recyclerView;

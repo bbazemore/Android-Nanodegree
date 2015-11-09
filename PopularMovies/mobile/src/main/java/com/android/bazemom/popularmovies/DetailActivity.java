@@ -15,19 +15,37 @@ import com.android.bazemom.popularmovies.moviebusevents.MovieDetailLoadedEvent;
 import com.android.bazemom.popularmovies.moviebusevents.ReviewsLoadedEvent;
 import com.android.bazemom.popularmovies.movielocaldb.LocalDBHelper;
 import com.android.bazemom.popularmovies.moviemodel.ReviewModel;
+import com.android.bazemom.popularmovies.moviemodel.VideoModel;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
 import java.util.ArrayList;
 import java.util.List;
 
+interface MovieData {
+    int getMovieId();
+
+    MovieDetail getMovieDetail();
+
+    List<ReviewModel> getReviewList();
+
+    List<VideoModel> getVideoList();
+
+    int getFavorite();
+
+    void setFavorite(int value);
+}
 
 /**
  * Display Movie Details.  Send intent with extra integer containing the Movie id
  */
-public class DetailActivity extends AppCompatActivity {
+public class DetailActivity extends AppCompatActivity implements MovieData {
     private final static String TAG = DetailActivity.class.getSimpleName();
+    static final String MOVIE_ID = "MOVIE_ID";
     private final static int GUARDIANS_OF_GALAXY_ID = 118340; // movie id from TMDB
+    private final int TAB_DETAIL = 0;
+    private final int TAB_REVIEW = 1;
+    private final int TAB_VIDEO = 2;
 
     private Bus mBus; // the bus that is used to deliver messages to the TMDB dispatcher
     private DispatchTMDB mDispatchTMDB;
@@ -41,10 +59,13 @@ public class DetailActivity extends AppCompatActivity {
     private View mRootView;
     private DetailTabViewHolder mViewHolder;
 
-    protected int mReviewPageRequest = 0;
-    protected List<ReviewModel> mReviewList;
-
     protected MovieDetail mMovieDetail;
+    protected List<ReviewModel> mReviewList;
+    protected List<VideoModel> mVideoList;
+
+    // Movie API management, keep track of how many pages of data we've received
+    // so we know if we are asking for more for the current movie, or starting over.
+    protected int mReviewPageRequest = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,7 +73,6 @@ public class DetailActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_detail);
         mRootView = findViewById(R.id.detail_container);
-        mReviewList = new ArrayList<ReviewModel>();
 
         //setHasOptionsMenu(true);
 
@@ -65,14 +85,59 @@ public class DetailActivity extends AppCompatActivity {
             mMovieId = intent.getIntExtra(MainActivityFragment.EXTRA_MOVIE_ID, GUARDIANS_OF_GALAXY_ID);
         } else mMovieId = GUARDIANS_OF_GALAXY_ID;
 
+        // Initialize the review and trailer lists so we don't have to keep checking for null
+        mReviewList = new ArrayList<ReviewModel>();
+        mVideoList = new ArrayList<VideoModel>();
+
+        // Create a fragment to handle each tab.  Cache them away so we can poke them
+        // when someone selects a tab, and when the data arrives back from the cloud.
+        mViewHolder.detailFragment = new DetailFragment();
+        mViewHolder.reviewFragment = new ReviewFragment();
+
         // Start the data cooking
         getDetails(1);
         getReviews(1);
+        getVideos(1);
 
         // Tab layout set up
         setSupportActionBar(mViewHolder.toolbar);
         setupViewPager(mViewHolder.viewPager);
         mViewHolder.tabLayout.setupWithViewPager(mViewHolder.viewPager);
+    }
+
+    // MovieData interface
+    @Override
+    public int getMovieId() {
+        return mMovieId;
+    }
+
+    @Override
+    public MovieDetail getMovieDetail() {
+        return mMovieDetail;
+    }
+
+    @Override
+    public List<ReviewModel> getReviewList() {
+        return mReviewList;
+    }
+
+    @Override
+    public List<VideoModel> getVideoList() {
+        return mVideoList;
+    }
+
+    @Override
+    public int getFavorite() {
+        return mMovieDetail.getFavorite();
+    }
+
+    @Override
+    public void setFavorite(int value) {
+        mMovieDetail.setFavorite(value);
+
+        // Persist the favorite setting in the local database
+        LocalDBHelper dbHelper = new LocalDBHelper(mRootView.getContext());
+        dbHelper.updateMovieInLocalDB(mMovieDetail);
     }
 
     // Handy dandy little class to cache the View ids so we don't keep looking for them every
@@ -93,22 +158,7 @@ public class DetailActivity extends AppCompatActivity {
             tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
                 @Override
                 public void onTabSelected(TabLayout.Tab tab) {
-                    viewPager.setCurrentItem(tab.getPosition());
-                    switch (tab.getPosition()) {
-                        case 0:
-                            Log.d(TAG, "Tab select detail");
-                            mViewHolder.detailFragment.updateUI();
-                            break;
-                        case 1:
-                            Log.d(TAG, "Tab select review");
-                            mViewHolder.reviewFragment.updateUI();
-                            break;
-                        case 2:
-                            Log.d(TAG, "Tab select video");
-                           // mViewHolder.videoFragment.updateUI();
-                            break;
-                    }
-
+                    updateTab(tab);
                 }
 
                 @Override
@@ -117,50 +167,40 @@ public class DetailActivity extends AppCompatActivity {
 
                 @Override
                 public void onTabReselected(TabLayout.Tab tab) {
+                    updateTab(tab);
                 }
             });  // end tab listener
 
-            // Get the height and width once, and only once after the fragment is laid out
             tabLayout.post(new Runnable() {
                 @Override
                 public void run() {
                     // Anything we need to fix up in the display once it is up
-                    Log.d("TAG", String.format("DetailTabView post-run"));
+                    Log.d("TAG", "DetailTabView post-run");
                 }
             });
         }
     }
 
-   /* @Nullable
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // Get the layout adjusted to the new orientation / device
-        mRootView = inflater.inflate(R.layout.activity_detail, container, false);
-
-        // Get the ids of the View elements so we don't have to fetch them over and over
-        mViewHolder = new DetailTabViewHolder();
-        // slide nerd was doing mRootView.setTag(mViewHolder) - I'm just keeping it in a member variable
-
-        Intent intent = getIntent();
-        if (intent != null && intent.hasExtra(MainActivityFragment.EXTRA_MOVIE_ID)) {
-            mMovieId = intent.getIntExtra(MainActivityFragment.EXTRA_MOVIE_ID, GUARDIANS_OF_GALAXY_ID);
+    private void updateTab(TabLayout.Tab tab) {
+        mViewHolder.viewPager.setCurrentItem(tab.getPosition());
+        switch (tab.getPosition()) {
+            case TAB_DETAIL:
+                Log.d(TAG, "Tab select detail");
+                mViewHolder.detailFragment.updateUI();
+                break;
+            case TAB_REVIEW:
+                Log.d(TAG, "Tab select review");
+                mViewHolder.reviewFragment.updateUI();
+                break;
+            case TAB_VIDEO:
+                Log.d(TAG, "Tab select video");
+                // mViewHolder.videoFragment.updateUI();
+                break;
         }
-        else mMovieId = GUARDIANS_OF_GALAXY_ID;
-
-        // Tab layout set up
-        setSupportActionBar(mViewHolder.toolbar);
-        setupViewPager(mViewHolder.viewPager);
-        mViewHolder.tabLayout.setupWithViewPager(mViewHolder.viewPager);
-
-        // Allow the tabs to get movie details, reviews and trailers through our shared bus
-        receiveEvents();
-        return mRootView;
-    } */
+    }
 
     private void setupViewPager(ViewPager viewPager) {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
-        mViewHolder.detailFragment = new DetailFragment(this, mMovieId);
-        mViewHolder.reviewFragment = new ReviewFragment(this, mMovieId);
 
         adapter.addFrag(mViewHolder.detailFragment, getString(R.string.tab_title_detail));
         adapter.addFrag(mViewHolder.reviewFragment, getString(R.string.tab_title_review));
@@ -244,7 +284,10 @@ public class DetailActivity extends AppCompatActivity {
             } catch (Exception e) {
                 // not a big deal
                 Log.d(TAG, "DetailFragment not ready for update: " + e.getLocalizedMessage());
+                return;
             }
+            if (null != mMovieDetail)
+                mViewHolder.toolbar.setTitle(mMovieDetail.title);
         }
     }
 
@@ -277,7 +320,6 @@ public class DetailActivity extends AppCompatActivity {
 
         // load the movie data into our movies list
         mReviewList.addAll(event.reviewResults);
-
         if (null != mViewHolder
                 && null != mViewHolder.reviewFragment) {
             try {
@@ -318,4 +360,33 @@ public class DetailActivity extends AppCompatActivity {
         getBus().post(loadReviewsRequest);
         //}
     }
+
+    protected void getVideos(int nextPage) {
+        //  TODO: Is this movie cached in the local DB?
+        /*LocalDBHelper dbHelper = new LocalDBHelper(mRootView.getContext());
+        mVideoList = dbHelper.getMovieVideosFromDB(mMovieId);
+        if (null != mReviewList) {
+            // We are in luck, we have the movie details handy already.
+            // We can update the UI right away
+            updateUI();
+        } else { */
+        // We have to get the movie from the cloud
+        // Start listening for the Reviews loaded event
+  /*      receiveEvents();
+
+        //  Now request that the reviews be loaded
+        String apiKey = mRootView.getContext().getString(R.string.movie_api_key);
+        LoadVideosEvent loadVideosRequest = new LoadVideosEvent(apiKey, mMovieId, nextPage);
+
+        Log.i(TAG, "request reviews");
+        getBus().post(loadVideosRequest);
+        //}
+       */
+    }
+    // reviewsLoaded gets called when we get a list of reviews back from TMDB
+ /*   @Subscribe
+    public void videosLoaded(VideosLoadedEvent event) {
+        Log.i(TAG, "videos Loaded callback! Number of reviews: " + event.reviewResults.size());
+    }
+ */
 } // end class DetailActivity

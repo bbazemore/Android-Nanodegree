@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout android:id="@+id/detail_movie_background"
                 xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:app="http://schemas.android.com/apk/res-auto"
                 xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -34,11 +33,12 @@
             android:id="@+id/detail_movie_title"
             style="@style/DetailShadowedText"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/abc_text_size_title_material"
+            android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_toRightOf="@+id/detail_favorite_button"
             android:gravity="center|top"
-            android:text="Title"/>
+            android:text="Title"
+            android:textSize="@dimen/abc_text_size_title_material"/>
     </RelativeLayout>
     <RelativeLayout
         android:id="@+id/detail_movie_poster_frame"
