@@ -35,7 +35,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
-            android:layout_toRightOf="@+id/detail_favorite_button"
+            android:layout_toRightOf="@id/detail_favorite_button"
             android:gravity="center|top"
             android:text="Title"
             android:textSize="@dimen/abc_text_size_title_material"/>

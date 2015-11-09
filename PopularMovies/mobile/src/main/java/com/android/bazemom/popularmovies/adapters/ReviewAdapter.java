@@ -1,4 +1,4 @@
-package com.android.bazemom.popularmovies;
+package com.android.bazemom.popularmovies.adapters;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.android.bazemom.popularmovies.R;
 import com.android.bazemom.popularmovies.moviemodel.ReviewModel;
 
 import java.util.ArrayList;

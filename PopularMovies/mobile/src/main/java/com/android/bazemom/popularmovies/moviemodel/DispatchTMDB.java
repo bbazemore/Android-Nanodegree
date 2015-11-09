@@ -1,4 +1,4 @@
-package com.android.bazemom.popularmovies;
+package com.android.bazemom.popularmovies.moviemodel;
 
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -6,14 +6,13 @@ import android.util.Log;
 import com.android.bazemom.popularmovies.moviebusevents.LoadMovieDetailEvent;
 import com.android.bazemom.popularmovies.moviebusevents.LoadMoviesEvent;
 import com.android.bazemom.popularmovies.moviebusevents.LoadReviewsEvent;
+import com.android.bazemom.popularmovies.moviebusevents.LoadVideosEvent;
 import com.android.bazemom.popularmovies.moviebusevents.MovieApiErrorEvent;
 import com.android.bazemom.popularmovies.moviebusevents.MovieDetailLoadedEvent;
 import com.android.bazemom.popularmovies.moviebusevents.MoviesAvailableEvent;
 import com.android.bazemom.popularmovies.moviebusevents.MoviesLoadedEvent;
 import com.android.bazemom.popularmovies.moviebusevents.ReviewsLoadedEvent;
-import com.android.bazemom.popularmovies.moviemodel.MovieDetailModel;
-import com.android.bazemom.popularmovies.moviemodel.MovieResults;
-import com.android.bazemom.popularmovies.moviemodel.MovieReviewListModel;
+import com.android.bazemom.popularmovies.moviebusevents.VideosLoadedEvent;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Produce;
 import com.squareup.otto.Subscribe;
@@ -48,7 +47,7 @@ public class DispatchTMDB {
     private int mAPIReviewRequestMovieId = 0;
     private int mReviewPageRequested = 1;
     private int mAPITrailerRequestMovieId = 0;
-    private int mTrailerPageRequested = 1;
+
 
     public synchronized static DispatchTMDB getInstance(@NonNull  MovieDBService movieAPI, Bus bus) {
         if (sInstance == null) {
@@ -217,5 +216,41 @@ public class DispatchTMDB {
                 }
             });
         }
+    }
+    ////////////////////////////////////////////
+    // Start of Movie Videos support
+    ///////////////////////////////////////////
+    @Subscribe
+    public void onLoadVideosEvent(LoadVideosEvent event) {
+        if (mAPITrailerRequestMovieId == event.movieId) {
+            // If we already have an outstanding request for this movie, don't send out a duplicate request
+            // There is no sense in having multiple network calls and updating the UI multiple times
+            Log.d(TAG, "Ignore duplicate video request for movie id: " + mAPIDetailRequestMovieId);
+            return;
+        }
+        mAPITrailerRequestMovieId = event.movieId;
+
+        // Get the video urls for one movie. They are all returned at once, not paged
+
+        movieDBService.getMovieVideos(event.movieId, event.api_key, new retrofit.Callback<MovieVideoListModel>() {
+            @Override
+            public void success(MovieVideoListModel response, Response rawResponse) {
+                Log.d(TAG, "Reviews received!");
+                mAPITrailerRequestMovieId = 0;  // request is no longer outstanding
+                try {
+                    //mLastMovieDetail = response;
+                    mBus.post(new VideosLoadedEvent(response));
+                } catch (Exception e) {
+                    Log.e(TAG, "Videos Callback failed to post VideosLoadedEvent: " + e.getLocalizedMessage());
+                }
+            }
+
+            @Override
+            public void failure(RetrofitError error) {
+                Log.d(TAG, "Videos failed");
+                mBus.post(new MovieApiErrorEvent(error));
+                mAPITrailerRequestMovieId = 0;  // request is no longer outstanding
+            }
+        });
     }
 }

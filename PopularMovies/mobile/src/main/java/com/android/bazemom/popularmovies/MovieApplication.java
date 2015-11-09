@@ -3,6 +3,8 @@ package com.android.bazemom.popularmovies;
 import android.app.Application;
 import android.util.Log;
 
+import com.android.bazemom.popularmovies.moviemodel.DispatchTMDB;
+import com.android.bazemom.popularmovies.moviemodel.MovieDBService;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.squareup.otto.Bus;

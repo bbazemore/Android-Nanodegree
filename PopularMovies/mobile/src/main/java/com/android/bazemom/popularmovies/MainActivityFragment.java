@@ -20,10 +20,12 @@ import android.widget.GridView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.android.bazemom.popularmovies.adapters.MovieAdapter;
 import com.android.bazemom.popularmovies.moviebusevents.LoadMoviesEvent;
 import com.android.bazemom.popularmovies.moviebusevents.MoviesLoadedEvent;
 import com.android.bazemom.popularmovies.movielocaldb.LocalDBContract;
 import com.android.bazemom.popularmovies.movielocaldb.LocalDBHelper;
+import com.android.bazemom.popularmovies.moviemodel.DispatchTMDB;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
@@ -89,7 +91,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
             mRootView.post(new Runnable() {
                 @Override
                 public void run() {
-                    Log.d("TAG", String.format("RootView post-run lambda"));
+                    Log.d("TAG", "RootView post-run lambda");
                     // update the UI now we can scroll the last selected movie into position
                     updatePosition();
                 }
@@ -144,6 +146,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
 
     @Override
     public void onResume() {
+        Log.d(TAG, "on resume");
         super.onResume();
 
         // We are back on display. Pay attention to movie results again.
@@ -163,6 +166,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
 
     @Override
     public void onViewStateRestored(Bundle savedInstanceState) {
+        Log.d(TAG, "view restored");
         super.onViewStateRestored(savedInstanceState);
         restoreState(savedInstanceState);
         receiveEvents();

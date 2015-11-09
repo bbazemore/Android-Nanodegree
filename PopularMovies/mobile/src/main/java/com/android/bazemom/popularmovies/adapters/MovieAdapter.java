@@ -1,4 +1,4 @@
-package com.android.bazemom.popularmovies;
+package com.android.bazemom.popularmovies.adapters;
 
 import android.app.Activity;
 import android.content.Context;
@@ -10,6 +10,8 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 
+import com.android.bazemom.popularmovies.Movie;
+import com.android.bazemom.popularmovies.R;
 import com.android.bazemom.popularmovies.moviemodel.MovieModel;
 import com.android.bazemom.popularmovies.moviemodel.MovieResults;
 import com.squareup.picasso.Picasso;

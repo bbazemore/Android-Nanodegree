@@ -1,11 +1,6 @@
-package com.android.bazemom.popularmovies;
+package com.android.bazemom.popularmovies.moviemodel;
 
 import android.support.annotation.NonNull;
-
-import com.android.bazemom.popularmovies.moviemodel.MovieDetailModel;
-import com.android.bazemom.popularmovies.moviemodel.MovieResults;
-import com.android.bazemom.popularmovies.moviemodel.MovieReviewListModel;
-import com.android.bazemom.popularmovies.moviemodel.MovieVideoListModel;
 
 import retrofit.Callback;
 import retrofit.http.GET;
@@ -33,6 +28,7 @@ public interface MovieDBService {
     void getMoviesList(@Path("movieType") String sortType, @Query(PAGE_LIMIT_PARAM) int page, @Query(KEY_PARAM) String apiKey, @NonNull Callback<MovieResults> callback);
 
     // Get details for an individual movie, identified in movieId
+    // TODO: get reviews & trailers in one go?: reviews might be overly long "append_to_response=reviews,trailers"
     @GET("/movie/{movieId}")
     void getMovieDetails(@Path("movieId") long movieId, @Query(KEY_PARAM) String apiKey, @NonNull Callback<MovieDetailModel> callback);
 
@@ -40,6 +36,6 @@ public interface MovieDBService {
     void getMovieReviews(@Path("movieId") long movieId, @Query(PAGE_LIMIT_PARAM) int page, @Query(KEY_PARAM) String apiKey, @NonNull Callback<MovieReviewListModel> callback);
 
     @GET("/movie/{movieId}/videos")
-    void getMovieVideos(@Path("movieId") long movieId, @Query(PAGE_LIMIT_PARAM) int page, @Query(KEY_PARAM) String apiKey, @NonNull Callback<MovieVideoListModel> callback);
+    void getMovieVideos(@Path("movieId") long movieId, @Query(KEY_PARAM) String apiKey, @NonNull Callback<MovieVideoListModel> callback);
 
 }

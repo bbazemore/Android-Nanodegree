@@ -11,21 +11,21 @@ import com.android.bazemom.popularmovies.moviemodel.MovieModel;
  *  Movie holds all the data we care about for one movie.
  */
 public class Movie implements Parcelable {
-    String title;
-    int id;
-    String releaseDate;
-    String overview;
-    String posterPath;
-    String posterLocalPath;  // for when we aren't connected to the network
-    String backdropPath;
+    public String title;
+    public int id;
+    public String releaseDate;
+    public String overview;
+    public String posterPath;
+    public String posterLocalPath;  // for when we aren't connected to the network
+    public String backdropPath;
     //int runtime;
 
     // sort related items
-    double  popularity;
-    double voteAverage;
-    int voteCount;
+    public double  popularity;
+    public double voteAverage;
+    public int voteCount;
     //int revenue;
-    int favorite;  // 0, not a favorite, 1 or larger leaves room for ranking
+    public int favorite;  // 0, not a favorite, 1 or larger leaves room for ranking
 
     public Movie(MovieModel movieInput)
     {

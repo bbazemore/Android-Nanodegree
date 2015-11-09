@@ -8,12 +8,17 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
+import com.android.bazemom.popularmovies.adapters.ViewPagerAdapter;
 import com.android.bazemom.popularmovies.moviebusevents.LoadMovieDetailEvent;
 import com.android.bazemom.popularmovies.moviebusevents.LoadReviewsEvent;
+import com.android.bazemom.popularmovies.moviebusevents.LoadVideosEvent;
 import com.android.bazemom.popularmovies.moviebusevents.MovieDetailLoadedEvent;
 import com.android.bazemom.popularmovies.moviebusevents.ReviewsLoadedEvent;
+import com.android.bazemom.popularmovies.moviebusevents.VideosLoadedEvent;
 import com.android.bazemom.popularmovies.movielocaldb.LocalDBHelper;
+import com.android.bazemom.popularmovies.moviemodel.DispatchTMDB;
 import com.android.bazemom.popularmovies.moviemodel.ReviewModel;
 import com.android.bazemom.popularmovies.moviemodel.VideoModel;
 import com.squareup.otto.Bus;
@@ -30,6 +35,7 @@ interface MovieData {
     List<ReviewModel> getReviewList();
 
     List<VideoModel> getVideoList();
+    String getYouTubeKey(int videoPosition);
 
     int getFavorite();
 
@@ -93,6 +99,7 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
         // when someone selects a tab, and when the data arrives back from the cloud.
         mViewHolder.detailFragment = new DetailFragment();
         mViewHolder.reviewFragment = new ReviewFragment();
+        mViewHolder.videoFragment = new VideoFragment();
 
         // Start the data cooking
         getDetails(1);
@@ -127,6 +134,17 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
     }
 
     @Override
+    public String getYouTubeKey(int videoPosition) {
+        String urlKey = "YouTube key not available for this movie";
+        try {
+            urlKey = mVideoList.get(videoPosition).getKey();
+        } catch (Exception e) {
+            Log.d(TAG, "getYouTubeKey failed for video at index: " + videoPosition);
+        }
+        return urlKey;
+    }
+
+    @Override
     public int getFavorite() {
         return mMovieDetail.getFavorite();
     }
@@ -138,6 +156,8 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
         // Persist the favorite setting in the local database
         LocalDBHelper dbHelper = new LocalDBHelper(mRootView.getContext());
         dbHelper.updateMovieInLocalDB(mMovieDetail);
+        if (value == 1)
+            Toast.makeText(this, R.string.favorite_added, Toast.LENGTH_SHORT).show();
     }
 
     // Handy dandy little class to cache the View ids so we don't keep looking for them every
@@ -148,6 +168,7 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
         TabLayout tabLayout;
         DetailFragment detailFragment;
         ReviewFragment reviewFragment;
+        VideoFragment videoFragment;
 
         DetailTabViewHolder() {
             toolbar = (Toolbar) mRootView.findViewById(R.id.tabanim_toolbar);
@@ -194,7 +215,7 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
                 break;
             case TAB_VIDEO:
                 Log.d(TAG, "Tab select video");
-                // mViewHolder.videoFragment.updateUI();
+                mViewHolder.videoFragment.updateUI();
                 break;
         }
     }
@@ -204,7 +225,7 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
 
         adapter.addFrag(mViewHolder.detailFragment, getString(R.string.tab_title_detail));
         adapter.addFrag(mViewHolder.reviewFragment, getString(R.string.tab_title_review));
-        //adapter.addFrag(new TrailerFragment(), getString(R.string.tab_title_trailer));
+        adapter.addFrag(mViewHolder.videoFragment, getString(R.string.tab_title_trailer));
         viewPager.setAdapter(adapter);
     }
 
@@ -372,21 +393,32 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
         } else { */
         // We have to get the movie from the cloud
         // Start listening for the Reviews loaded event
-  /*      receiveEvents();
+        receiveEvents();
 
         //  Now request that the reviews be loaded
         String apiKey = mRootView.getContext().getString(R.string.movie_api_key);
-        LoadVideosEvent loadVideosRequest = new LoadVideosEvent(apiKey, mMovieId, nextPage);
+        LoadVideosEvent loadVideosRequest = new LoadVideosEvent(apiKey, mMovieId);
 
-        Log.i(TAG, "request reviews");
+        Log.i(TAG, "request video trailers");
         getBus().post(loadVideosRequest);
-        //}
-       */
     }
+    //}
+
+
     // reviewsLoaded gets called when we get a list of reviews back from TMDB
- /*   @Subscribe
+    @Subscribe
     public void videosLoaded(VideosLoadedEvent event) {
-        Log.i(TAG, "videos Loaded callback! Number of reviews: " + event.reviewResults.size());
+        Log.i(TAG, "videos Loaded callback! Number of trailers: " + event.trailerResults.size());
+        // load the movie data into our movies list
+        mVideoList.addAll(event.trailerResults);
+        if (null != mViewHolder
+                && null != mViewHolder.videoFragment) {
+            try {
+                mViewHolder.videoFragment.updateUI();
+            } catch (Exception e) {
+                Log.d(TAG, "videosLoaded received, but videoFragment not ready yet");
+            }
+        }
     }
- */
+
 } // end class DetailActivity

@@ -12,6 +12,8 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.android.bazemom.popularmovies.adapters.ReviewAdapter;
+
 /**
  * Tab that displays the reviews for the selected movie
  * Requires the caller to support the MovieData interface
@@ -47,8 +49,12 @@ public class ReviewFragment extends Fragment {
     void updateUI() {
         Log.d(TAG, "updateUI");
         MovieData data = (MovieData) getActivity();
-        adapter = new ReviewAdapter(data.getReviewList());
-        mViewHolder.recyclerView.setAdapter(adapter);
+        if (null != data && null != mViewHolder) {
+            {
+                adapter = new ReviewAdapter(data.getReviewList());
+                mViewHolder.recyclerView.setAdapter(adapter);
+            }
+        }
     }
 
 
@@ -65,15 +71,15 @@ public class ReviewFragment extends Fragment {
             //detailLayout = (RelativeLayout) mRootView.findViewById(R.id.detail_movie_background);
             frameLayout = (LinearLayout) mRootView.findViewById(R.id.review_frame);
 
-            // Get the height and width once, and only once after the fragment is laid out
-            frameLayout.post(new Runnable() {
+            // Last chance to fix up the UI
+            /*frameLayout.post(new Runnable() {
                 @Override
                 public void run() {
-                    Log.d("TAG", String.format("ReviewFragment post-run"));
+                    Log.d("TAG", "ReviewFragment post-run");
                     // update the UI now we can put the poster up with the right aspect ratio
                     //updateUI();
                 }
-            });
+            }); */
         }
     } // end ReviewViewHolder
 }
