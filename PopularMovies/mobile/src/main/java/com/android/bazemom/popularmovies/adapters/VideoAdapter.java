@@ -1,5 +1,6 @@
 package com.android.bazemom.popularmovies.adapters;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -8,7 +9,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.android.bazemom.popularmovies.R;
 import com.android.bazemom.popularmovies.moviemodel.VideoModel;
@@ -21,6 +21,9 @@ import java.util.List;
  * Map the video / trailer data returned from TMDB into our view.
  */
 public class VideoAdapter  extends RecyclerView.Adapter<VideoAdapter.ViewHolder> {
+    private final static String TAG = VideoAdapter.class.getSimpleName();
+
+    // All the movie trailers fit to click
     private List<VideoModel> mDataset;
 
     // Provide a reference to the views for each data item
@@ -38,21 +41,11 @@ public class VideoAdapter  extends RecyclerView.Adapter<VideoAdapter.ViewHolder>
             trailerNameView = (TextView) itemView.findViewById(R.id.video_name);
             thumbnailPlayView = (ImageView) itemView.findViewById(R.id.video_thumbnail);
             cardView = itemView.findViewById(R.id.video_card_item);
-
-            // If there is anything we need to fix up after the layout is known,
-            // do it in the post-layout lambda
-            cardView.post(new Runnable() {
-                @Override
-                public void run() {
-                    Log.d("TAG", "VideoFragment post-run");
-                    // update the UI now we can put the poster up with the right aspect ratio
-                    //updateUI();
-                }
-            });
         }
         @Override
         public void onClick(View view) {
-            Toast.makeText(view.getContext(), "position = " + getPosition(), Toast.LENGTH_SHORT).show();
+            onClickTrailer(view);
+            //Toast.makeText(view.getContext(), "position = " + getPosition(), Toast.LENGTH_SHORT).show();
         }
         public void setItem(VideoModel trailer) {
             trailerNameView.setText(trailer.getName());
@@ -69,6 +62,30 @@ public class VideoAdapter  extends RecyclerView.Adapter<VideoAdapter.ViewHolder>
 
             cardView.setTag(youtubeURL);
         }
+
+        public void onClickTrailer(View v) {
+            Log.d(TAG, "Trailer card clicked");
+            // We stashed the URI of the Youtube video in the cardView during VideoAdapter onBind
+            Uri trailerLink = (Uri) v.getTag();
+            if (null != trailerLink) {
+                v.getContext().startActivity(new Intent(Intent.ACTION_VIEW,
+                        trailerLink));
+            } else
+                Log.d(TAG, "Trailer card container did not have trailer link.");
+        }
+
+        public void onShareTrailer(View v) {
+            Log.d(TAG, "Trailer share");
+            // We stashed the URI of the Youtube video in the cardView during VideoAdapter onBind
+            Uri trailerLink = (Uri) v.getTag();
+            if (null != trailerLink) {
+                Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                shareIntent.setType("text/plain");
+                shareIntent.putExtra(Intent.EXTRA_TEXT, trailerLink);
+                v.getContext().startActivity(shareIntent);
+            } else
+                Log.d(TAG, "Trailer card container did not have trailer link.");
+        }
     } // end VideoViewHolder
 
     //////////
@@ -80,12 +97,17 @@ public class VideoAdapter  extends RecyclerView.Adapter<VideoAdapter.ViewHolder>
 
         // Only include Youtube videos since those are the only ones we
         // support playing
-        for (VideoModel video : myDataset) {
-            // why is it so awkward to get a string resource in an Adapter?
-            // getString(R.string.tmdb_site_value_YouTube))
-            if (video.getSite().contentEquals("YouTube")) {
-                mDataset.add(video);
+        try {
+            for (VideoModel video : myDataset) {
+                // why is it so awkward to get a string resource in an Adapter?
+                // getString(R.string.tmdb_site_value_YouTube))
+                if (video.getSite().contentEquals("YouTube")) {
+                    mDataset.add(video);
+                }
             }
+        }
+        catch (Exception e) {
+            Log.d(TAG, "Exception while filtering videos in VideoAdapter: " + e.getLocalizedMessage());
         }
     }
 
@@ -118,5 +140,8 @@ public class VideoAdapter  extends RecyclerView.Adapter<VideoAdapter.ViewHolder>
             size = mDataset.size();
         return size;
     }
+
+
+
 
 }

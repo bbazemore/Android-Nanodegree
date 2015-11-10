@@ -19,7 +19,6 @@ public class VideoFragment extends Fragment {
     private static final String TAG = VideoFragment.class.getSimpleName();
     private View mRootView;
     private RecyclerView mRecyclerView;
-    //private VideoViewHolder mViewHolder;
     VideoAdapter adapter;
 
     public VideoFragment() {
@@ -36,15 +35,24 @@ public class VideoFragment extends Fragment {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity().getBaseContext());
         mRecyclerView.setLayoutManager(linearLayoutManager);
 
-        updateUI();
+        // If there is anything we need to fix up after the layout is known,
+        // do it in the post-layout lambda
+        mRootView.post(new Runnable() {
+            @Override
+            public void run() {
+                Log.d("TAG", "VideoFragment post-run");
+                // update the UI now we can put the poster up with the right aspect ratio
+                updateUI();
+            }
+        });
 
         return mRootView;
     }
 
     // Once VideoList is filled in, get the adapter to fill in the recycler view
     void updateUI() {
-        Log.d(TAG, "updateUI");
         MovieData data = (MovieData) getActivity();
+        Log.d(TAG, "updateUI from Activity: " + getActivity().getLocalClassName());
         if (null != data && null != mRecyclerView) {
             adapter = new VideoAdapter(data.getVideoList());
             mRecyclerView.setAdapter(adapter);
@@ -52,30 +60,4 @@ public class VideoFragment extends Fragment {
         }
     }
 
-
-/*
-    public void onClickTrailer(View v) {
-        Log.d(TAG, "Trailer card clicked");
-        // We stashed the URI of the Youtube video in the cardView during VideoAdapter onBind
-        Uri trailerLink = (Uri) v.getTag();
-        if (null != trailerLink) {
-            getContext().startActivity(new Intent(Intent.ACTION_VIEW,
-                    trailerLink));
-        } else
-            Log.d(TAG, "Trailer card container did not have trailer link.");
-    }
-
-    public void onShareTrailer(View v) {
-        Log.d(TAG, "Trailer share");
-        // We stashed the URI of the Youtube video in the cardView during VideoAdapter onBind
-        Uri trailerLink = (Uri) v.getTag();
-        if (null != trailerLink) {
-            Intent shareIntent = new Intent(Intent.ACTION_SEND);
-            shareIntent.setType("text/plain");
-            shareIntent.putExtra(Intent.EXTRA_TEXT, trailerLink);
-            getContext().startActivity(shareIntent);
-        } else
-            Log.d(TAG, "Trailer card container did not have trailer link.");
-    }
-    */
 }

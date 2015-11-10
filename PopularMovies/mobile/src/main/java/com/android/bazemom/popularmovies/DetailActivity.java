@@ -31,14 +31,11 @@ interface MovieData {
     int getMovieId();
 
     MovieDetail getMovieDetail();
-
     List<ReviewModel> getReviewList();
-
     List<VideoModel> getVideoList();
+
     String getYouTubeKey(int videoPosition);
-
     int getFavorite();
-
     void setFavorite(int value);
 }
 
@@ -53,6 +50,9 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
     private final int TAB_REVIEW = 1;
     private final int TAB_VIDEO = 2;
 
+    private final ReviewModel EMPTY_REVIEW = new ReviewModel();
+    private final VideoModel EMPTY_VIDEO = new VideoModel();
+
     private Bus mBus; // the bus that is used to deliver messages to the TMDB dispatcher
     private DispatchTMDB mDispatchTMDB;
 
@@ -60,6 +60,9 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
     // Turn event notification off when we are shutting down, register for events once when
     // starting back up.
     private boolean mReceivingEvents;
+    private boolean mDataReceivedDetail = false;
+    private boolean mDataReceivedReviewList = false;
+    private boolean mDataReceivedVideoList = false;
 
     private int mMovieId;
     private View mRootView;
@@ -217,6 +220,8 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
                 Log.d(TAG, "Tab select video");
                 mViewHolder.videoFragment.updateUI();
                 break;
+            default:
+                Log.d(TAG, "Tab select something different " + tab.getPosition());
         }
     }
 
@@ -241,7 +246,7 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
 
     @Override
     public void onPause() {
-        Log.d(TAG, "on resume");
+        Log.d(TAG, "on pause");
         super.onPause();
 
         // Don't bother processing results when we aren't on display.
@@ -293,6 +298,7 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
     public void movieDetailLoaded(MovieDetailLoadedEvent event) {
         // load the movie data into our movies list
         mMovieDetail = event.movieResult;
+        mDataReceivedDetail = true;
         Log.i(TAG, "movie detail Loaded ");
         updateDetailUI();
     }
@@ -312,13 +318,17 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
         }
     }
 
-
     private void getDetails(int nextPage) {
         // Is this movie cached in the local DB?
+        if (mDataReceivedDetail)
+            // We have the detail data, we're done.
+            return;
+
         LocalDBHelper dbHelper = new LocalDBHelper(mRootView.getContext());
         mMovieDetail = dbHelper.getMovieDetailFromDB(mMovieId);
         if (null != mMovieDetail) {
             // We are in luck, we have the movie details handy already.
+            mDataReceivedDetail = true;
             // We can update the UI right away
             updateDetailUI();
         } else {
@@ -341,6 +351,19 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
 
         // load the movie data into our movies list
         mReviewList.addAll(event.reviewResults);
+
+        if (event.endOfInput) {
+            mDataReceivedReviewList = true;
+            if (mReviewList.isEmpty()) {
+                EMPTY_REVIEW.setContent(getString(R.string.review_no_reviews));
+                mReviewList.add(EMPTY_REVIEW);
+            }
+        }
+        else {
+            // Ask for another page of reviews
+            getReviews(event.currentPage + 1);
+        }
+
         if (null != mViewHolder
                 && null != mViewHolder.reviewFragment) {
             try {
@@ -350,17 +373,14 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
                 Log.d(TAG, "ReviewFragment not ready for update: " + e.getLocalizedMessage());
             }
         }
-
-        // if we know the number of reviews and they aren't going to change
-        if (event.endOfInput) {
-            //mViewHolder.recyclerView.setHasFixedSize(true);
-        } else {
-            // Ask for another page of reviews
-            getReviews(event.currentPage + 1);
-        }
     }
 
     protected void getReviews(int nextPage) {
+        if (mDataReceivedReviewList)
+            // we have all the reviews for this movie,
+            // don't keep asking.
+            return;
+
         //  TODO: Is this movie cached in the local DB?
         /*LocalDBHelper dbHelper = new LocalDBHelper(mRootView.getContext());
         mReviewList = dbHelper.getMovieReviewsFromDB(mMovieId);
@@ -383,11 +403,16 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
     }
 
     protected void getVideos(int nextPage) {
+        if (mDataReceivedVideoList)
+            // we have all the videos for this movie
+            return;
+
         //  TODO: Is this movie cached in the local DB?
         /*LocalDBHelper dbHelper = new LocalDBHelper(mRootView.getContext());
         mVideoList = dbHelper.getMovieVideosFromDB(mMovieId);
         if (null != mReviewList) {
             // We are in luck, we have the movie details handy already.
+            mDataReceivedVideoList = true;
             // We can update the UI right away
             updateUI();
         } else { */
@@ -411,6 +436,12 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
         Log.i(TAG, "videos Loaded callback! Number of trailers: " + event.trailerResults.size());
         // load the movie data into our movies list
         mVideoList.addAll(event.trailerResults);
+        mDataReceivedVideoList = true;
+
+        if (mVideoList.isEmpty()) {
+            EMPTY_VIDEO.setName(getString(R.string.video_no_videos));
+            mVideoList.add(EMPTY_VIDEO);
+        }
         if (null != mViewHolder
                 && null != mViewHolder.videoFragment) {
             try {

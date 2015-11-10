@@ -38,9 +38,17 @@ public class ReviewFragment extends Fragment {
 
         // Use the default layout manager
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity().getBaseContext());
-
         mViewHolder.recyclerView.setLayoutManager(linearLayoutManager);
-        updateUI();
+        // If there is anything we need to fix up after the layout is known,
+        // do it in the post-layout lambda
+        mRootView.post(new Runnable() {
+            @Override
+            public void run() {
+                Log.d("TAG", "ReviewFragment post-run");
+                // update the UI now we can put the poster up with the right aspect ratio
+                updateUI();
+            }
+        });
 
         return mRootView;
     }

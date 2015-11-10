@@ -65,7 +65,9 @@
     <string name="tab_title_review">REVIEW</string>
     <string name="tab_title_trailer">TRAILER</string>
     <string name="favorite_added">Movie added to favorites</string>
+    <string name="review_no_reviews">No reviews found for this movie.</string>
     <string name="tmdb_site_value_YouTube" translatable="false">YouTube</string>
+    <string name="video_no_videos">No trailer videos found for this movie.</string>
     <string name="video_url_YouTube_watch" translatable="false">http://www.youtube.com/watch?v=%s</string>
     <string name="video_url_YouTube_thumbnail" translatable="false">http://img.youtube.com/vi/%s/0.jpg"</string>
     <string name="video_thumbnail">Movie thumbnail will play the Youtube video trailer</string>

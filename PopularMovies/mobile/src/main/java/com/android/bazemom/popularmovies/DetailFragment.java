@@ -66,6 +66,16 @@ import com.squareup.picasso.Target;
             }
         });
 
+        // If there is anything we need to fix up after the layout is known,
+        // do it in the post-layout lambda
+        mRootView.post(new Runnable() {
+            @Override
+            public void run() {
+                Log.d("TAG", "DetailFragment post-run");
+                // update the UI now we can put the poster up with the right aspect ratio
+                updateUI();
+            }
+        });
         return mRootView;
     }
 
