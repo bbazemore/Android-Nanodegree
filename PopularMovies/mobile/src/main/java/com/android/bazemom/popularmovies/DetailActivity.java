@@ -1,12 +1,15 @@
 package com.android.bazemom.popularmovies;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
@@ -35,6 +38,7 @@ interface MovieData {
     List<VideoModel> getVideoList();
 
     String getYouTubeKey(int videoPosition);
+    String getYouTubeURL(int videoPosition);
     int getFavorite();
     void setFavorite(int value);
 }
@@ -104,6 +108,12 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
         mViewHolder.reviewFragment = new ReviewFragment();
         mViewHolder.videoFragment = new VideoFragment();
 
+        // Set up in case we have movies with no reviews or trailers
+        EMPTY_REVIEW.setAuthor("");
+        EMPTY_REVIEW.setContent(getString(R.string.review_no_reviews));
+        EMPTY_VIDEO.setSite(getString(R.string.tmdb_site_value_YouTube));
+        EMPTY_VIDEO.setName(getString(R.string.video_no_videos));
+
         // Start the data cooking
         getDetails(1);
         getReviews(1);
@@ -114,7 +124,27 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
         setupViewPager(mViewHolder.viewPager);
         mViewHolder.tabLayout.setupWithViewPager(mViewHolder.viewPager);
     }
-
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_detail, menu);
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+        if (id == R.id.action_share) {
+            // Launch share trailer
+            if (null != mViewHolder.videoFragment) {
+                return mViewHolder.videoFragment.onShareTrailer(mRootView);
+            };
+            return false;
+        }
+        return super.onOptionsItemSelected(item);
+    }
     // MovieData interface
     @Override
     public int getMovieId() {
@@ -147,6 +177,10 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
         return urlKey;
     }
 
+    public String getYouTubeURL(int videoPosition) {
+        String youtubeTrailerId = getYouTubeKey(videoPosition);
+        return Uri.parse("http://www.youtube.com/watch?v=" + youtubeTrailerId).toString();
+    }
     @Override
     public int getFavorite() {
         return mMovieDetail.getFavorite();
@@ -355,7 +389,6 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
         if (event.endOfInput) {
             mDataReceivedReviewList = true;
             if (mReviewList.isEmpty()) {
-                EMPTY_REVIEW.setContent(getString(R.string.review_no_reviews));
                 mReviewList.add(EMPTY_REVIEW);
             }
         }
@@ -439,7 +472,6 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
         mDataReceivedVideoList = true;
 
         if (mVideoList.isEmpty()) {
-            EMPTY_VIDEO.setName(getString(R.string.video_no_videos));
             mVideoList.add(EMPTY_VIDEO);
         }
         if (null != mViewHolder

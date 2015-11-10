@@ -196,7 +196,7 @@ public class DispatchTMDB {
                 public void success(MovieReviewListModel response, Response rawResponse) {
                     Log.d(TAG, "Reviews received!");
                     mAPIReviewRequestMovieId = 0;  // request is no longer outstanding
-                    if ((response.getTotalPages() - response.getPage()) == 0)
+                    if (mReviewPageRequested > response.getTotalPages())
                         mReviewPageRequested = -1;  // end of the line
                     else
                         mReviewPageRequested++;

@@ -1,5 +1,7 @@
 package com.android.bazemom.popularmovies;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -52,7 +54,7 @@ public class VideoFragment extends Fragment {
     // Once VideoList is filled in, get the adapter to fill in the recycler view
     void updateUI() {
         MovieData data = (MovieData) getActivity();
-        Log.d(TAG, "updateUI from Activity: " + getActivity().getLocalClassName());
+        Log.d(TAG, "updateUI from Activity: " + getActivity());
         if (null != data && null != mRecyclerView) {
             adapter = new VideoAdapter(data.getVideoList());
             mRecyclerView.setAdapter(adapter);
@@ -60,4 +62,39 @@ public class VideoFragment extends Fragment {
         }
     }
 
+    public static void onClickTrailer(View v) {
+        Log.d(TAG, "Trailer card clicked");
+        // We stashed the URI of the Youtube video in the cardView during VideoAdapter onBind
+        Uri trailerLink = (Uri) v.getTag();
+        if (null != trailerLink) {
+            v.getContext().startActivity(new Intent(Intent.ACTION_VIEW,
+                    trailerLink));
+        } else
+            Log.d(TAG, "Trailer card container did not have trailer link.");
+    }
+
+    // return true on successful share of a video trailer link
+    public boolean onShareTrailer(View v) {
+        Log.d(TAG, "Trailer share");
+        // We stashed the URI of the Youtube video in the cardView during VideoAdapter onBind
+        Uri trailerUri = (Uri) v.getTag();
+        String trailerLink = "";
+        if (null != trailerUri)
+            trailerLink = trailerUri.toString();
+        if (trailerLink.isEmpty()) {
+            // default to the first trailer
+            MovieData movieData = (MovieData) getActivity();
+            trailerLink = movieData.getYouTubeURL(0);
+        }
+        if (!trailerLink.isEmpty()) {
+            Log.d(TAG, "Share trailer link " + trailerLink);
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("text/plain");
+            shareIntent.putExtra(Intent.EXTRA_TEXT, trailerLink);
+            v.getContext().startActivity(shareIntent);
+            return true;
+        } else
+            Log.d(TAG, "Trailer card container did not have trailer link.");
+        return false;
+    }
 }

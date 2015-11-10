@@ -10,6 +10,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -50,6 +51,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
     private int mGridviewPosition = GridView.INVALID_POSITION;
     DispatchTMDB dispatchTMDB = null;
     View mRootView = null;
+    Toolbar mToolbar = null;
     Bus mBus = null;
     Boolean mReceivingEvents = false;
     private String mCurrentlyDisplayedSortType = "";
@@ -188,7 +190,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
                 mPageRequest = 1; // start from the beginning of the new movie type
                 mGridviewPosition = ListView.INVALID_POSITION;
             }
-            mCurrentlyDisplayedSortType = sortType;
+            setSortType( sortType );
 
             // Special case fetching favorite movies from database.
             // only do the fetch once when the setting changes.
@@ -214,10 +216,17 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
 
         // Mash new movie results into the View that is displayed to user
         mAdapter.addAll(event.movieResults);
-
         updatePosition();
     }
 
+    private void setSortType(String sortType) {
+        mCurrentlyDisplayedSortType = sortType;
+        // Display sort type in the title bar
+        if (null == mToolbar)
+            mToolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
+        if (null != mToolbar)
+            mToolbar.setTitle(mCurrentlyDisplayedSortType);
+    }
     private void updatePosition() {
         if (null != mGridView
                 && mGridviewPosition != mGridView.getFirstVisiblePosition()
@@ -278,8 +287,8 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
 
     private void restoreState(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
+            setSortType( savedInstanceState.getString(getString(R.string.settings_sort_key)));
             mMovieList = savedInstanceState.getParcelableArrayList(getString(R.string.key_movielist));
-            mCurrentlyDisplayedSortType = savedInstanceState.getString(getString(R.string.settings_sort_key));
             mCurrentlyDisplayedPosterQuality = savedInstanceState.getString(getString(R.string.settings_image_quality_key));
             mGridviewPosition = savedInstanceState.getInt(getString(R.string.key_gridview_position));
         }
