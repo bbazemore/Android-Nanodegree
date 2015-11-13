@@ -4,13 +4,13 @@
     android:id="@+id/video_card_item"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="?android:attr/selectableItemBackground"
     android:padding="16dp"
     android:elevation="4dp">
 
     <ImageView
         android:id="@+id/video_thumbnail"
         android:contentDescription="@string/video_thumbnail"
-
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="left"
