@@ -9,7 +9,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.android.bazemom.popularmovies.adapters.ReviewAdapter;
@@ -22,7 +21,6 @@ public class ReviewFragment extends Fragment {
     private static final String TAG = ReviewFragment.class.getSimpleName();
     private View mRootView;
     private ReviewViewHolder mViewHolder;
-
     ReviewAdapter adapter;
 
     public ReviewFragment() {
@@ -49,7 +47,6 @@ public class ReviewFragment extends Fragment {
                 updateUI();
             }
         });
-
         return mRootView;
     }
 
@@ -65,29 +62,17 @@ public class ReviewFragment extends Fragment {
         }
     }
 
-
     class ReviewViewHolder {
         final TextView titleView;
         final RecyclerView recyclerView;
         final LinearLayout frameLayout;
 
-        RelativeLayout detailLayout;
-
         ReviewViewHolder() {
             titleView = (TextView) mRootView.findViewById(R.id.detail_movie_title);
+
             recyclerView = (RecyclerView) mRootView.findViewById(R.id.review_recycler_view);
             //detailLayout = (RelativeLayout) mRootView.findViewById(R.id.detail_movie_background);
             frameLayout = (LinearLayout) mRootView.findViewById(R.id.review_frame);
-
-            // Last chance to fix up the UI
-            /*frameLayout.post(new Runnable() {
-                @Override
-                public void run() {
-                    Log.d("TAG", "ReviewFragment post-run");
-                    // update the UI now we can put the poster up with the right aspect ratio
-                    //updateUI();
-                }
-            }); */
         }
     } // end ReviewViewHolder
 }

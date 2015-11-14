@@ -1,6 +1,8 @@
 package com.android.bazemom.popularmovies.adapters;
 
+import android.animation.ObjectAnimator;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,14 +24,43 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ViewHolder
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
     // you provide access to all the views for a data item in a view holder
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         // each data item is just a string in this case
         public TextView author;
         public TextView reviewContent;
+        boolean isExpanded;
+
         public ViewHolder(View v) {
             super(v);
             author = (TextView) v.findViewById(R.id.review_author);
             reviewContent = (TextView) v.findViewById(R.id.review_text);
+            isExpanded = false;
+            v.setOnClickListener(this);
+        }
+
+        @Override
+        public void onClick(View view) {
+            int newMaxLines;
+
+            // Toggle back and forth
+            // Expand the review text if truncated, or contract if it isn't
+            if (isExpanded) {
+                newMaxLines = 4;
+                reviewContent.setEllipsize(TextUtils.TruncateAt.END);
+            } else {
+                // Setting max value does not allow the animation to look good,
+                // keep it down to a dull roar.
+                newMaxLines = 1000;
+                reviewContent.setEllipsize(null);
+            }
+            // Make a graceful transition to the new card size
+            ObjectAnimator animation = ObjectAnimator.ofInt(
+                    reviewContent,
+                    "maxLines",
+                    newMaxLines);
+            animation.setDuration(2000);
+            animation.start();
+            isExpanded = !isExpanded;
         }
     }
 
@@ -43,14 +74,12 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ViewHolder
     // Create new views (invoked by the layout manager)
     @Override
     public ReviewAdapter.ViewHolder onCreateViewHolder(ViewGroup parent,
-                                                   int viewType) {
+                                                       int viewType) {
         // create a new view
         View v = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.list_item_review, parent, false);
-        // TODO: set the view's size, margins, paddings and layout parameters
 
-        ViewHolder vh = new ViewHolder(v);
-        return vh;
+        return new ViewHolder(v);
     }
 
     // Replace the contents of a view (invoked by the layout manager)
@@ -67,4 +96,6 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ViewHolder
     public int getItemCount() {
         return mDataset.size();
     }
+
+
 }

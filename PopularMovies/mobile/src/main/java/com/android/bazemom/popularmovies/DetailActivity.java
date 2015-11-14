@@ -140,7 +140,7 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
             // Launch share trailer
             if (null != mViewHolder.videoFragment) {
                 return mViewHolder.videoFragment.onShareTrailer(mRootView);
-            };
+            }
             return false;
         }
         return super.onOptionsItemSelected(item);
@@ -381,7 +381,7 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
     // reviewsLoaded gets called when we get a list of reviews back from TMDB
     @Subscribe
     public void reviewsLoaded(ReviewsLoadedEvent event) {
-        Log.i(TAG, "reviews Loaded callback! Number of reviews: " + event.reviewResults.size());
+        Log.d(TAG, "reviews Loaded callback! Number of reviews: " + event.reviewResults.size());
 
         // load the movie data into our movies list
         mReviewList.addAll(event.reviewResults);
@@ -467,6 +467,9 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
     @Subscribe
     public void videosLoaded(VideosLoadedEvent event) {
         Log.i(TAG, "videos Loaded callback! Number of trailers: " + event.trailerResults.size());
+        if (event.trailerResults.size() == 0)
+            return;
+
         // load the movie data into our movies list
         mVideoList.addAll(event.trailerResults);
         mDataReceivedVideoList = true;

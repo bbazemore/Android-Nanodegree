@@ -20,7 +20,7 @@ import java.util.List;
 /**
  * Map the video / trailer data returned from TMDB into our view.
  */
-public class VideoAdapter  extends RecyclerView.Adapter<VideoAdapter.ViewHolder> {
+public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> {
     private final static String TAG = VideoAdapter.class.getSimpleName();
 
     // All the movie trailers fit to click
@@ -43,8 +43,7 @@ public class VideoAdapter  extends RecyclerView.Adapter<VideoAdapter.ViewHolder>
                     mDataset.add(video);
                 }
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             Log.d(TAG, "Exception while filtering videos in VideoAdapter: " + e.getLocalizedMessage());
         }
     }
@@ -93,11 +92,13 @@ public class VideoAdapter  extends RecyclerView.Adapter<VideoAdapter.ViewHolder>
             thumbnailPlayView = (ImageView) itemView.findViewById(R.id.video_thumbnail);
             cardView = itemView.findViewById(R.id.video_card_item);
         }
+
         @Override
         public void onClick(View view) {
             VideoFragment.onClickTrailer(view);
             //Toast.makeText(view.getContext(), "position = " + getPosition(), Toast.LENGTH_SHORT).show();
         }
+
         public void setItem(VideoModel trailer) {
             trailerNameView.setText(trailer.getName());
 

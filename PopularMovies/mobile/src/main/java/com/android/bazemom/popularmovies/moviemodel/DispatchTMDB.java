@@ -49,7 +49,7 @@ public class DispatchTMDB {
     private int mAPITrailerRequestMovieId = 0;
 
 
-    public synchronized static DispatchTMDB getInstance(@NonNull  MovieDBService movieAPI, Bus bus) {
+    public synchronized static DispatchTMDB getInstance(@NonNull MovieDBService movieAPI, Bus bus) {
         if (sInstance == null) {
             sInstance = new DispatchTMDB(movieAPI, bus);
         }
@@ -68,14 +68,15 @@ public class DispatchTMDB {
         return sInstance;
     }
 
-    public static Bus shareBus() {return mBus;}
+    public static Bus shareBus() {
+        return mBus;
+    }
 
     @Subscribe
     public void onLoadMovies(LoadMoviesEvent event) {
 
         // Avoid having multiple calls out at once. Patience is a virtue.
-        if (mAPIRequestInProcess)
-        {
+        if (mAPIRequestInProcess) {
             // Special case, we don't want to miss a start over request
             if (!(event.page == 1 && mPageRequested != 2))
                 // Just a duplicate run-of-the-mill request
@@ -104,24 +105,25 @@ public class DispatchTMDB {
         // Get the next page worth of data, and prep to advance to the next page
         movieDBService.getMoviesList(event.sortType, mPageRequested++, event.api_key, new retrofit.Callback<MovieResults>() {
             @Override
-            public void success (MovieResults response, Response rawResponse){
+            public void success(MovieResults response, Response rawResponse) {
                 mLastMovieSet = response;
                 mBus.post(new MoviesLoadedEvent(response));
                 mAPIRequestInProcess = false;
             }
 
             @Override
-            public void failure (RetrofitError error){
+            public void failure(RetrofitError error) {
                 mAPIRequestInProcess = false;
                 mBus.post(new MovieApiErrorEvent(error));
             }
         });
 
     }
-   /* When subscribing to events it is often desired to also fetch the current known value for
-    * specific events (e.g., current list of movies). To address this common paradigm,
-    * Otto adds the concept of 'Producers' which provide an immediate callback to any subscribers upon their registration.
-    */
+
+    /* When subscribing to events it is often desired to also fetch the current known value for
+     * specific events (e.g., current list of movies). To address this common paradigm,
+     * Otto adds the concept of 'Producers' which provide an immediate callback to any subscribers upon their registration.
+     */
     @Produce
     public MoviesAvailableEvent getMoviesNow() {
         // Assuming 'lastMovieSet' exists.
@@ -143,7 +145,7 @@ public class DispatchTMDB {
         // Get the detailed info for one movie
         movieDBService.getMovieDetails(event.movieId, event.api_key, new retrofit.Callback<MovieDetailModel>() {
             @Override
-            public void success (MovieDetailModel response, Response rawResponse){
+            public void success(MovieDetailModel response, Response rawResponse) {
                 mAPIDetailRequestMovieId = 0;  // request is no longer outstanding
                 try {
                     mBus.post(new MovieDetailLoadedEvent(response));
@@ -153,13 +155,14 @@ public class DispatchTMDB {
             }
 
             @Override
-            public void failure (RetrofitError error){
+            public void failure(RetrofitError error) {
                 mBus.post(new MovieApiErrorEvent(error));
                 mAPIDetailRequestMovieId = 0;  // request is no longer outstanding
             }
         });
 
     }
+
     /* When subscribing to events it is often desired to also fetch the current known value for
      * specific events (e.g., current list of movies). To address this common paradigm,
      * Otto adds the concept of 'Producers' which provide an immediate callback to any subscribers upon their registration.
@@ -174,10 +177,12 @@ public class DispatchTMDB {
     ///////////////////////////////////////////
     @Subscribe
     public void onLoadReviewsEvent(LoadReviewsEvent event) {
-        if (mAPIReviewRequestMovieId == event.movieId)
+        if (mAPIReviewRequestMovieId == event.movieId) {
             // If we already have an outstanding request for this movie, don't send out a duplicate request
             // There is no sense in having multiple network calls and updating the UI multiple times
+            Log.d(TAG, "Ignore duplicate review request for movie id: " + mAPIReviewRequestMovieId);
             return;
+        }
         mAPIReviewRequestMovieId = event.movieId;
 
         // The UI might ask us to start over from the beginning.
@@ -190,33 +195,39 @@ public class DispatchTMDB {
         }
 
         // Get the detailed info for one movie, if we aren't already past the last page of results
-        if (mReviewPageRequested != -1) {
-            movieDBService.getMovieReviews(event.movieId, mReviewPageRequested, event.api_key, new retrofit.Callback<MovieReviewListModel>() {
-                @Override
-                public void success(MovieReviewListModel response, Response rawResponse) {
-                    Log.d(TAG, "Reviews received!");
-                    mAPIReviewRequestMovieId = 0;  // request is no longer outstanding
-                    if (mReviewPageRequested > response.getTotalPages())
-                        mReviewPageRequested = -1;  // end of the line
-                    else
-                        mReviewPageRequested++;
-                    try {
-                        //mLastMovieDetail = response;
-                        mBus.post(new ReviewsLoadedEvent(response));
-                    } catch (Exception e) {
-                        Log.e(TAG, "Reviews Callback failed to post ReviewsLoadedEvent: " + e.getLocalizedMessage());
-                    }
-                }
-
-                @Override
-                public void failure(RetrofitError error) {
-                    Log.d(TAG, "Reviews failed");
-                    mBus.post(new MovieApiErrorEvent(error));
-                    mAPIReviewRequestMovieId = 0;  // request is no longer outstanding
-                }
-            });
+        if (mReviewPageRequested == -1) {
+            Log.d(TAG, "Ignoring onLoadReviews request because we are past end of input.");
+            return;
         }
+        movieDBService.getMovieReviews(event.movieId, mReviewPageRequested, event.api_key, new retrofit.Callback<MovieReviewListModel>() {
+            @Override
+            public void success(MovieReviewListModel response, Response rawResponse) {
+                Log.d(TAG, "Reviews received!");
+                mAPIReviewRequestMovieId = 0;  // request is no longer outstanding
+                if (mReviewPageRequested > response.getTotalPages()) {
+                    Log.d(TAG, "Reviews starting over at page 1 after page requested was " + mReviewPageRequested);
+                    // mReviewPageRequested = -1;  // end of the line
+                    mReviewPageRequested = 1;  // start over
+
+                } else
+                    mReviewPageRequested++;
+                try {
+                    //mLastMovieDetail = response;
+                    mBus.post(new ReviewsLoadedEvent(response));
+                } catch (Exception e) {
+                    Log.e(TAG, "Reviews Callback failed to post ReviewsLoadedEvent: " + e.getLocalizedMessage());
+                }
+            }
+
+            @Override
+            public void failure(RetrofitError error) {
+                Log.d(TAG, "Reviews failed");
+                mBus.post(new MovieApiErrorEvent(error));
+                mAPIReviewRequestMovieId = 0;  // request is no longer outstanding
+            }
+        });
     }
+
     ////////////////////////////////////////////
     // Start of Movie Videos support
     ///////////////////////////////////////////
@@ -225,17 +236,16 @@ public class DispatchTMDB {
         if (mAPITrailerRequestMovieId == event.movieId) {
             // If we already have an outstanding request for this movie, don't send out a duplicate request
             // There is no sense in having multiple network calls and updating the UI multiple times
-            Log.d(TAG, "Ignore duplicate video request for movie id: " + mAPIDetailRequestMovieId);
+            Log.d(TAG, "Ignore duplicate video request for movie id: " + mAPITrailerRequestMovieId);
             return;
         }
         mAPITrailerRequestMovieId = event.movieId;
 
         // Get the video urls for one movie. They are all returned at once, not paged
-
         movieDBService.getMovieVideos(event.movieId, event.api_key, new retrofit.Callback<MovieVideoListModel>() {
             @Override
             public void success(MovieVideoListModel response, Response rawResponse) {
-                Log.d(TAG, "Reviews received!");
+                Log.d(TAG, "Videos received!");
                 mAPITrailerRequestMovieId = 0;  // request is no longer outstanding
                 try {
                     //mLastMovieDetail = response;
