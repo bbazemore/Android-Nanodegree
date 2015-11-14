@@ -72,7 +72,7 @@ public class ReviewFragment extends Fragment {
 
             recyclerView = (RecyclerView) mRootView.findViewById(R.id.review_recycler_view);
             //detailLayout = (RelativeLayout) mRootView.findViewById(R.id.detail_movie_background);
-            frameLayout = (LinearLayout) mRootView.findViewById(R.id.review_frame);
+            frameLayout = (LinearLayout) mRootView.findViewById(R.id.fragment_review);
         }
     } // end ReviewViewHolder
 }

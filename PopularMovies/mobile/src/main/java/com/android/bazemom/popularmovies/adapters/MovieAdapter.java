@@ -61,7 +61,7 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         // Gets the AndroidFlavor object from the ArrayAdapter at the appropriate position
-        Movie movie = getItem(position);
+        final Movie movie = getItem(position);
 
         // Adapters recycle views to AdapterViews.
         // If this is a new View object we're getting, then inflate the layout.
@@ -71,26 +71,36 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.list_item_movie, parent, false);
         }
 
-        ImageView posterView = (ImageView) convertView.findViewById(R.id.list_item_movie_imageview);
-
-        // To build an image URL, we need 3 pieces of data. The baseurl, size and filepath.
-        Context context = convertView.getContext();
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        String posterSize = prefs.getString(context.getString(R.string.settings_image_quality_key), context.getString(R.string.settings_poster_quality_high));
-        String posterURL = context.getString(R.string.TMDB_image_base_url)  + posterSize + movie.posterPath;
-
+        final ImageView posterView = (ImageView) convertView.findViewById(R.id.list_item_movie_imageview);
         /* Todo: store poster locally, Picasso load from local path first, if that image file does not
          * exist, get the poster from the internet TMDB and then stash it locally.
          * See http://stackoverflow.com/questions/27729976/download-and-save-images-using-picasso
          */
+        // Wait until the ImageView has a size before filling it in
+        posterView.post(new Runnable() {
+            @Override
+            public void run() {
+                //Log.d("TAG", "MovieAdapter post-run");
+                // update the UI now we can put the poster up with the right aspect ratio
+                loadPoster(getContext(), posterView, movie.posterPath);
+            }});
+
+
+        return convertView;
+    }
+    private void loadPoster(Context context, ImageView posterView, String posterPath) {
+        // To build an image URL, we need 3 pieces of data. The baseurl, size and filepath.
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        String posterSize = prefs.getString(context.getString(R.string.settings_image_quality_key), context.getString(R.string.settings_poster_quality_high));
+        String posterURL = context.getString(R.string.TMDB_image_base_url)  + posterSize + posterPath;
 
         // Here’s an example URL: http://image.tmdb.org/t/p/w500/8uO0gUM8aNqYLs1OsTBQiXu0fEv.jpg
         Picasso.with(getContext())
-        .load(posterURL)
-        //.placeholder(R.mipmap.ic_launcher) too busy looking
-        .error(R.mipmap.ic_error_fallback)         // optional
-        .into(posterView);
-
-        return convertView;
+                .load(posterURL)
+                        //.placeholder(R.mipmap.ic_launcher) too busy looking
+                .error(R.mipmap.ic_error_fallback)         // optional]
+                .fit()
+                .into(posterView);
     }
 }

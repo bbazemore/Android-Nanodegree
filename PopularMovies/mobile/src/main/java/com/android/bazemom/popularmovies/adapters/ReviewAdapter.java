@@ -3,13 +3,14 @@ package com.android.bazemom.popularmovies.adapters;
 import android.animation.ObjectAnimator;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.android.bazemom.popularmovies.R;
-import com.android.bazemom.popularmovies.moviemodel.ReviewModel;
+import com.android.bazemom.popularmovies.Review;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +20,8 @@ import java.util.List;
  * From: http://developer.android.com/training/material/lists-cards.html#RVExamples
  */
 public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ViewHolder> {
-    private List<ReviewModel> mDataset;
+    private final static String TAG = ReviewAdapter.class.getSimpleName();
+    private List<Review> mDataset;
 
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
@@ -28,6 +30,7 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ViewHolder
         // each data item is just a string in this case
         public TextView author;
         public TextView reviewContent;
+        private int maxLines;
         boolean isExpanded;
 
         public ViewHolder(View v) {
@@ -50,7 +53,8 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ViewHolder
             } else {
                 // Setting max value does not allow the animation to look good,
                 // keep it down to a dull roar.
-                newMaxLines = 1000;
+                Log.d(TAG, "On click review new max lines is: " + maxLines);
+                newMaxLines = maxLines;
                 reviewContent.setEllipsize(null);
             }
             // Make a graceful transition to the new card size
@@ -58,16 +62,16 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ViewHolder
                     reviewContent,
                     "maxLines",
                     newMaxLines);
-            animation.setDuration(2000);
+            //animation.setDuration(500);
             animation.start();
             isExpanded = !isExpanded;
         }
     }
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    public ReviewAdapter(List<ReviewModel> myDataset) {
+    public ReviewAdapter(List<Review> myDataset) {
         if (null == myDataset)
-            myDataset = new ArrayList<ReviewModel>();
+            myDataset = new ArrayList<Review>();
         mDataset = myDataset;
     }
 
@@ -87,8 +91,12 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ViewHolder
     public void onBindViewHolder(ViewHolder holder, int position) {
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
-        holder.author.setText(mDataset.get(position).getAuthor());
-        holder.reviewContent.setText(mDataset.get(position).getContent());
+        holder.author.setText(mDataset.get(position).author);
+        String reviewText = mDataset.get(position).content;
+        holder.reviewContent.setText(reviewText);
+
+        // very rough idea of line count, assuming small device
+        holder.maxLines = Math.max(reviewText.length() / 20, 4);
     }
 
     // Return the size of your dataset (invoked by the layout manager)
@@ -96,6 +104,4 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ViewHolder
     public int getItemCount() {
         return mDataset.size();
     }
-
-
 }

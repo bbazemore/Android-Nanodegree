@@ -10,8 +10,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.android.bazemom.popularmovies.R;
+import com.android.bazemom.popularmovies.Video;
 import com.android.bazemom.popularmovies.VideoFragment;
-import com.android.bazemom.popularmovies.moviemodel.VideoModel;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -24,22 +24,22 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
     private final static String TAG = VideoAdapter.class.getSimpleName();
 
     // All the movie trailers fit to click
-    private List<VideoModel> mDataset;
+    private List<Video> mDataset;
 
     //////////
     // Accept all the videos we can play
     /////////
-    public VideoAdapter(List<VideoModel> myDataset) {
+    public VideoAdapter(List<Video> myDataset) {
         if (null == mDataset)
-            mDataset = new ArrayList<VideoModel>();
+            mDataset = new ArrayList<Video>();
 
         // Only include Youtube videos since those are the only ones we
         // support playing
         try {
-            for (VideoModel video : myDataset) {
+            for (Video video : myDataset) {
                 // why is it so awkward to get a string resource in an Adapter?
                 // getString(R.string.tmdb_site_value_YouTube))
-                if (video.getSite().contentEquals("YouTube")) {
+                if (video.site.contentEquals("YouTube")) {
                     mDataset.add(video);
                 }
             }
@@ -99,10 +99,10 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
             //Toast.makeText(view.getContext(), "position = " + getPosition(), Toast.LENGTH_SHORT).show();
         }
 
-        public void setItem(VideoModel trailer) {
-            trailerNameView.setText(trailer.getName());
+        public void setItem(Video trailer) {
+            trailerNameView.setText(trailer.name);
 
-            String youtubeTrailerId = trailer.getKey();
+            String youtubeTrailerId = trailer.key;
             String youtubeThumbnailURL = "http://img.youtube.com/vi/" + youtubeTrailerId + "/0.jpg";
             Uri youtubeURL = Uri.parse("http://www.youtube.com/watch?v=" + youtubeTrailerId);
 

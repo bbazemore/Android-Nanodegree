@@ -34,9 +34,10 @@
     <string name="settings_poster_quality_medium" translatable="false">w185</string>
     <string name="settings_poster_quality_high" translatable="false">w500</string>
 
+    <!-- backdrop quality can be as high as w780, but that tends to run out of memory. -->
     <string name="settings_backdrop_quality_low" translatable="false">w300</string>
     <string name="settings_backdrop_quality_medium" translatable="false">w500</string>
-    <string name="settings_backddrop_quality_high" translatable="false">w780</string>
+    <string name="settings_backddrop_quality_high" translatable="false">w500</string>
 
     <string name="settings_sort_label">Populate and sort the movies by:</string>
     <string name="settings_sort_key" translatable="false">

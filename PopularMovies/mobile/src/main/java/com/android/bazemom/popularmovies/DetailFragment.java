@@ -132,6 +132,8 @@ import com.squareup.picasso.Target;
         if (movieDetail.backdropPath != null && !movieDetail.backdropPath.isEmpty()
                 && mViewHolder.backgroundWidth > 0) {
             int backgroundSizeId = R.string.settings_backddrop_quality_high;
+            // drop down the resolution on larger devices to keep from getting out of memory
+            // sadly the devices with best resolution get the lowest quality image.
             if (posterSize.equals(getString(R.string.settings_poster_quality_medium))) {
                 backgroundSizeId = R.string.settings_backdrop_quality_medium;
             } else if (posterSize.equals(getString(R.string.settings_poster_quality_low))) {
@@ -144,8 +146,11 @@ import com.squareup.picasso.Target;
 
 
             Picasso.with(getActivity()).load(backgroundURL)
+                    //.memoryPolicy(MemoryPolicy.NO_CACHE) // we run out of memory on tablets
                     .resize(mViewHolder.backgroundWidth, mViewHolder.backgroundHeight)
+                    .onlyScaleDown()  // the image will only be resized if it is too big
                     .centerInside()
+                    .error(R.mipmap.ic_launcher)         // optional
                     .into(mViewHolder.backgroundTarget);
         }
     }
@@ -175,7 +180,7 @@ import com.squareup.picasso.Target;
             rating = (TextView) mRootView.findViewById(R.id.detail_movie_user_rating);
             posterView = (ImageView) mRootView.findViewById(R.id.detail_movie_poster);
             favoriteButton = (ImageButton) mRootView.findViewById(R.id.detail_favorite_button);
-            detailLayout = (RelativeLayout) mRootView.findViewById(R.id.detail_movie_background);
+            detailLayout = (RelativeLayout) mRootView.findViewById(R.id.fragment_detail);
 
             // Detail movie background set up
             backgroundTarget = new Target() {

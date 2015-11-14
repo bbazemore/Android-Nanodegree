@@ -205,10 +205,8 @@ public class DispatchTMDB {
                 Log.d(TAG, "Reviews received!");
                 mAPIReviewRequestMovieId = 0;  // request is no longer outstanding
                 if (mReviewPageRequested > response.getTotalPages()) {
-                    Log.d(TAG, "Reviews starting over at page 1 after page requested was " + mReviewPageRequested);
-                    // mReviewPageRequested = -1;  // end of the line
-                    mReviewPageRequested = 1;  // start over
-
+                    Log.d(TAG, "Reviews finished after page requested was " + mReviewPageRequested);
+                    mReviewPageRequested = -1;  // end of the line
                 } else
                     mReviewPageRequested++;
                 try {

@@ -19,7 +19,7 @@
         android:layout_height="match_parent"
         android:layout_below="@id/toolbar"
         android:background="@mipmap/ic_launcher"
-        android:columnWidth="150dp"
+        android:columnWidth="168dp"
         android:horizontalSpacing="0dp"
         android:numColumns="auto_fit"
         android:stretchMode="columnWidth"
