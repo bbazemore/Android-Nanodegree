@@ -84,6 +84,10 @@ public class DispatchTMDB {
                 // the pages requested from this dispatch, no worries. It will work anyway.
                 return;
         }
+        // We get favorites from the local database, not the TMDB
+        if (event.sortType.equals("favorite"))
+            return;
+
         // Keep track of the last outstanding request
         mAPIRequestInProcess = true;
 
