@@ -31,6 +31,7 @@ import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 
 /**
@@ -39,8 +40,6 @@ import java.util.ArrayList;
  */
 public class MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
     private final static String TAG = MainActivityFragment.class.getSimpleName();
-    public final static String EXTRA_MOVIE_ID = "com.android.bazemom.popularmovies.app.MovieId";
-
     private static final int FAVORITE_LOADER = 0;
 
     private ArrayList<Movie> mMovieList;
@@ -71,6 +70,14 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         receiveEvents();
     }
 
+    @Override public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        // retain this fragment across configuration changes
+        setRetainInstance(true);
+        Log.d(TAG, "onCreate with retain instance");
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -98,7 +105,6 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
                     updatePosition();
                 }
             });
-
         }
 
         // Connect the UI with our fine list of movies
@@ -115,20 +121,11 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
 
                 // remember where we were in the list for when we return
                 mGridviewPosition = position;
-
-                Intent detailIntent = new Intent(getActivity(), DetailActivity.class)
-                        .putExtra(MainActivityFragment.EXTRA_MOVIE_ID, movie.id);
-
-                // Pass the movieId as an integer to the DetailActivity
-                startActivity(detailIntent);
+                launchDetailFragment(movie);
             }
         });
         mGridView.setOnScrollListener(new AbsListView.OnScrollListener() {
             public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-                // Keep track of where user is positioned in the gridview so we can
-                // restore it later if needed
-                //mGridviewPosition = firstVisibleItem;
-
                 // When the user gets within 2 screens of the bottom of the list, get some more movies
                 if (totalItemCount == 0)
                     // can't scroll past bottom if there is nothing in the list, don't loop through the workflow on this condition
@@ -146,6 +143,12 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         return mRootView;
     }
 
+    public void launchDetailFragment(Movie movie) {
+        // Pass the Movie to the Detail Activity that holds the tab container
+        Intent detailIntent = new Intent(getActivity(), DetailActivity.class);
+        detailIntent.putExtra(DetailActivity.EXTRA_MOVIE, movie);
+        startActivity(detailIntent);
+    }
     @Override
     public void onResume() {
         Log.d(TAG, "on resume");
@@ -190,6 +193,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
                 mPageRequest = 1; // start from the beginning of the new movie type
                 mGridviewPosition = ListView.INVALID_POSITION;
             }
+
             setSortType( sortType );
 
             // Special case fetching favorite movies from database.
@@ -201,6 +205,9 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
                 loadFavoriteMovies();
                 return;
             }
+        } else {
+            // Make sure title in the toolbar is current, even first time around
+            setSortType( sortType );
         }
 
         // Create an event requesting that the movie list be updated from the
@@ -224,8 +231,14 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         // Display sort type in the title bar
         if (null == mToolbar)
             mToolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
-        if (null != mToolbar)
-            mToolbar.setTitle(mCurrentlyDisplayedSortType);
+        if (null != mToolbar) {
+            // we have the sort type value - which is what we hand to the UI.
+            // Convert it to the user friendly label. They don't make this easy :(
+            String[] sortKeyStrings = getResources().getStringArray(R.array.settings_sort_values);
+            int index = Arrays.asList(sortKeyStrings).indexOf(sortType);
+            String[] sortFriendlyStrings = getResources().getStringArray(R.array.settings_sort_labels);
+            mToolbar.setTitle(sortFriendlyStrings[index]);
+        }
     }
     private void updatePosition() {
         if (null != mGridView
