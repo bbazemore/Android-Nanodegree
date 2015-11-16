@@ -27,23 +27,25 @@ import com.squareup.picasso.Target;
 // This class is effectively nested inside the DetailActivity class
 // Requires the caller to implement the MovieData interface so it can
 // get the movie detail data
- public final class DetailFragment extends Fragment {
+public final class DetailFragment extends Fragment {
     private static final String TAG = DetailFragment.class.getSimpleName();
+    private MovieDetail mMovieDetail;
     private View mRootView;
     private DetailViewHolder mViewHolder;
-
-    // private ShareActionProvider mShareActionProvider;  // V2?
 
     public DetailFragment() {
     }
 
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         // Get the layout adjusted to the new orientation / device
         mRootView = inflater.inflate(R.layout.fragment_detail, container, false);
 
+        if (null != savedInstanceState) {
+            mMovieDetail = savedInstanceState.getParcelable(DetailActivity.MOVIE_DETAIL);
+        }
         // Get the ids of the View elements so we don't have to fetch them over and over
         mViewHolder = new DetailViewHolder();
         // slide nerd was doing mRootView.setTag(mViewHolder) - I'm just keeping it in a member variable
@@ -73,40 +75,76 @@ import com.squareup.picasso.Target;
             public void run() {
                 Log.d("TAG", "DetailFragment post-run");
                 // update the UI now we can put the poster up with the right aspect ratio
-                updateUI();
+                updateDetailUI(mMovieDetail);
             }
         });
         return mRootView;
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable(DetailActivity.MOVIE_DETAIL, mMovieDetail);
+    }
+
     public void onResume() {
         super.onResume();
         // We are back on display. Pay attention to movie results again.
-        updateUI();
+        updateDetailUI(mMovieDetail);
     }
-    protected void updateUI() {
+
+    // Update a little bit of the UI right away with the movie that was passed
+    // in.
+    protected void updateMovieUI(Movie movie) {
         if (mRootView == null) {
-            Log.d(TAG, "updateUI no root view");
+            Log.d(TAG, "updateMovieUI no root view");
             return;
         }
-        MovieData data = (MovieData) getActivity();
-        MovieDetail movieDetail = data.getMovieDetail();
-
-        if (null == movieDetail) {
-            Log.d(TAG, "updateUI: movie detail data is null.  Skip the update");
+        if (null == movie || null == mViewHolder) {
+            Log.d(TAG, "updateMovieUI: movie data or view is null.  Skip the update");
             return;
         }
         final Context context = mRootView.getContext();
+        mViewHolder.titleView.setText(movie.title);
+        mViewHolder.overview.setText(movie.overview);
+        mViewHolder.releaseDate.setText(context.getString(R.string.detail_release_date) + movie.releaseDate);
+        mViewHolder.rating.setText(String.format(context.getString(R.string.detail_movie_user_rating), movie.voteAverage));
+    }
+
+    // Full UI update with backgrounds
+    protected void updateDetailUI(MovieDetail movieDetail) {
+        final Context context = getContext();
+
+        // Sometimes we get the movie details on a silver platter,
+        // sometimes we don't.  If we don't, go ask the activity for them,
+        // then see if we have it cached.
+        if (null == movieDetail) {
+            MovieData data = (MovieData) getActivity();
+            if (null != data) {
+                movieDetail = data.getMovieDetail();
+            }
+        }
+        if (null == movieDetail) {
+            if (null == mMovieDetail) {
+                Log.d(TAG, "updateDetailUI: movie detail data is null.  Skip the update");
+                return;
+            }
+            // go with what we have
+            movieDetail = mMovieDetail;
+        } else {
+            mMovieDetail = movieDetail;
+        }
         mViewHolder.titleView.setText(movieDetail.title);
         mViewHolder.overview.setText(movieDetail.overview);
-        mViewHolder.releaseDate.setText(context.getString(R.string.detail_release_date) + movieDetail.releaseDate);
+        mViewHolder.releaseDate.setText(context.getString(R.string.detail_release_date)
+                + movieDetail.releaseDate);
 
         // A little convoluted here to support internationalization later. Stuff the runtime
         // in minutes into a formatted string.  The placement of the number may vary in other languages.
         String runtimeText = String.format(context.getString(R.string.detail_runtime_format), movieDetail.runtime);
         mViewHolder.runtime.setText(runtimeText);
-
-        mViewHolder.rating.setText(String.format(context.getString(R.string.detail_movie_user_rating), movieDetail.voteAverage));
+        mViewHolder.rating.setText(String.format(context.getString(R.string.detail_movie_user_rating),
+                movieDetail.voteAverage));
 
         updateFavoriteButton(mViewHolder.favoriteButton, movieDetail.getFavorite());
 
@@ -143,7 +181,6 @@ import com.squareup.picasso.Target;
             String backgroundURL = context.getString(R.string.TMDB_image_base_url);
             backgroundURL += context.getString(backgroundSizeId);
             backgroundURL += movieDetail.backdropPath;
-
 
             Picasso.with(getActivity()).load(backgroundURL)
                     //.memoryPolicy(MemoryPolicy.NO_CACHE) // we run out of memory on tablets
@@ -220,7 +257,7 @@ import com.squareup.picasso.Target;
                     Log.d("TAG", String.format("Background width, height from run: %d %d", backgroundWidth, backgroundHeight));
 
                     // update the UI now we can put the poster up with the right aspect ratio
-                    updateUI();
+                    updateDetailUI(mMovieDetail);
                 }
             });
         }

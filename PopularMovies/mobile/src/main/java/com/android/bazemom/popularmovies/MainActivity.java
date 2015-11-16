@@ -24,8 +24,12 @@ import com.android.debug.hv.ViewServer;
 
 public class MainActivity extends AppCompatActivity {
     private final static String TAG = MainActivity.class.getSimpleName();
+    private static final String DETAILFRAGMENT_TAG = "DFTAG";
+    public final static int GUARDIANS_OF_GALAXY_ID = 118340; // movie id from TMDB we use by default
+
     private View mRootView;
     private Toolbar mToolbar;
+    private boolean mTwoPane = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,7 +41,22 @@ public class MainActivity extends AppCompatActivity {
 
         // For debugging - View Hierarchy
         ViewServer.get(this).addWindow(this);
-
+        if (findViewById(R.id.fragment_detail) != null) {
+            // The detail container view will be present only in the large-screen layouts
+            // (res/layout-sw600dp). If this view is present, then the activity should be
+            // in two-pane mode.
+            mTwoPane = true;
+            // In two-pane mode, show the detail view in this activity by
+            // adding or replacing the detail fragment using a
+            // fragment transaction.
+            if (savedInstanceState == null) {
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_detail, new DetailFragment(), DETAILFRAGMENT_TAG)
+                        .commit();
+            }
+        } else {
+            mTwoPane = false;
+        }
         // Set up the RESTful connection to the movie database
         // using our buddies Retrofit and Otto.
         DispatchTMDB dispatchTMDB = DispatchTMDB.getInstance();

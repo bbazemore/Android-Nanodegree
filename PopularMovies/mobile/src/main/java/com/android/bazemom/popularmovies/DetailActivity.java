@@ -3,18 +3,14 @@ package com.android.bazemom.popularmovies;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.TabLayout;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-import com.android.bazemom.popularmovies.adapters.ViewPagerAdapter;
 import com.android.bazemom.popularmovies.moviebusevents.LoadMovieDetailEvent;
 import com.android.bazemom.popularmovies.moviebusevents.LoadReviewsEvent;
 import com.android.bazemom.popularmovies.moviebusevents.LoadVideosEvent;
@@ -32,30 +28,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 interface MovieData {
-    int getMovieId();
-
+    // int getMovieId();
     MovieDetail getMovieDetail();
     List<Review> getReviewList();
     List<Video> getVideoList();
 
-    String getYouTubeKey(int videoPosition);
+    // String getYouTubeKey(int videoPosition);
     String getYouTubeURL(int videoPosition);
     int getFavorite();
     void setFavorite(int value);
 }
-
 /**
  * Display Movie Details.  Send intent with extra integer containing the Movie id
  */
 public class DetailActivity extends AppCompatActivity implements MovieData {
     private final static String TAG = DetailActivity.class.getSimpleName();
-    static final String MOVIE_ID = "MOVIE_ID";
-    private final static int GUARDIANS_OF_GALAXY_ID = 118340; // movie id from TMDB
-    private final int TAB_DETAIL = 0;
-    private final int TAB_REVIEW = 1;
-    private final int TAB_VIDEO = 2;
-
+    //public final static String EXTRA_MOVIE_ID = "com.android.bazemom.popularmovies.app.MovieId";
+    public final static String EXTRA_MOVIE = "com.android.bazemom.popularmovies.app.Movie";
     static final String packageName = DetailActivity.class.getPackage().getName();
+    static final String MOVIE = packageName + ".Movie";
     static final String REVIEW_KEY = packageName + ".ReviewList";
     static final String MOVIE_DETAIL = packageName + ".MovieDetail";
     static final String TRAILER_KEY = packageName + ".TrailerList";
@@ -69,120 +60,35 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
     // Otto gets upset if the Fragment disappears while still subscribed to outstanding events
     // Turn event notification off when we are shutting down, register for events once when
     // starting back up.
+    private boolean requestData = true;
     private boolean mReceivingEvents;
     private boolean mDataReceivedDetail = false;
     private boolean mDataReceivedReviewList = false;
     private boolean mDataReceivedVideoList = false;
 
-    private int mMovieId;
-    private View mRootView;
-    private DetailTabViewHolder mViewHolder;
-
-    protected MovieDetail mMovieDetail;
-    protected ArrayList<Review> mReviewList;
-    protected ArrayList<Video> mVideoList;
-
     // Movie API management, keep track of how many pages of data we've received
     // so we know if we are asking for more for the current movie, or starting over.
     protected int mReviewPageRequest = 0;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    // Data items
+    Movie mMovie;
+    protected MovieDetail mMovieDetail;
+    protected ArrayList<Review> mReviewList;
+    protected ArrayList<Video> mVideoList;
 
-        setContentView(R.layout.activity_detail);
-        mRootView = findViewById(R.id.detail_container);
+    // UI items
+    private View mRootView;
+    TabContainerFragment mTabContainerFragment;
 
-        // Get the ids of the View elements so we don't have to fetch them over and over
-        mViewHolder = new DetailTabViewHolder();
 
-        //setHasOptionsMenu(true);
-        mMovieId = -1;
-        boolean requestData = true;
-        boolean createFragments = true;
-
-        if (null != savedInstanceState) {
-            // restores state from saved instance
-            mMovieDetail= savedInstanceState.getParcelable(MOVIE_DETAIL);
-            if (null != mMovieDetail) {
-                requestData = false;
-                mMovieId = mMovieDetail.getId();
-                mReviewList =  savedInstanceState.getParcelableArrayList(REVIEW_KEY);
-                mVideoList = savedInstanceState.getParcelableArrayList(TRAILER_KEY);
-            }
-        }
-        if (mMovieId == -1) {
-            // get Movie detail from argument
-            Intent intent = getIntent();
-            if (intent != null && intent.hasExtra(MainActivityFragment.EXTRA_MOVIE_ID)) {
-                mMovieId = intent.getIntExtra(MainActivityFragment.EXTRA_MOVIE_ID, GUARDIANS_OF_GALAXY_ID);
-            } else mMovieId = GUARDIANS_OF_GALAXY_ID;
-
-            // Initialize the review and trailer lists so we don't have to keep checking for null
-            mReviewList = new ArrayList<Review>();
-            mVideoList = new ArrayList<Video>();
-        }
-
-        FragmentManager fragMan = getSupportFragmentManager();
-        mViewHolder.detailFragment =  (DetailFragment) fragMan.findFragmentById(R.id.fragment_detail);
-
-        if (null != mViewHolder.detailFragment) {
-            // cache the locations of the rest of the existing fragments
-            mViewHolder.reviewFragment = (ReviewFragment) fragMan.findFragmentById(R.id.fragment_review);
-            mViewHolder.videoFragment = (VideoFragment) fragMan.findFragmentById(R.id.fragment_video);
-        }
-        else {
-            // Create a fragment to handle each tab.  Cache them away so we can poke them
-            // when someone selects a tab, and when the data arrives back from the cloud.
-            mViewHolder.detailFragment = new DetailFragment();
-            mViewHolder.reviewFragment = new ReviewFragment();
-            mViewHolder.videoFragment = new VideoFragment();
-
-            // Set up in case we have movies with no reviews or trailers
-            EMPTY_REVIEW.setAuthor("");
-            EMPTY_REVIEW.setContent(getString(R.string.review_no_reviews));
-
-        }
-
-        if (requestData) {
-            // Start the data cooking
-            getDetails(1);
-            getReviews(1);
-            getVideos(1);
-        }
-
-        // Tab layout set up
-        setSupportActionBar(mViewHolder.toolbar);
-        setupViewPager(mViewHolder.viewPager);
-        mViewHolder.tabLayout.setupWithViewPager(mViewHolder.viewPager);
-    }
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_detail, menu);
-        return true;
-    }
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        if (id == R.id.action_share) {
-            // Launch share trailer
-            if (null != mViewHolder.videoFragment) {
-                return mViewHolder.videoFragment.onShareTrailer(mRootView);
-            }
-            return false;
-        }
-        return super.onOptionsItemSelected(item);
-    }
+    ////////////////////////////////////////////////////
     // MovieData interface
-    @Override
+    ///////////////////////////////////////////////////
+ /*   @Override
     public int getMovieId() {
-        return mMovieId;
+        return mMovie.id;
     }
-
+*/
     @Override
     public MovieDetail getMovieDetail() {
         return mMovieDetail;
@@ -198,21 +104,18 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
         return mVideoList;
     }
 
-    @Override
-    public String getYouTubeKey(int videoPosition) {
-        String urlKey = "YouTube key not available for this movie";
+    public String getYouTubeURL(int videoPosition) {
+        String youtubeURL = "YouTube key not available for this movie";
         try {
-            urlKey = mVideoList.get(videoPosition).key;
+            youtubeURL = mVideoList.get(videoPosition).key;
+            youtubeURL = Uri.parse("http://www.youtube.com/watch?v=" + youtubeURL).toString();
         } catch (Exception e) {
             Log.d(TAG, "getYouTubeKey failed for video at index: " + videoPosition);
         }
-        return urlKey;
+
+        return youtubeURL;
     }
 
-    public String getYouTubeURL(int videoPosition) {
-        String youtubeTrailerId = getYouTubeKey(videoPosition);
-        return Uri.parse("http://www.youtube.com/watch?v=" + youtubeTrailerId).toString();
-    }
     @Override
     public int getFavorite() {
         return mMovieDetail.getFavorite();
@@ -226,78 +129,89 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
         LocalDBHelper dbHelper = new LocalDBHelper(mRootView.getContext());
         dbHelper.updateMovieInLocalDB(mMovieDetail);
         if (value == 1)
-            Toast.makeText(this, R.string.favorite_added, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this,R.string.favorite_added, Toast.LENGTH_SHORT).show();
     }
 
-    // Handy dandy little class to cache the View ids so we don't keep looking for them every
-    // time we refresh the UI.  We only need to fetch them after the inflate in onCreateView
-    class DetailTabViewHolder {
-        Toolbar toolbar;
-        ViewPager viewPager;
-        TabLayout tabLayout;
-        DetailFragment detailFragment;
-        ReviewFragment reviewFragment;
-        VideoFragment videoFragment;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-        DetailTabViewHolder() {
-            toolbar = (Toolbar) mRootView.findViewById(R.id.tabanim_toolbar);
-            viewPager = (ViewPager) mRootView.findViewById(R.id.tabanim_viewpager);
-            tabLayout = (TabLayout) mRootView.findViewById(R.id.tabanim_tabs);
+        setContentView(R.layout.activity_detail);
+        mRootView = findViewById(R.id.detail_container);
 
-            // Set up tab listeners
-            tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-                @Override
-                public void onTabSelected(TabLayout.Tab tab) {
-                    updateTab(tab);
-                }
+        // get Movie detail from argument
+        Intent intent = getIntent();
+        Bundle tabArg = null;
+        if (intent != null) {
+            mMovie = (Movie) intent.getParcelableExtra(EXTRA_MOVIE);
+            tabArg = intent.getExtras();
+            if (null== mMovie)
+                Log.d(TAG, "Why don't we have a movie in Detail onCreate?");
+        };
 
-                @Override
-                public void onTabUnselected(TabLayout.Tab tab) {
-                }
+        if (savedInstanceState == null) {
+            requestData = true;
+            mReviewList = new ArrayList<Review>();
+            mVideoList = new ArrayList<Video>();
 
-                @Override
-                public void onTabReselected(TabLayout.Tab tab) {
-                    updateTab(tab);
-                }
-            });  // end tab listener
-
-            tabLayout.post(new Runnable() {
-                @Override
-                public void run() {
-                    // Anything we need to fix up in the display once it is up
-                    Log.d("TAG", "DetailTabView post-run");
-                }
-            });
+            // Set up in case we have movies with no reviews or trailers
+            EMPTY_REVIEW.setAuthor("");
+            EMPTY_REVIEW.setContent(getString(R.string.review_no_reviews));
+            // pass Movie detail through to the tab container fragment
+            FragmentManager fragMan = getSupportFragmentManager();
+            mTabContainerFragment = new TabContainerFragment();
+            mTabContainerFragment.setArguments(tabArg);
+            fragMan.beginTransaction()
+                    .add(R.id.detail_container, mTabContainerFragment, TabContainerFragment.TAG )
+                    .commit();
+        }
+        else {
+            // restores state from saved instance
+            mMovie = savedInstanceState.getParcelable(MOVIE);
+            mMovieDetail= savedInstanceState.getParcelable(MOVIE_DETAIL);
+            if (null != mMovieDetail) {
+                requestData = false;
+                // mMovieId = mMovieDetail.getId();
+                mReviewList = savedInstanceState.getParcelableArrayList(REVIEW_KEY);
+                mVideoList = savedInstanceState.getParcelableArrayList(TRAILER_KEY);
+            }
+        }
+        if(requestData) {
+            // Start the data cooking
+            getDetails(1);
+            getReviews(1);
+            getVideos(1);
         }
     }
 
-    private void updateTab(TabLayout.Tab tab) {
-        mViewHolder.viewPager.setCurrentItem(tab.getPosition());
-        switch (tab.getPosition()) {
-            case TAB_DETAIL:
-                Log.d(TAG, "Tab select detail");
-                mViewHolder.detailFragment.updateUI();
-                break;
-            case TAB_REVIEW:
-                Log.d(TAG, "Tab select review");
-                mViewHolder.reviewFragment.updateUI();
-                break;
-            case TAB_VIDEO:
-                Log.d(TAG, "Tab select video");
-                mViewHolder.videoFragment.updateUI();
-                break;
-            default:
-                Log.d(TAG, "Tab select something different " + tab.getPosition());
-        }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_detail, menu);
+        return true;
     }
-
-    private void setupViewPager(ViewPager viewPager) {
-        ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
-
-        adapter.addFrag(mViewHolder.detailFragment, getString(R.string.tab_title_detail));
-        adapter.addFrag(mViewHolder.reviewFragment, getString(R.string.tab_title_review));
-        adapter.addFrag(mViewHolder.videoFragment, getString(R.string.tab_title_trailer));
-        viewPager.setAdapter(adapter);
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+        if (id == R.id.action_share) {
+            // Launch share trailer
+            if (null != mTabContainerFragment) {
+                return mTabContainerFragment.onShareTrailer(mRootView);
+            }
+            return false;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable(MOVIE, mMovie);
+        outState.putParcelable(MOVIE_DETAIL, mMovieDetail);
+        outState.putParcelableArrayList(REVIEW_KEY, mReviewList);
+        outState.putParcelableArrayList(TRAILER_KEY, mVideoList);
     }
 
     @Override
@@ -307,7 +221,7 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
 
         // We are back on display. Pay attention to movie results again.
         receiveEvents();
-        //updateUI();
+        //updateDetailUI();
     }
 
     @Override
@@ -317,14 +231,6 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
 
         // Don't bother processing results when we aren't on display.
         stopReceivingEvents();
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putParcelable(MOVIE_DETAIL, mMovieDetail);
-        outState.putParcelableArrayList(REVIEW_KEY, mReviewList);
-        outState.putParcelableArrayList(TRAILER_KEY, mVideoList);
     }
 
     // Use some kind of injection, so that we can swap in a mock for tests.
@@ -374,22 +280,16 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
         mMovieDetail = event.movieResult;
         mDataReceivedDetail = true;
         Log.i(TAG, "movie detail Loaded ");
-        updateDetailUI();
+        updateDetailUI(mMovieDetail);
     }
-
-    private void updateDetailUI() {
-        if (null != mViewHolder
-                && null != mViewHolder.detailFragment) {
-            try {
-                mViewHolder.detailFragment.updateUI();
-            } catch (Exception e) {
-                // not a big deal
-                Log.d(TAG, "DetailFragment not ready for update: " + e.getLocalizedMessage());
-                return;
-            }
-            if (null != mMovieDetail)
-                mViewHolder.toolbar.setTitle(mMovieDetail.title);
-        }
+    // If we have the basic movie information, use that to start filling in the UI
+    private void updateMovieUI() {
+        if (null != mTabContainerFragment)
+           mTabContainerFragment.updateMovieUI(mMovie);
+    }
+    private void updateDetailUI(MovieDetail movieDetail) {
+        if (null != mTabContainerFragment)
+            mTabContainerFragment.updateDetailUI(movieDetail);
     }
 
     private void getDetails(int nextPage) {
@@ -399,12 +299,12 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
             return;
 
         LocalDBHelper dbHelper = new LocalDBHelper(mRootView.getContext());
-        mMovieDetail = dbHelper.getMovieDetailFromDB(mMovieId);
+        mMovieDetail = dbHelper.getMovieDetailFromDB(mMovie.id);
         if (null != mMovieDetail) {
             // We are in luck, we have the movie details handy already.
             mDataReceivedDetail = true;
             // We can update the UI right away
-            updateDetailUI();
+            updateDetailUI(mMovieDetail);
         } else {
             // We have to get the movie from the cloud
             // Start listening for the Movie Detail loaded event
@@ -412,7 +312,7 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
 
             //  Now request that the movie details be loaded
             String apiKey = mRootView.getContext().getString(R.string.movie_api_key);
-            LoadMovieDetailEvent loadMovieRequest = new LoadMovieDetailEvent(apiKey, mMovieId);
+            LoadMovieDetailEvent loadMovieRequest = new LoadMovieDetailEvent(apiKey, mMovie.id);
 
             getBus().post(loadMovieRequest);
         }
@@ -439,15 +339,8 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
             getReviews(event.currentPage + 1);
         }
 
-        if (null != mViewHolder
-                && null != mViewHolder.reviewFragment) {
-            try {
-                mViewHolder.reviewFragment.updateUI();
-            } catch (Exception e) {
-                // not a big deal
-                Log.d(TAG, "ReviewFragment not ready for update: " + e.getLocalizedMessage());
-            }
-        }
+        if (null != mTabContainerFragment)
+            mTabContainerFragment.updateReviewList();
     }
 
     protected void getReviews(int nextPage) {
@@ -462,7 +355,7 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
         if (null != mReviewList) {
             // We are in luck, we have the movie details handy already.
             // We can update the UI right away
-            updateUI();
+            updateDetailUI();
         } else { */
         // We have to get the movie from the cloud
         // Start listening for the Reviews loaded event
@@ -470,7 +363,7 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
 
         //  Now request that the reviews be loaded
         String apiKey = mRootView.getContext().getString(R.string.movie_api_key);
-        LoadReviewsEvent loadReviewsRequest = new LoadReviewsEvent(apiKey, mMovieId, nextPage);
+        LoadReviewsEvent loadReviewsRequest = new LoadReviewsEvent(apiKey, mMovie.id, nextPage);
 
         Log.i(TAG, "request reviews");
         getBus().post(loadReviewsRequest);
@@ -489,7 +382,7 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
             // We are in luck, we have the movie details handy already.
             mDataReceivedVideoList = true;
             // We can update the UI right away
-            updateUI();
+            updateDetailUI();
         } else { */
         // We have to get the movie from the cloud
         // Start listening for the Reviews loaded event
@@ -497,7 +390,7 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
 
         //  Now request that the reviews be loaded
         String apiKey = mRootView.getContext().getString(R.string.movie_api_key);
-        LoadVideosEvent loadVideosRequest = new LoadVideosEvent(apiKey, mMovieId);
+        LoadVideosEvent loadVideosRequest = new LoadVideosEvent(apiKey, mMovie.id);
 
         Log.i(TAG, "request video trailers");
         getBus().post(loadVideosRequest);
@@ -521,14 +414,8 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
         if (mVideoList.isEmpty()) {
             mVideoList.add(new Video(EMPTY_VIDEO));
         }
-        if (null != mViewHolder
-                && null != mViewHolder.videoFragment) {
-            try {
-                mViewHolder.videoFragment.updateUI();
-            } catch (Exception e) {
-                Log.d(TAG, "videosLoaded received, but videoFragment not ready yet");
-            }
+        if (null != mTabContainerFragment) {
+            mTabContainerFragment.updateVideoList();
         }
     }
-
 } // end class DetailActivity

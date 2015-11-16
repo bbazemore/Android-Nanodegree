@@ -52,7 +52,7 @@ public class ReviewFragment extends Fragment {
 
     // Once ReviewList is filled in, get the adapter to fill in the recycler view
     void updateUI() {
-        Log.d(TAG, "updateUI");
+        Log.d(TAG, "updateDetailUI");
         MovieData data = (MovieData) getActivity();
         if (null != data && null != mViewHolder) {
             {
