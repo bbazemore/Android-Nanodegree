@@ -37,6 +37,14 @@ public class TabContainerFragment extends Fragment  {
     public TabContainerFragment() {
     Log.d(TAG, "TabContainerFragment constructor");
     }
+    // Constructor for Master-Detail view
+    public static TabContainerFragment newInstance(Movie movie) {
+        TabContainerFragment newTabFragment = new TabContainerFragment();
+        Bundle args = new Bundle();
+        args.putParcelable(MovieData.MOVIE, movie);
+        newTabFragment.setArguments(args);
+        return newTabFragment;
+    }
     // Master view and Detail activity can tell us to change the movie here
     public void onMovieChanged(Movie movie) {
         // TODO: if the movie is different, clear the mMovieDetail, mReviewList & mVideoList
@@ -50,7 +58,7 @@ public class TabContainerFragment extends Fragment  {
         Log.d(TAG, "onCreateView");
         if (null != savedInstanceState) {
             // restores state from saved instance
-            mMovie = savedInstanceState.getParcelable(DetailActivity.MOVIE);
+            mMovie = savedInstanceState.getParcelable(MovieData.MOVIE);
         }
     }
 
@@ -66,7 +74,7 @@ public class TabContainerFragment extends Fragment  {
         // get Movie detail from argument
         Bundle args = getArguments();
         if (args != null ) {
-            mMovie = args.getParcelable(DetailActivity.EXTRA_MOVIE);
+            mMovie = args.getParcelable(MovieData.EXTRA_MOVIE);
         }
 
         // Create a fragment to handle each tab.  Cache them away so we can poke them

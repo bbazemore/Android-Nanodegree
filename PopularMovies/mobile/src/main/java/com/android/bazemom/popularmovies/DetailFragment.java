@@ -44,7 +44,7 @@ public final class DetailFragment extends Fragment {
         mRootView = inflater.inflate(R.layout.fragment_detail, container, false);
 
         if (null != savedInstanceState) {
-            mMovieDetail = savedInstanceState.getParcelable(DetailActivity.MOVIE_DETAIL);
+            mMovieDetail = savedInstanceState.getParcelable(MovieData.MOVIE_DETAIL);
         }
         // Get the ids of the View elements so we don't have to fetch them over and over
         mViewHolder = new DetailViewHolder();
@@ -84,7 +84,7 @@ public final class DetailFragment extends Fragment {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putParcelable(DetailActivity.MOVIE_DETAIL, mMovieDetail);
+        outState.putParcelable(MovieData.MOVIE_DETAIL, mMovieDetail);
     }
 
     public void onResume() {

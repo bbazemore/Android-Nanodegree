@@ -34,7 +34,7 @@ public class Review  implements Parcelable{
         dest.writeString(content);
         dest.writeString(url);
     }
-    public final Parcelable.Creator<Review> CREATOR = new Parcelable.Creator<Review>() {
+    public static final Parcelable.Creator<Review> CREATOR = new Parcelable.Creator<Review>() {
         @Override
         public Review createFromParcel(Parcel parcel) {
             return new Review(parcel);

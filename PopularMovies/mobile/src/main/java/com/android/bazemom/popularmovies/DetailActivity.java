@@ -1,7 +1,6 @@
 package com.android.bazemom.popularmovies;
 
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
@@ -9,128 +8,29 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Toast;
 
-import com.android.bazemom.popularmovies.moviebusevents.LoadMovieDetailEvent;
-import com.android.bazemom.popularmovies.moviebusevents.LoadReviewsEvent;
-import com.android.bazemom.popularmovies.moviebusevents.LoadVideosEvent;
 import com.android.bazemom.popularmovies.moviebusevents.MovieDetailLoadedEvent;
 import com.android.bazemom.popularmovies.moviebusevents.ReviewsLoadedEvent;
 import com.android.bazemom.popularmovies.moviebusevents.VideosLoadedEvent;
-import com.android.bazemom.popularmovies.movielocaldb.LocalDBHelper;
-import com.android.bazemom.popularmovies.moviemodel.DispatchTMDB;
-import com.android.bazemom.popularmovies.moviemodel.ReviewModel;
-import com.android.bazemom.popularmovies.moviemodel.VideoModel;
-import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 
-interface MovieData {
-    // int getMovieId();
-    MovieDetail getMovieDetail();
-    List<Review> getReviewList();
-    List<Video> getVideoList();
 
-    // String getYouTubeKey(int videoPosition);
-    String getYouTubeURL(int videoPosition);
-    int getFavorite();
-    void setFavorite(int value);
-}
 /**
  * Display Movie Details.  Send intent with extra integer containing the Movie id
  */
-public class DetailActivity extends AppCompatActivity implements MovieData {
+public class DetailActivity extends AppCompatActivity  implements Observer, MovieData {
     private final static String TAG = DetailActivity.class.getSimpleName();
-    //public final static String EXTRA_MOVIE_ID = "com.android.bazemom.popularmovies.app.MovieId";
-    public final static String EXTRA_MOVIE = "com.android.bazemom.popularmovies.app.Movie";
-    static final String packageName = DetailActivity.class.getPackage().getName();
-    static final String MOVIE = packageName + ".Movie";
-    static final String REVIEW_KEY = packageName + ".ReviewList";
-    static final String MOVIE_DETAIL = packageName + ".MovieDetail";
-    static final String TRAILER_KEY = packageName + ".TrailerList";
-
-    private final ReviewModel EMPTY_REVIEW = new ReviewModel();
-    private final VideoModel EMPTY_VIDEO = new VideoModel();
-
-    private Bus mBus; // the bus that is used to deliver messages to the TMDB dispatcher
-    private DispatchTMDB mDispatchTMDB;
-
-    // Otto gets upset if the Fragment disappears while still subscribed to outstanding events
-    // Turn event notification off when we are shutting down, register for events once when
-    // starting back up.
-    private boolean requestData = true;
-    private boolean mReceivingEvents;
-    private boolean mDataReceivedDetail = false;
-    private boolean mDataReceivedReviewList = false;
-    private boolean mDataReceivedVideoList = false;
-
-    // Movie API management, keep track of how many pages of data we've received
-    // so we know if we are asking for more for the current movie, or starting over.
-    protected int mReviewPageRequest = 0;
-
-    // Data items
-    Movie mMovie;
-    protected MovieDetail mMovieDetail;
-    protected ArrayList<Review> mReviewList;
-    protected ArrayList<Video> mVideoList;
 
     // UI items
     private View mRootView;
     TabContainerFragment mTabContainerFragment;
-
-
-    ////////////////////////////////////////////////////
-    // MovieData interface
-    ///////////////////////////////////////////////////
- /*   @Override
-    public int getMovieId() {
-        return mMovie.id;
-    }
-*/
-    @Override
-    public MovieDetail getMovieDetail() {
-        return mMovieDetail;
-    }
-
-    @Override
-    public List<Review> getReviewList() {
-        return mReviewList;
-    }
-
-    @Override
-    public List<Video> getVideoList() {
-        return mVideoList;
-    }
-
-    public String getYouTubeURL(int videoPosition) {
-        String youtubeURL = "YouTube key not available for this movie";
-        try {
-            youtubeURL = mVideoList.get(videoPosition).key;
-            youtubeURL = Uri.parse("http://www.youtube.com/watch?v=" + youtubeURL).toString();
-        } catch (Exception e) {
-            Log.d(TAG, "getYouTubeKey failed for video at index: " + videoPosition);
-        }
-
-        return youtubeURL;
-    }
-
-    @Override
-    public int getFavorite() {
-        return mMovieDetail.getFavorite();
-    }
-
-    @Override
-    public void setFavorite(int value) {
-        mMovieDetail.setFavorite(value);
-
-        // Persist the favorite setting in the local database
-        LocalDBHelper dbHelper = new LocalDBHelper(mRootView.getContext());
-        dbHelper.updateMovieInLocalDB(mMovieDetail);
-        if (value == 1)
-            Toast.makeText(this,R.string.favorite_added, Toast.LENGTH_SHORT).show();
-    }
+    public MovieDataService mMovieService;
+    private Movie mMovie;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -139,24 +39,19 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
         setContentView(R.layout.activity_detail);
         mRootView = findViewById(R.id.detail_container);
 
-        // get Movie detail from argument
-        Intent intent = getIntent();
-        Bundle tabArg = null;
-        if (intent != null) {
-            mMovie = (Movie) intent.getParcelableExtra(EXTRA_MOVIE);
-            tabArg = intent.getExtras();
-            if (null== mMovie)
-                Log.d(TAG, "Why don't we have a movie in Detail onCreate?");
-        };
-
         if (savedInstanceState == null) {
-            requestData = true;
-            mReviewList = new ArrayList<Review>();
-            mVideoList = new ArrayList<Video>();
+            // get Movie detail from argument
+            Intent intent = getIntent();
+            Bundle tabArg = null;
+            if (intent != null) {
+                mMovie = intent.getParcelableExtra(MovieData.EXTRA_MOVIE);
+                tabArg = intent.getExtras();
+                if (null== mMovie)
+                    Log.d(TAG, "Why don't we have a movie in Detail onCreate?");
+            }
+            mMovieService = MovieDataService.getInstance(getApplicationContext(), mMovie);
+            mMovieService.addObserver(this);
 
-            // Set up in case we have movies with no reviews or trailers
-            EMPTY_REVIEW.setAuthor("");
-            EMPTY_REVIEW.setContent(getString(R.string.review_no_reviews));
             // pass Movie detail through to the tab container fragment
             FragmentManager fragMan = getSupportFragmentManager();
             mTabContainerFragment = new TabContainerFragment();
@@ -167,20 +62,8 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
         }
         else {
             // restores state from saved instance
-            mMovie = savedInstanceState.getParcelable(MOVIE);
-            mMovieDetail= savedInstanceState.getParcelable(MOVIE_DETAIL);
-            if (null != mMovieDetail) {
-                requestData = false;
-                // mMovieId = mMovieDetail.getId();
-                mReviewList = savedInstanceState.getParcelableArrayList(REVIEW_KEY);
-                mVideoList = savedInstanceState.getParcelableArrayList(TRAILER_KEY);
-            }
-        }
-        if(requestData) {
-            // Start the data cooking
-            getDetails(1);
-            getReviews(1);
-            getVideos(1);
+            mMovie = savedInstanceState.getParcelable(MovieData.MOVIE);
+            mMovieService = savedInstanceState.getParcelable(MovieData.MOVIE_SERVICE);
         }
     }
 
@@ -208,10 +91,7 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putParcelable(MOVIE, mMovie);
-        outState.putParcelable(MOVIE_DETAIL, mMovieDetail);
-        outState.putParcelableArrayList(REVIEW_KEY, mReviewList);
-        outState.putParcelableArrayList(TRAILER_KEY, mVideoList);
+        mMovieService.saveInstanceState(outState);
     }
 
     @Override
@@ -219,9 +99,10 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
         Log.d(TAG, "on resume");
         super.onResume();
 
+        mMovieService = MovieDataService.getInstance(this, mMovie);
         // We are back on display. Pay attention to movie results again.
-        receiveEvents();
-        //updateDetailUI();
+        if (null != mMovieService)
+            mMovieService.onResume();
     }
 
     @Override
@@ -230,172 +111,38 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
         super.onPause();
 
         // Don't bother processing results when we aren't on display.
-        stopReceivingEvents();
+        mMovieService.onPause();
     }
 
-    // Use some kind of injection, so that we can swap in a mock for tests.
-    // Here we just use simple getter/setter injection for simplicity.
-    protected Bus getBus() {
-        if (mBus == null) {
-            if (mDispatchTMDB == null) {
-                mDispatchTMDB = DispatchTMDB.getInstance();
-            }
-            setBus(mDispatchTMDB.shareBus()); // can get fancy with an injector later BusProvider.getInstance();
-        }
-        return mBus;
-    }
-
-    private void setBus(Bus bus) {
-        mBus = bus;
-    }
-
-    private void receiveEvents() {
-        if (!mReceivingEvents) {
-            try {
-                Log.d(TAG, "DetailActivity Events on");
-                getBus().register(this);
-                mReceivingEvents = true;
-            } catch (Exception e) {
-                Log.i(TAG, "receiveEvents could not register with Otto bus");
-            }
-        }
-    }
-
-    private void stopReceivingEvents() {
-        if (mReceivingEvents) {
-            try {
-                Log.d(TAG, "DetailActivity Events off");
-                getBus().unregister(this);
-                mReceivingEvents = false;
-            } catch (Exception e) {
-                Log.i(TAG, "stopReceivingEvents could not unregister with Otto bus");
-            }
-        }
-    }
-
-    // moviesLoaded gets called when we get a list of movies back from TMDB
-    @Subscribe
-    public void movieDetailLoaded(MovieDetailLoadedEvent event) {
-        // load the movie data into our movies list
-        mMovieDetail = event.movieResult;
-        mDataReceivedDetail = true;
-        Log.i(TAG, "movie detail Loaded ");
-        updateDetailUI(mMovieDetail);
-    }
     // If we have the basic movie information, use that to start filling in the UI
     private void updateMovieUI() {
         if (null != mTabContainerFragment)
-           mTabContainerFragment.updateMovieUI(mMovie);
+            mTabContainerFragment.updateMovieUI(mMovie);
     }
-    private void updateDetailUI(MovieDetail movieDetail) {
+    public void updateMovieDetail(MovieDetail movieDetail) {
         if (null != mTabContainerFragment)
             mTabContainerFragment.updateDetailUI(movieDetail);
     }
 
-    private void getDetails(int nextPage) {
-        // Is this movie cached in the local DB?
-        if (mDataReceivedDetail)
-            // We have the detail data, we're done.
-            return;
+    public MovieDataService getMovieDataService() { return mMovieService; }
 
-        LocalDBHelper dbHelper = new LocalDBHelper(mRootView.getContext());
-        mMovieDetail = dbHelper.getMovieDetailFromDB(mMovie.id);
-        if (null != mMovieDetail) {
-            // We are in luck, we have the movie details handy already.
-            mDataReceivedDetail = true;
-            // We can update the UI right away
-            updateDetailUI(mMovieDetail);
-        } else {
-            // We have to get the movie from the cloud
-            // Start listening for the Movie Detail loaded event
-            receiveEvents();
-
-            //  Now request that the movie details be loaded
-            String apiKey = mRootView.getContext().getString(R.string.movie_api_key);
-            LoadMovieDetailEvent loadMovieRequest = new LoadMovieDetailEvent(apiKey, mMovie.id);
-
-            getBus().post(loadMovieRequest);
-        }
+    // moviesLoaded gets called when we get a list of movies back from TMDB
+    @Subscribe
+    public void movieDetailLoaded(MovieDetailLoadedEvent event) {
+        Log.i(TAG, "movie detail Loaded ");
+        updateMovieDetail(event.movieResult);
     }
-
     // reviewsLoaded gets called when we get a list of reviews back from TMDB
     @Subscribe
     public void reviewsLoaded(ReviewsLoadedEvent event) {
         Log.d(TAG, "reviews Loaded callback! Number of reviews: " + event.reviewResults.size());
 
-        // load the review data into our movies list
-        for (ReviewModel data : event.reviewResults) {
-            mReviewList.add(new Review(data));
-        }
-
-        if (event.endOfInput) {
-            mDataReceivedReviewList = true;
-            if (mReviewList.isEmpty()) {
-                mReviewList.add(new Review(EMPTY_REVIEW));
-            }
-        }
-        else {
-            // Ask for another page of reviews
-            getReviews(event.currentPage + 1);
-        }
-
         if (null != mTabContainerFragment)
             mTabContainerFragment.updateReviewList();
     }
-
-    protected void getReviews(int nextPage) {
-        if (mDataReceivedReviewList)
-            // we have all the reviews for this movie,
-            // don't keep asking.
-            return;
-
-        //  TODO: Is this movie cached in the local DB?
-        /*LocalDBHelper dbHelper = new LocalDBHelper(mRootView.getContext());
-        mReviewList = dbHelper.getMovieReviewsFromDB(mMovieId);
-        if (null != mReviewList) {
-            // We are in luck, we have the movie details handy already.
-            // We can update the UI right away
-            updateDetailUI();
-        } else { */
-        // We have to get the movie from the cloud
-        // Start listening for the Reviews loaded event
-        receiveEvents();
-
-        //  Now request that the reviews be loaded
-        String apiKey = mRootView.getContext().getString(R.string.movie_api_key);
-        LoadReviewsEvent loadReviewsRequest = new LoadReviewsEvent(apiKey, mMovie.id, nextPage);
-
-        Log.i(TAG, "request reviews");
-        getBus().post(loadReviewsRequest);
-        //}
+    public void updateReviewList(List<Review> reviewList) {
+        mTabContainerFragment.updateReviewList();
     }
-
-    protected void getVideos(int nextPage) {
-        if (mDataReceivedVideoList)
-            // we have all the videos for this movie
-            return;
-
-        //  TODO: Is this movie cached in the local DB?
-        /*LocalDBHelper dbHelper = new LocalDBHelper(mRootView.getContext());
-        mVideoList = dbHelper.getMovieVideosFromDB(mMovieId);
-        if (null != mReviewList) {
-            // We are in luck, we have the movie details handy already.
-            mDataReceivedVideoList = true;
-            // We can update the UI right away
-            updateDetailUI();
-        } else { */
-        // We have to get the movie from the cloud
-        // Start listening for the Reviews loaded event
-        receiveEvents();
-
-        //  Now request that the reviews be loaded
-        String apiKey = mRootView.getContext().getString(R.string.movie_api_key);
-        LoadVideosEvent loadVideosRequest = new LoadVideosEvent(apiKey, mMovie.id);
-
-        Log.i(TAG, "request video trailers");
-        getBus().post(loadVideosRequest);
-    }
-    //}
 
 
     // reviewsLoaded gets called when we get a list of reviews back from TMDB
@@ -405,17 +152,60 @@ public class DetailActivity extends AppCompatActivity implements MovieData {
         if (event.trailerResults.size() == 0)
             return;
 
-        // load the movie data into our movies list
-        for (VideoModel data : event.trailerResults) {
-            mVideoList.add(new Video(data));
-        }
-        mDataReceivedVideoList = true;
-
-        if (mVideoList.isEmpty()) {
-            mVideoList.add(new Video(EMPTY_VIDEO));
-        }
         if (null != mTabContainerFragment) {
             mTabContainerFragment.updateVideoList();
         }
+    }
+    public void updateVideoList(List<Video> videoList) {
+        mTabContainerFragment.updateVideoList();
+    }
+
+    @Override
+    public void update(Observable publisher, Object data) {
+        Log.d(TAG, "object updated" + data.toString());
+        if (data instanceof MovieDetail) {
+            mTabContainerFragment.updateDetailUI((MovieDetail) data);
+        } else if (data instanceof ArrayList) {
+            List list = (ArrayList) data;
+            if (!list.isEmpty()) {
+                if (list.get(0) instanceof Review) {
+                    mTabContainerFragment.updateReviewList();
+                } else if (list.get(0) instanceof Video) {
+                    mTabContainerFragment.updateVideoList();
+                }
+            } else {
+                Log.d(TAG, "Unexpected data type in Observer update: " + data.getClass().toString());
+            }
+        }
+    }
+
+    @Override
+    public MovieDetail getMovieDetail() {
+        return mMovieService.getMovieDetail();
+    }
+
+    @Override
+    public List<Review> getReviewList() {
+        return mMovieService.getReviewList();
+    }
+
+    @Override
+    public List<Video> getVideoList() {
+        return mMovieService.getVideoList();
+    }
+
+    @Override
+    public String getYouTubeURL(int videoPosition) {
+        return mMovieService.getYouTubeURL(videoPosition);
+    }
+
+    @Override
+    public int getFavorite() {
+        return mMovieService.getFavorite();
+    }
+
+    @Override
+    public void setFavorite(int value) {
+        mMovieService.setFavorite(value);
     }
 } // end class DetailActivity

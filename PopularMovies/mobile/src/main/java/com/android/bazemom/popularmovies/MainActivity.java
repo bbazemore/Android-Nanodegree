@@ -19,7 +19,7 @@ import com.android.debug.hv.ViewServer;
 //
 // 2. Setting up the Settings menu item
 //
-// 3. Launching the MainActivityFragment that contains the Movie Poster gridview
+// 3. Launching the MainFragment that contains the Movie Poster gridview
 //
 
 public class MainActivity extends AppCompatActivity {
@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
 
     private View mRootView;
     private Toolbar mToolbar;
-    private boolean mTwoPane = false;
+    public boolean mTwoPane = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
 
         // For debugging - View Hierarchy
         ViewServer.get(this).addWindow(this);
-        if (findViewById(R.id.fragment_detail) != null) {
+        if (findViewById(R.id.detail_container) != null) {
             // The detail container view will be present only in the large-screen layouts
             // (res/layout-sw600dp). If this view is present, then the activity should be
             // in two-pane mode.
@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
             // fragment transaction.
             if (savedInstanceState == null) {
                 getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.fragment_detail, new DetailFragment(), DETAILFRAGMENT_TAG)
+                        .replace(R.id.detail_container, new DetailFragment(), DETAILFRAGMENT_TAG)
                         .commit();
             }
         } else {

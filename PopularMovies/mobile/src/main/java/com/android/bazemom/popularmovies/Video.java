@@ -47,7 +47,7 @@ public class Video implements Parcelable {
         dest.writeInt(size);
         dest.writeString(type);
     }
-    public final Parcelable.Creator<Video> CREATOR = new Parcelable.Creator<Video>() {
+    public static final Parcelable.Creator<Video> CREATOR = new Parcelable.Creator<Video>() {
         @Override
         public Video createFromParcel(Parcel parcel) {
             return new Video(parcel);

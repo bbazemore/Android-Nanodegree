@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -38,8 +39,8 @@ import java.util.Arrays;
  * This is where we will display a grid view of movies
  * See About.txt for more detail.
  */
-public class MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
-    private final static String TAG = MainActivityFragment.class.getSimpleName();
+public class MainFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+    private final static String TAG = MainFragment.class.getSimpleName();
     private static final int FAVORITE_LOADER = 0;
 
     private ArrayList<Movie> mMovieList;
@@ -49,6 +50,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
 
     private int mGridviewPosition = GridView.INVALID_POSITION;
     DispatchTMDB dispatchTMDB = null;
+    boolean mTwoPane = false;
     View mRootView = null;
     Toolbar mToolbar = null;
     Bus mBus = null;
@@ -58,7 +60,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
     private int mPageRequest = 1; // 1 = first page of the movie results, 2 = next page
 
 
-    public MainActivityFragment() {
+    public MainFragment() {
     }
 
     @Override
@@ -70,7 +72,8 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         receiveEvents();
     }
 
-    @Override public void onCreate(Bundle savedInstanceState) {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         // retain this fragment across configuration changes
@@ -86,6 +89,12 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         mHintView = (TextView) mRootView.findViewById(R.id.favorite_hint);
         mHintView.setVisibility(View.GONE);
 
+        if (mRootView.findViewById(R.id.detail_container) != null) {
+            // The detail container view will be present only in the large-screen layouts
+            // (res/layout-sw600dp). If this view is present, then the activity should be
+            // in two-pane mode.
+            mTwoPane = true;
+        }
         if (savedInstanceState == null || !savedInstanceState.containsKey(getString(R.string.key_movielist))) {
             // MoviesAvailableEvent (load whatever we have now)
             mMovieList = new ArrayList<>();
@@ -111,6 +120,13 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         mAdapter = new MovieAdapter(getActivity(), mMovieList);
         mGridView = (GridView) mRootView.findViewById(R.id.movies_grid);
         mGridView.setAdapter(mAdapter);
+
+        // In Master-Detail two pane mode, keep the movie in the
+        // master grid-view selected to indicate it is associated
+        // with the detail view
+        mGridView.setChoiceMode(
+                mTwoPane ? ListView.CHOICE_MODE_SINGLE
+                        : ListView.CHOICE_MODE_NONE);
 
         mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v,
@@ -140,15 +156,25 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
             }
         });
 
+
         return mRootView;
     }
 
     public void launchDetailFragment(Movie movie) {
-        // Pass the Movie to the Detail Activity that holds the tab container
-        Intent detailIntent = new Intent(getActivity(), DetailActivity.class);
-        detailIntent.putExtra(DetailActivity.EXTRA_MOVIE, movie);
-        startActivity(detailIntent);
+        if (mTwoPane) {
+            // Replace framelayout with new detail fragment with Tabs
+            TabContainerFragment fragmentItem = TabContainerFragment.newInstance(movie);
+            FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
+            ft.replace(R.id.detail_container, fragmentItem);
+            ft.commit();
+        } else {  // one pane
+            // Pass the Movie to the Detail Activity that holds the tab container
+            Intent detailIntent = new Intent(getActivity(), DetailActivity.class);
+            detailIntent.putExtra(MovieData.EXTRA_MOVIE, movie);
+            startActivity(detailIntent);
+        }
     }
+
     @Override
     public void onResume() {
         Log.d(TAG, "on resume");
@@ -194,7 +220,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
                 mGridviewPosition = ListView.INVALID_POSITION;
             }
 
-            setSortType( sortType );
+            setSortType(sortType);
 
             // Special case fetching favorite movies from database.
             // only do the fetch once when the setting changes.
@@ -207,7 +233,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
             }
         } else {
             // Make sure title in the toolbar is current, even first time around
-            setSortType( sortType );
+            setSortType(sortType);
         }
 
         // Create an event requesting that the movie list be updated from the
@@ -240,6 +266,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
             mToolbar.setTitle(sortFriendlyStrings[index]);
         }
     }
+
     private void updatePosition() {
         if (null != mGridView
                 && mGridviewPosition != mGridView.getFirstVisiblePosition()
@@ -300,7 +327,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
 
     private void restoreState(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
-            setSortType( savedInstanceState.getString(getString(R.string.settings_sort_key)));
+            setSortType(savedInstanceState.getString(getString(R.string.settings_sort_key)));
             mMovieList = savedInstanceState.getParcelableArrayList(getString(R.string.key_movielist));
             mCurrentlyDisplayedPosterQuality = savedInstanceState.getString(getString(R.string.settings_image_quality_key));
             mGridviewPosition = savedInstanceState.getInt(getString(R.string.key_gridview_position));
