@@ -289,7 +289,8 @@ public final class DetailFragment extends Fragment implements Observer {
             // Detail movie background set up
             backgroundTarget = new Target() {
                 @Override
-                @SuppressLint("Deprecation")
+                @SuppressWarnings("deprecation")
+                @SuppressLint("NewApi")
                 public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
                     // use deprecated setBackgroundDrawable for API 11 compatibility.
                     // setBackground requires 16 which is a bit too new for now
@@ -350,7 +351,8 @@ public final class DetailFragment extends Fragment implements Observer {
         updateFavoriteButton((ImageButton) view, data.getFavorite());
     }
 
-    @SuppressLint("Deprecation")
+    @SuppressWarnings("deprecation")
+    @SuppressLint("NewApi")
     private void updateFavoriteButton(ImageButton favoriteButton, int favoriteValue) {
         Drawable favorite = (favoriteValue == 1) ?
                 ContextCompat.getDrawable(getContext(), R.drawable.ic_favorite_on) :
@@ -364,6 +366,8 @@ public final class DetailFragment extends Fragment implements Observer {
     }
 
     // Make way for a new movie
+    @SuppressWarnings("deprecation")
+    @SuppressLint("NewApi")
     private void clearUI() {
         mUIInitialized = false;
         mBackgroundInitialzed = false;
