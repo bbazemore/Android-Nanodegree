@@ -2,14 +2,19 @@ package com.android.bazemom.popularmovies;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
 import com.android.bazemom.popularmovies.moviemodel.DispatchTMDB;
 import com.android.debug.hv.ViewServer;
+
+//import com.android.bazemom.popularmovies.moviemodel.DispatchTMDB;
 
 // Welcome to the Main Activity for Popular Movies
 // Not much happens here except:
@@ -22,13 +27,15 @@ import com.android.debug.hv.ViewServer;
 // 3. Launching the MainFragment that contains the Movie Poster gridview
 //
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements MainFragment.Callback {
     private final static String TAG = MainActivity.class.getSimpleName();
     private static final String DETAILFRAGMENT_TAG = "DFTAG";
     public final static int GUARDIANS_OF_GALAXY_ID = 118340; // movie id from TMDB we use by default
 
     private View mRootView;
+    private TabContainerFragment mTabContainerFragment;
     private Toolbar mToolbar;
+    private Movie mMovie;
     public boolean mTwoPane = false;
 
     @Override
@@ -45,22 +52,23 @@ public class MainActivity extends AppCompatActivity {
             // The detail container view will be present only in the large-screen layouts
             // (res/layout-sw600dp). If this view is present, then the activity should be
             // in two-pane mode.
+            Log.d(TAG, "TwoPane mode");
             mTwoPane = true;
             // In two-pane mode, show the detail view in this activity by
             // adding or replacing the detail fragment using a
             // fragment transaction.
             if (savedInstanceState == null) {
-                getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.detail_container, new DetailFragment(), DETAILFRAGMENT_TAG)
-                        .commit();
+                // TODO: select a movie and initialize Detail tabs view
             }
         } else {
             mTwoPane = false;
+            getSupportActionBar().setElevation(0f);
         }
         // Set up the RESTful connection to the movie database
         // using our buddies Retrofit and Otto.
         DispatchTMDB dispatchTMDB = DispatchTMDB.getInstance();
         dispatchTMDB.shareBus().register(this);
+        dispatchTMDB.getMoviesNow();
     }
 
     @Override
@@ -79,14 +87,22 @@ public class MainActivity extends AppCompatActivity {
 
         if (id == R.id.action_settings) {
             // Launch settings activity
-            Intent settingsIntent = new Intent ( getBaseContext(), SettingsActivity.class);
+            Intent settingsIntent = new Intent(getBaseContext(), SettingsActivity.class);
             startActivity(settingsIntent);
 
             return true;
         }
+        if (id == R.id.action_share) {
+            // Launch share trailer
+            if (null != mTabContainerFragment) {
+                return mTabContainerFragment.onShareTrailer(mRootView);
+            }
+            return false;
+        }
 
         return super.onOptionsItemSelected(item);
     }
+
     public void onPause() {
         super.onPause();
         ViewServer.get(this).removeWindow(this);
@@ -97,5 +113,42 @@ public class MainActivity extends AppCompatActivity {
         ViewServer.get(this).setFocusedWindow(this);
     }
 
+    @Override
+    public void onItemSelected(Movie movie) {
+        // In this app the only thing selected in the main view is a movie
+        onMovieSelected(movie);
+    }
+
+
+    protected void onMovieSelected(Movie movie) {
+        // Start the process of getting the details for the selected movie
+        MovieDataService.getInstance(this, movie);
+
+        // No detail view in single pane mode
+        if (!mTwoPane) return;
+
+        // Add or replace the detail view for the selected movie
+        FragmentManager fragMan = getSupportFragmentManager();
+        if (null == fragMan) return;
+
+        // pass Movie detail through to the tab container fragment
+        Fragment oldDetailFragment = fragMan.findFragmentByTag(DETAILFRAGMENT_TAG);
+        Fragment detailFragment = new DetailFragment();
+        Bundle detailArgs = new Bundle();
+        detailArgs.putParcelable(MovieData.MOVIE, movie);
+        detailFragment.setArguments(detailArgs);
+
+        if (null == oldDetailFragment) {
+            // first time through, create the detail fragment
+            fragMan.beginTransaction()
+                    .add(R.id.detail_container, detailFragment, DETAILFRAGMENT_TAG)
+                    .commit();
+        } else {
+            fragMan.beginTransaction()
+                    .replace(R.id.detail_container, detailFragment, DETAILFRAGMENT_TAG)
+                    .commit();
+
+        }
+    }
 }
 

@@ -26,10 +26,7 @@
           android:layout_height="wrap_content"
         />
     <FrameLayout android:id="@+id/detail_container"
-                 xmlns:android="http://schemas.android.com/apk/res/android"
-                 xmlns:tools="http://schemas.android.com/tools"
                  android:layout_width="0dp"
                  android:layout_height="match_parent"
-                 android:layout_weight="5"
-                 tools:context="com.android.bazemom.popularmovies.app.DetailActivity"/>
+                 android:layout_weight="5"/>
 </LinearLayout>

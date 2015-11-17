@@ -1,13 +1,11 @@
 package com.android.bazemom.popularmovies;
 
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -56,11 +54,24 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
     Bus mBus = null;
     Boolean mReceivingEvents = false;
     private String mCurrentlyDisplayedSortType = "";
+    private String mCurrentlyDisplayedSortTitle = "";
     private String mCurrentlyDisplayedPosterQuality = "";
     private int mPageRequest = 1; // 1 = first page of the movie results, 2 = next page
 
 
     public MainFragment() {
+    }
+
+    /**
+     * A callback interface that all activities containing this fragment must
+     * implement. This mechanism allows activities to be notified of item
+     * selections.
+     */
+    public interface Callback {
+        /**
+         * Notify the activity when an item has been selected.
+         */
+        void onItemSelected(Movie movie);
     }
 
     @Override
@@ -89,11 +100,12 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
         mHintView = (TextView) mRootView.findViewById(R.id.favorite_hint);
         mHintView.setVisibility(View.GONE);
 
-        if (mRootView.findViewById(R.id.detail_container) != null) {
+        if (getActivity().findViewById(R.id.detail_container) != null) {
             // The detail container view will be present only in the large-screen layouts
             // (res/layout-sw600dp). If this view is present, then the activity should be
             // in two-pane mode.
             mTwoPane = true;
+            Log.d(TAG, "Two pane mode");
         }
         if (savedInstanceState == null || !savedInstanceState.containsKey(getString(R.string.key_movielist))) {
             // MoviesAvailableEvent (load whatever we have now)
@@ -137,7 +149,8 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
 
                 // remember where we were in the list for when we return
                 mGridviewPosition = position;
-                launchDetailFragment(movie);
+                ((Callback) getActivity())
+                        .onItemSelected(movie);
             }
         });
         mGridView.setOnScrollListener(new AbsListView.OnScrollListener() {
@@ -156,24 +169,9 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
             }
         });
 
-
         return mRootView;
     }
 
-    public void launchDetailFragment(Movie movie) {
-        if (mTwoPane) {
-            // Replace framelayout with new detail fragment with Tabs
-            TabContainerFragment fragmentItem = TabContainerFragment.newInstance(movie);
-            FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
-            ft.replace(R.id.detail_container, fragmentItem);
-            ft.commit();
-        } else {  // one pane
-            // Pass the Movie to the Detail Activity that holds the tab container
-            Intent detailIntent = new Intent(getActivity(), DetailActivity.class);
-            detailIntent.putExtra(MovieData.EXTRA_MOVIE, movie);
-            startActivity(detailIntent);
-        }
-    }
 
     @Override
     public void onResume() {
@@ -204,10 +202,7 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
     }
 
     public void updateMovies() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        String apiKey = mRootView.getContext().getString(R.string.movie_api_key);
-        String sortType = prefs.getString(getString(R.string.settings_sort_key), getString(R.string.settings_sort_now_playing));
-
+         String sortType = getSortType();
         // Clear the list of movies if the sort type is changing.  The sort is a misnomer since
         // the app is fetching a different set of movies depending on the type requested.
         if (!sortType.contentEquals(mCurrentlyDisplayedSortType)) {
@@ -220,7 +215,7 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
                 mGridviewPosition = ListView.INVALID_POSITION;
             }
 
-            setSortType(sortType);
+            updateSortType(sortType);
 
             // Special case fetching favorite movies from database.
             // only do the fetch once when the setting changes.
@@ -233,11 +228,12 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
             }
         } else {
             // Make sure title in the toolbar is current, even first time around
-            setSortType(sortType);
+            updateSortType(sortType);
         }
-
-        // Create an event requesting that the movie list be updated from the
+        // TODO: check for end of data?
+        // Create an event requesting that the movie list with the new sort order be updated from the
         // Movie DB web service
+        String apiKey = mRootView.getContext().getString(R.string.movie_api_key);
         LoadMoviesEvent loadMoviesRequest = new LoadMoviesEvent(apiKey, sortType, mPageRequest++);
         getBus().post(loadMoviesRequest);
     }
@@ -252,8 +248,14 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
         updatePosition();
     }
 
-    private void setSortType(String sortType) {
+    // TODO: Clean up Settings <-> SortType <-> Data
+    // create a MovieListDataService that tracks and responds to sort type
+    private void updateSortType(String sortType) {
+        Log.d(TAG, "updateSortType to " + sortType);
+       // if (mCurrentlyDisplayedSortType != sortType)
+       //     mCurrentlyDisplayedSortTitle = false;
         mCurrentlyDisplayedSortType = sortType;
+
         // Display sort type in the title bar
         if (null == mToolbar)
             mToolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
@@ -262,14 +264,29 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
             // Convert it to the user friendly label. They don't make this easy :(
             String[] sortKeyStrings = getResources().getStringArray(R.array.settings_sort_values);
             int index = Arrays.asList(sortKeyStrings).indexOf(sortType);
-            String[] sortFriendlyStrings = getResources().getStringArray(R.array.settings_sort_labels);
-            mToolbar.setTitle(sortFriendlyStrings[index]);
+            if (index >= 0) {
+                String[] sortFriendlyStrings = getResources().getStringArray(R.array.settings_sort_labels);
+                mToolbar.setTitle(sortFriendlyStrings[index]);
+            } else {
+                Log.d(TAG, "Error updateSortType for " + sortType + " index was " + index);
+            }
         }
+    }
+    private String getSortType() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        return prefs.getString(getString(R.string.settings_sort_key), getString(R.string.settings_sort_now_playing));
     }
 
     private void updatePosition() {
-        if (null != mGridView
-                && mGridviewPosition != mGridView.getFirstVisiblePosition()
+        Log.d(TAG, "updatePosition: " + mGridviewPosition);
+        if (null == mGridView) return;
+
+        if (mGridviewPosition == GridView.INVALID_POSITION) {
+            Log.d(TAG, "updatePosition 2pane, first visible position is: " + mGridView.getFirstVisiblePosition());
+            // When 2 pane view starts up, select the first visible movie in the list
+            mGridView.performItemClick(mGridView, mGridView.getFirstVisiblePosition(), 0 );
+        }
+        if (mGridviewPosition != mGridView.getFirstVisiblePosition()
                 && mGridviewPosition != GridView.INVALID_POSITION) {
             // The position we want is different than the position we have
             // Back to where we were in the list the last time the user clicked
@@ -327,7 +344,7 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
 
     private void restoreState(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
-            setSortType(savedInstanceState.getString(getString(R.string.settings_sort_key)));
+            mCurrentlyDisplayedSortType = savedInstanceState.getString(getString(R.string.settings_sort_key));
             mMovieList = savedInstanceState.getParcelableArrayList(getString(R.string.key_movielist));
             mCurrentlyDisplayedPosterQuality = savedInstanceState.getString(getString(R.string.settings_image_quality_key));
             mGridviewPosition = savedInstanceState.getInt(getString(R.string.key_gridview_position));
