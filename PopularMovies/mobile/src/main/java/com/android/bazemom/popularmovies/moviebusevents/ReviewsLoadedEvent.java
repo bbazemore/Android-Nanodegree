@@ -17,9 +17,9 @@ public class ReviewsLoadedEvent {
     public ReviewsLoadedEvent(MovieReviewListModel reviewsReturned)
     {
         reviewResults = reviewsReturned.getResults();
-        totalPages = reviewsReturned.getTotalPages();
+        totalPages = reviewsReturned.getTotalPages();  // this is sometimes 0
         currentPage = reviewsReturned.getPage();
-        endOfInput = (totalPages-currentPage) == 0;
+        endOfInput = (totalPages-currentPage) <= 0 ;
         Log.i(TAG, "ReviewsLoadedEvent created with " + reviewsReturned.getResults().size() + " results");
     }
 
