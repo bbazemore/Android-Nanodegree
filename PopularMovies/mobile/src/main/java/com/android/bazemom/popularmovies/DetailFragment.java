@@ -73,20 +73,25 @@ public final class DetailFragment extends Fragment implements Observer {
             }
         });
 
+        boolean haveGoodMovieDetail = false;
         if (null != savedInstanceState) {
             Movie cachedMovie = savedInstanceState.getParcelable(MovieData.MOVIE);
             setMovie(cachedMovie);
             MovieDetail cachedDetail = savedInstanceState.getParcelable(MovieData.MOVIE_DETAIL);
-            setMovieDetail(cachedDetail);
+            haveGoodMovieDetail = setMovieDetail(cachedDetail);
         }
         // Get the latest and greatest movie info, which may be more recent than what was saved.
         // Register for updates when the movie data changes
         MovieDataService dataService = MovieDataService.getInstance();
-        setMovie(dataService.getMovie());
-        setMovieDetail(dataService.getMovieDetail());
-        // fill in the simple things
-        updateMovieUI(mMovie);
-
+        if (!haveGoodMovieDetail) {
+            if (setMovie(dataService.getMovie())) {
+                // fill in the simple things
+                updateMovieUI(mMovie);
+            }
+            if (setMovieDetail(dataService.getMovieDetail())) {
+                updateDetailUI(mMovieDetail);
+            }
+        }
         // If there is anything we need to fix up after the layout is known,
         // do it in the post-layout lambda
         mRootView.post(new Runnable() {
@@ -109,6 +114,15 @@ public final class DetailFragment extends Fragment implements Observer {
         outState.putParcelable(MovieData.MOVIE_DETAIL, mMovieDetail);
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        // fragment can't receive events, so don't try to deliver them
+        MovieDataService.getInstance().deleteObserver(this);
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
         mUIInitialized = false;
@@ -144,12 +158,12 @@ public final class DetailFragment extends Fragment implements Observer {
             return;
         }
         // We have a layout and we have a movie, refresh the UI
-        final Context context = getActivity().getBaseContext();
         mViewHolder.titleView.setText(movie.title);
         mViewHolder.overview.setText(movie.overview);
-        mViewHolder.releaseDate.setText(context.getString(R.string.detail_release_date) + movie.releaseDate);
-        mViewHolder.rating.setText(String.format(context.getString(R.string.detail_movie_user_rating), movie.voteAverage));
-
+        if (null != getResources()) {
+            mViewHolder.releaseDate.setText(getResources().getString(R.string.detail_release_date) + movie.releaseDate);
+            mViewHolder.rating.setText(String.format(getResources().getString(R.string.detail_movie_user_rating), movie.voteAverage));
+        }
         if (mMovieDetail != null && mMovieDetail.id != movie.id) {
             // encourage movie detail to reset to new movie
             setMovieDetail(null);
@@ -248,6 +262,7 @@ public final class DetailFragment extends Fragment implements Observer {
         // If we haven't been initialized, there is nothing to change.
         if (!mLayoutInitialized) return;
 
+        Log.d(TAG, "Update from MovieDataService: " + data.getClass().getSimpleName());
         if (data instanceof MovieDetail) {
             if (setMovieDetail((MovieDetail) data))
                 updateDetailUI(mMovieDetail);
@@ -440,8 +455,6 @@ public final class DetailFragment extends Fragment implements Observer {
         Log.d(TAG, "setMovieDetail: movie details null or out of date, retrieving from MovieDataService");
         boolean haveGoodMovieDetail = false;
         movieDetail = dataService.getMovieDetail();
-        // We are changing movies, we need to clear out the old movie
-        clearUI();
 
         if (null == movieDetail) {
             Log.d(TAG, "setMovieDetail: movie detail data is null.  Skip the update");
@@ -449,6 +462,8 @@ public final class DetailFragment extends Fragment implements Observer {
 
         if (null != mMovieDetail && null != movieDetail && mMovieDetail.id != movieDetail.id) {
             Log.d(TAG, "setMovieDetail: switching from '" + mMovieDetail.getTitle() + "' to " + movieDetail.getTitle());
+            // We are changing movies, we need to clear out the old movie
+            clearUI();
         }
 
         mMovieDetail = movieDetail;

@@ -303,7 +303,7 @@ public class MovieDataService extends Observable implements MovieData {
     private void receiveEvents() {
         if (!mReceivingEvents) {
             try {
-                Log.d(TAG, "DetailActivity Events on");
+                Log.d(TAG, "Events on");
                 getBus().register(this);
                 mReceivingEvents = true;
             } catch (Exception e) {

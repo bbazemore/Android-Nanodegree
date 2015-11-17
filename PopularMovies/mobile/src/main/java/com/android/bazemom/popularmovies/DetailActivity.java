@@ -18,8 +18,8 @@ public class DetailActivity extends AppCompatActivity {
 
     // UI items
     private View mRootView;
-    TabContainerFragment mTabContainerFragment;
-    public MovieDataService mMovieService;
+    private TabContainerFragment mTabContainerFragment;
+    private MovieDataService mMovieService;
     private Movie mMovie;
     private boolean mCreated = false;
 
