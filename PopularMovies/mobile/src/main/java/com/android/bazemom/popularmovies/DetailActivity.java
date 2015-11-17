@@ -9,21 +9,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.android.bazemom.popularmovies.moviebusevents.MovieDetailLoadedEvent;
-import com.android.bazemom.popularmovies.moviebusevents.ReviewsLoadedEvent;
-import com.android.bazemom.popularmovies.moviebusevents.VideosLoadedEvent;
-import com.squareup.otto.Subscribe;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Observable;
-import java.util.Observer;
-
 
 /**
  * Display Movie Details.  Send intent with extra integer containing the Movie id
  */
-public class DetailActivity extends AppCompatActivity  implements Observer, MovieData {
+public class DetailActivity extends AppCompatActivity {
     private final static String TAG = DetailActivity.class.getSimpleName();
 
     // UI items
@@ -31,6 +21,7 @@ public class DetailActivity extends AppCompatActivity  implements Observer, Movi
     TabContainerFragment mTabContainerFragment;
     public MovieDataService mMovieService;
     private Movie mMovie;
+    private boolean mCreated = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,30 +32,60 @@ public class DetailActivity extends AppCompatActivity  implements Observer, Movi
 
         if (savedInstanceState == null) {
             // get Movie detail from argument
-            Intent intent = getIntent();
-            Bundle tabArg = null;
-            if (intent != null) {
-                mMovie = intent.getParcelableExtra(MovieData.EXTRA_MOVIE);
-                tabArg = intent.getExtras();
-                if (null== mMovie)
-                    Log.d(TAG, "Why don't we have a movie in Detail onCreate?");
-            }
-            mMovieService = MovieDataService.getInstance(getApplicationContext(), mMovie);
-            mMovieService.addObserver(this);
+            if (setMovieFromIntent()) {
+                // pass Movie detail through to the tab container fragment
+                FragmentManager fragMan = getSupportFragmentManager();
+                mTabContainerFragment = new TabContainerFragment();
+                mTabContainerFragment.setArguments(getIntent().getExtras());
 
-            // pass Movie detail through to the tab container fragment
-            FragmentManager fragMan = getSupportFragmentManager();
-            mTabContainerFragment = new TabContainerFragment();
-            mTabContainerFragment.setArguments(tabArg);
-            fragMan.beginTransaction()
-                    .add(R.id.detail_container, mTabContainerFragment, TabContainerFragment.TAG )
-                    .commit();
-        }
-        else {
+                fragMan.beginTransaction()
+                        .add(R.id.detail_container, mTabContainerFragment, TabContainerFragment.TAG)
+                        .commit();
+
+                // Activity is set up. Now let's get the data service started getting data about the movie.
+                mCreated = true;
+                mMovieService = MovieDataService.getInstance(this, mMovie);
+            }
+        } else {
             // restores state from saved instance
             mMovie = savedInstanceState.getParcelable(MovieData.MOVIE);
-            mMovieService = savedInstanceState.getParcelable(MovieData.MOVIE_SERVICE);
         }
+    }
+
+    // Returns true if the movie changed.
+    private boolean setMovieFromIntent() {
+        Intent intent = getIntent();
+        Movie intentMovie;
+        boolean movieChanged = false;
+
+        if (intent != null) {
+            intentMovie = intent.getParcelableExtra(MovieData.EXTRA_MOVIE);
+            if (null == intentMovie) {
+                if (mMovie != null) {
+                    //movieChanged = true;
+                    Log.d(TAG, "Movie changing from '" + mMovie.title + "' to null. Do we want to notify the tabs?");
+                } else {
+                    Log.d(TAG, "Why are we getting a null Movie in the Detail intent?");
+                }
+            } else {
+                if (mMovie == null) {
+                    // Normal first time through
+                    Log.d(TAG, "Movie changing from Null to '" + intentMovie.title + "'.");
+                    movieChanged = true;
+                    mMovie = intentMovie;
+                } else if (mMovie.id != intentMovie.id) {
+                    // This is a genuine change in movie, pass it on
+                    Log.d(TAG, "Movie changing from '" + mMovie.title + "' to '" + intentMovie.title + "'. Movie service should notify the tabs.");
+                    movieChanged = true;
+                    mMovie = intentMovie;
+                }
+            }
+        }
+        // Tell data service we are focusing on a different movie
+        if (mCreated & movieChanged) {
+            mMovieService = MovieDataService.getInstance(this, mMovie);
+        }
+        return movieChanged;
     }
 
     @Override
@@ -73,6 +94,7 @@ public class DetailActivity extends AppCompatActivity  implements Observer, Movi
         getMenuInflater().inflate(R.menu.menu_detail, menu);
         return true;
     }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -88,124 +110,19 @@ public class DetailActivity extends AppCompatActivity  implements Observer, Movi
         }
         return super.onOptionsItemSelected(item);
     }
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        mMovieService.saveInstanceState(outState);
-    }
 
     @Override
     public void onResume() {
         Log.d(TAG, "on resume");
         super.onResume();
 
-        mMovieService = MovieDataService.getInstance(this, mMovie);
-        // We are back on display. Pay attention to movie results again.
-        if (null != mMovieService)
-            mMovieService.onResume();
+        // The movie may have changed while we were out
+        setMovieFromIntent();
     }
 
     @Override
     public void onPause() {
         Log.d(TAG, "on pause");
         super.onPause();
-
-        // Don't bother processing results when we aren't on display.
-        mMovieService.onPause();
-    }
-
-    // If we have the basic movie information, use that to start filling in the UI
-    private void updateMovieUI() {
-        if (null != mTabContainerFragment)
-            mTabContainerFragment.updateMovieUI(mMovie);
-    }
-    public void updateMovieDetail(MovieDetail movieDetail) {
-        if (null != mTabContainerFragment)
-            mTabContainerFragment.updateDetailUI(movieDetail);
-    }
-
-    public MovieDataService getMovieDataService() { return mMovieService; }
-
-    // moviesLoaded gets called when we get a list of movies back from TMDB
-    @Subscribe
-    public void movieDetailLoaded(MovieDetailLoadedEvent event) {
-        Log.i(TAG, "movie detail Loaded ");
-        updateMovieDetail(event.movieResult);
-    }
-    // reviewsLoaded gets called when we get a list of reviews back from TMDB
-    @Subscribe
-    public void reviewsLoaded(ReviewsLoadedEvent event) {
-        Log.d(TAG, "reviews Loaded callback! Number of reviews: " + event.reviewResults.size());
-
-        if (null != mTabContainerFragment)
-            mTabContainerFragment.updateReviewList();
-    }
-    public void updateReviewList(List<Review> reviewList) {
-        mTabContainerFragment.updateReviewList();
-    }
-
-
-    // reviewsLoaded gets called when we get a list of reviews back from TMDB
-    @Subscribe
-    public void videosLoaded(VideosLoadedEvent event) {
-        Log.i(TAG, "videos Loaded callback! Number of trailers: " + event.trailerResults.size());
-        if (event.trailerResults.size() == 0)
-            return;
-
-        if (null != mTabContainerFragment) {
-            mTabContainerFragment.updateVideoList();
-        }
-    }
-    public void updateVideoList(List<Video> videoList) {
-        mTabContainerFragment.updateVideoList();
-    }
-
-    @Override
-    public void update(Observable publisher, Object data) {
-        Log.d(TAG, "object updated" + data.toString());
-        if (data instanceof MovieDetail) {
-            mTabContainerFragment.updateDetailUI((MovieDetail) data);
-        } else if (data instanceof ArrayList) {
-            List list = (ArrayList) data;
-            if (!list.isEmpty()) {
-                if (list.get(0) instanceof Review) {
-                    mTabContainerFragment.updateReviewList();
-                } else if (list.get(0) instanceof Video) {
-                    mTabContainerFragment.updateVideoList();
-                }
-            } else {
-                Log.d(TAG, "Unexpected data type in Observer update: " + data.getClass().toString());
-            }
-        }
-    }
-
-    @Override
-    public MovieDetail getMovieDetail() {
-        return mMovieService.getMovieDetail();
-    }
-
-    @Override
-    public List<Review> getReviewList() {
-        return mMovieService.getReviewList();
-    }
-
-    @Override
-    public List<Video> getVideoList() {
-        return mMovieService.getVideoList();
-    }
-
-    @Override
-    public String getYouTubeURL(int videoPosition) {
-        return mMovieService.getYouTubeURL(videoPosition);
-    }
-
-    @Override
-    public int getFavorite() {
-        return mMovieService.getFavorite();
-    }
-
-    @Override
-    public void setFavorite(int value) {
-        mMovieService.setFavorite(value);
     }
 } // end class DetailActivity

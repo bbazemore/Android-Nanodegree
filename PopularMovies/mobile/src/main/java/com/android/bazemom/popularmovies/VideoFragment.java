@@ -53,7 +53,7 @@ public class VideoFragment extends Fragment {
 
     // Once VideoList is filled in, get the adapter to fill in the recycler view
     void updateUI() {
-        MovieDataService data = MovieDataService.getInstance(getContext(), null);
+        MovieDataService data = MovieDataService.getInstance();
         Log.d(TAG, "updateVideoUI from Activity: " + getActivity());
         if (null != data && null != mRecyclerView) {
             adapter = new VideoAdapter(data.getVideoList());

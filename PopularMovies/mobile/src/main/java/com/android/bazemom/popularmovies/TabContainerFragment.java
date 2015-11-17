@@ -45,12 +45,6 @@ public class TabContainerFragment extends Fragment  {
         newTabFragment.setArguments(args);
         return newTabFragment;
     }
-    // Master view and Detail activity can tell us to change the movie here
-    public void onMovieChanged(Movie movie) {
-        // TODO: if the movie is different, clear the mMovieDetail, mReviewList & mVideoList
-        // and request a new set.
-        // reset to tab position 1
-    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -105,6 +99,92 @@ public class TabContainerFragment extends Fragment  {
         return false;
     }
 
+    private void updateTab(TabLayout.Tab tab) {
+        mViewHolder.viewPager.setCurrentItem(tab.getPosition());
+        switch (tab.getPosition()) {
+            case TAB_DETAIL:
+                Log.d(TAG, "Tab select detail");
+                mViewHolder.detailFragment.updateMovieUI(mMovie);
+                break;
+            case TAB_REVIEW:
+                Log.d(TAG, "Tab select review");
+                mViewHolder.reviewFragment.updateUI();
+                break;
+            case TAB_VIDEO:
+                Log.d(TAG, "Tab select video");
+                mViewHolder.videoFragment.updateUI();
+                break;
+            default:
+                Log.d(TAG, "Tab select something different " + tab.getPosition());
+        }
+    }
+
+    private void setupViewPager(ViewPager viewPager) {
+        // was getSupportFragmentManager
+        ViewPagerAdapter adapter = new ViewPagerAdapter(getChildFragmentManager());
+
+        adapter.addFrag(mViewHolder.detailFragment, getString(R.string.tab_title_detail));
+        adapter.addFrag(mViewHolder.reviewFragment, getString(R.string.tab_title_review));
+        adapter.addFrag(mViewHolder.videoFragment, getString(R.string.tab_title_trailer));
+        viewPager.setAdapter(adapter);
+    }
+
+    // If we have the basic movie information, use that to start filling in the UI
+    public void updateMovieUI(Movie movie) {
+        if (null == mMovie || (mMovie.id != movie.id)) {
+            // Movie changed, clear out the old data
+            mMovie = movie;
+            if (null != mViewHolder
+                    && null != mViewHolder.detailFragment) {
+                try {
+                    mViewHolder.detailFragment.updateMovieUI(mMovie);
+                } catch (Exception e) {
+                    // not a big deal
+                    Log.d(TAG, "not ready for updateMovieUI: " + e.getLocalizedMessage());
+                    return;
+                }
+                if (null != mMovie)
+                    mViewHolder.toolbar.setTitle(mMovie.title);
+            }
+        }
+    }
+
+    public void updateDetailUI(MovieDetail movieDetail) {
+        if (null != mViewHolder
+                && null != mViewHolder.detailFragment) {
+            try {
+                mViewHolder.detailFragment.updateDetailUI(movieDetail);
+            } catch (Exception e) {
+                // not a big deal
+                Log.d(TAG, "Not ready for updateDetailUI: " + e.getLocalizedMessage());
+                return;
+            }
+            if (null != movieDetail)
+                mViewHolder.toolbar.setTitle(movieDetail.title);
+        }
+    }
+
+    public void updateReviewList() {
+        if (null != mViewHolder && null != mViewHolder.reviewFragment) {
+            try {
+                mViewHolder.reviewFragment.updateUI();
+            } catch (Exception e) {
+                // not a big deal
+                Log.d(TAG, "ReviewFragment not ready for update: " + e.getLocalizedMessage());
+            }
+        }
+    }
+
+    public void updateVideoList() {
+        if (null != mViewHolder
+                && null != mViewHolder.videoFragment) {
+            try {
+                mViewHolder.videoFragment.updateUI();
+            } catch (Exception e) {
+                Log.d(TAG, "videosLoaded received, but videoFragment not ready yet");
+            }
+        }
+    }
 
     /////////////////////////////////////////////////////////
     // Handy dandy little class to cache the View ids so we don't keep looking for them every
@@ -154,89 +234,6 @@ public class TabContainerFragment extends Fragment  {
                     Log.d("TAG", "DetailTabView post-run");
                 }
             });
-        }
-    }
-
-    private void updateTab(TabLayout.Tab tab) {
-        mViewHolder.viewPager.setCurrentItem(tab.getPosition());
-        switch (tab.getPosition()) {
-            case TAB_DETAIL:
-                Log.d(TAG, "Tab select detail");
-                mViewHolder.detailFragment.updateDetailUI(null);
-                break;
-            case TAB_REVIEW:
-                Log.d(TAG, "Tab select review");
-                mViewHolder.reviewFragment.updateUI();
-                break;
-            case TAB_VIDEO:
-                Log.d(TAG, "Tab select video");
-                mViewHolder.videoFragment.updateUI();
-                break;
-            default:
-                Log.d(TAG, "Tab select something different " + tab.getPosition());
-        }
-    }
-
-    private void setupViewPager(ViewPager viewPager) {
-        // was getSupportFragmentManager
-        ViewPagerAdapter adapter = new ViewPagerAdapter(getChildFragmentManager());
-
-        adapter.addFrag(mViewHolder.detailFragment, getString(R.string.tab_title_detail));
-        adapter.addFrag(mViewHolder.reviewFragment, getString(R.string.tab_title_review));
-        adapter.addFrag(mViewHolder.videoFragment, getString(R.string.tab_title_trailer));
-        viewPager.setAdapter(adapter);
-    }
-    // If we have the basic movie information, use that to start filling in the UI
-    public void updateMovieUI(Movie movie) {
-        if (null == mMovie || (mMovie.id != movie.id)) {
-            // Movie changed, clear out the old data
-            mMovie = movie;
-            if (null != mViewHolder
-                    && null != mViewHolder.detailFragment) {
-                try {
-                    mViewHolder.detailFragment.updateMovieUI(mMovie);
-                } catch (Exception e) {
-                    // not a big deal
-                    Log.d(TAG, "not ready for updateMovieUI: " + e.getLocalizedMessage());
-                    return;
-                }
-                if (null != mMovie)
-                    mViewHolder.toolbar.setTitle(mMovie.title);
-            }
-        }
-    }
-    public void updateDetailUI(MovieDetail movieDetail) {
-        if (null != mViewHolder
-                && null != mViewHolder.detailFragment) {
-            try {
-                mViewHolder.detailFragment.updateDetailUI(movieDetail);
-            } catch (Exception e) {
-                // not a big deal
-                Log.d(TAG, "Not ready for updateDetailUI: " + e.getLocalizedMessage());
-                return;
-            }
-            if (null != movieDetail)
-                mViewHolder.toolbar.setTitle(movieDetail.title);
-        }
-    }
-    public void updateReviewList() {
-        if (null != mViewHolder && null != mViewHolder.reviewFragment) {
-            try {
-                mViewHolder.reviewFragment.updateUI();
-            } catch (Exception e) {
-                // not a big deal
-                Log.d(TAG, "ReviewFragment not ready for update: " + e.getLocalizedMessage());
-            }
-        }
-    }
-    public void updateVideoList() {
-        if (null != mViewHolder
-                && null != mViewHolder.videoFragment) {
-            try {
-                mViewHolder.videoFragment.updateUI();
-            } catch (Exception e) {
-                Log.d(TAG, "videosLoaded received, but videoFragment not ready yet");
-            }
         }
     }
 }

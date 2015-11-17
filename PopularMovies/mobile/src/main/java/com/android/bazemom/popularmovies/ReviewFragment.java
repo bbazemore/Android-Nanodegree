@@ -13,11 +13,16 @@ import android.widget.TextView;
 
 import com.android.bazemom.popularmovies.adapters.ReviewAdapter;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
+
 /**
  * Tab that displays the reviews for the selected movie
  * Requires the caller to support the MovieData interface
  */
-public class ReviewFragment extends Fragment {
+public class ReviewFragment extends Fragment implements Observer {
     private static final String TAG = ReviewFragment.class.getSimpleName();
     private View mRootView;
     private ReviewViewHolder mViewHolder;
@@ -50,14 +55,35 @@ public class ReviewFragment extends Fragment {
         return mRootView;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Make sure we are pointing at the currently selected movie
+        updateUI();
+    }
+
     // Once ReviewList is filled in, get the adapter to fill in the recycler view
     void updateUI() {
         Log.d(TAG, "updateReviewUI");
-        MovieDataService data = MovieDataService.getInstance(getContext(), null);
+        MovieDataService data = MovieDataService.getInstance();
         if (null != data && null != mViewHolder) {
             {
                 adapter = new ReviewAdapter(data.getReviewList());
                 mViewHolder.recyclerView.setAdapter(adapter);
+                data.addObserver(this);
+            }
+        }
+    }
+
+    // If the data service tells us there are new reviews, pay attention
+    @Override
+    public void update(Observable observable, Object data) {
+        if (data instanceof ArrayList) {
+            List list = (ArrayList) data;
+            if (!list.isEmpty()) {
+                if (list.get(0) instanceof Review) {
+                    updateUI();
+                }
             }
         }
     }

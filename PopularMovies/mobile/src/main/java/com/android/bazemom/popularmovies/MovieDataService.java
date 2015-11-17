@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Observable;
 
 /**
- * Pull movie data from this interface
+ * Fragments pull from the read-only MovieData interface
  * Keeps the details, reviews and videos for one Movie handy
  * so the various Activities and Fragments can access it.
  */
@@ -36,32 +36,23 @@ interface MovieData {
     String REVIEW_KEY = packageName + ".ReviewList";
     String MOVIE_DETAIL = packageName + ".MovieDetail";
     String TRAILER_KEY = packageName + ".TrailerList";
-    String MOVIE_SERVICE = packageName + ".MovieService"; // the whole enchilada
-    String MOVIE_SERVICE_CONTEXT = packageName + ".MovieServiceContext";
 
-    // int getMovieId();
+    int getMovieId();
+    Movie getMovie();
     MovieDetail getMovieDetail();
-
     List<Review> getReviewList();
-
     List<Video> getVideoList();
 
     // String getYouTubeKey(int videoPosition);
     String getYouTubeURL(int videoPosition);
 
     int getFavorite();
-
     void setFavorite(int value);
 }
 
-interface MovieDataListener {
-    void updateMovieDetail(MovieDetail movieDetail);
-
-    void updateReviewList(List<Review> reviewList);
-
-    void updateVideoList(List<Video> videoList);
-}
-
+// The MovieDataService pulls data from a local database and from the TMDB RESTful Web API
+// as data model (moviemodel) objects.  The service makes the data available to Observers
+// as parcelable Movie, MovieData, etc objects via the MovieData interface.
 public class MovieDataService extends Observable implements MovieData {
     private final static String TAG = MovieDataService.class.getSimpleName();
 
@@ -92,16 +83,12 @@ public class MovieDataService extends Observable implements MovieData {
     protected ArrayList<Video> mVideoList;
 
     private MovieDataService() {
-
     }
 
     private void initializeConstructor(Context context, Movie movie) {
         // so we can get to string resources
         mContext = context;
-        if (mMovie != movie) {
-            mMovie = movie;
-            initialize();
-        }
+        setMovie(movie);
     }
 
     private static class SingletonHelper {
@@ -122,7 +109,7 @@ public class MovieDataService extends Observable implements MovieData {
 
     public void readInstanceState(Context context, Bundle savedInstanceState) {
         mContext = context;
-        mMovie = savedInstanceState.getParcelable(MOVIE);
+        setMovie((Movie) savedInstanceState.getParcelable(MOVIE));
         setMovieDetail((MovieDetail) savedInstanceState.getParcelable(MOVIE_DETAIL));
         if (null != mMovieDetail) {
             List<Review> existingReviews = savedInstanceState.getParcelableArrayList(REVIEW_KEY);
@@ -147,6 +134,12 @@ public class MovieDataService extends Observable implements MovieData {
     }
 
     private void initialize() {
+        mDataReceivedDetail = false;
+        mDataReceivedReviewList = false;
+        mDataReceivedVideoList = false;
+        mMovieDetail = null;
+        mReviewPageRequest = 1;
+
         requestData = true;
         mReviewList = new ArrayList<Review>();
         mVideoList = new ArrayList<Video>();
@@ -165,11 +158,45 @@ public class MovieDataService extends Observable implements MovieData {
     ////////////////////////////////////////////////////
     // MovieData interface, mixed in with underlying Observable
     ///////////////////////////////////////////////////
- /*   @Override
+    @Override
     public int getMovieId() {
         return mMovie.id;
     }
-*/
+
+    @Override
+    public Movie getMovie() {
+        return mMovie;
+    }
+    private boolean setMovie(Movie movie) {
+        boolean movieChanged = false;
+        if (movie == null ){
+            if (mMovie != null) {
+                movieChanged = true;
+                Log.d(TAG, "setMovie to null when old movie was " + mMovie.title);
+                // clear out whatever we had
+                initialize();
+            } // else both are null, nothing new
+        } else // We have a non-null movie
+            if (mMovie != null) {
+                if (mMovie.id != movie.id) {
+                    movieChanged = true;
+                    Log.d(TAG, "setMovie to '" + movie.title + "' when old movie was: " + mMovie.title);
+                }
+                // else the movies are the same
+            } else {  // old movie empty, new movie non-null
+                Log.d(TAG, "New movie: " + movie.title);
+                movieChanged = true;
+            }
+        // wrap it up without raising false change notifications
+        if (movieChanged) {
+            mMovie = movie;
+            setChanged();
+            initialize();
+            notifyObservers(mMovie);
+        }
+        return movieChanged;
+    }
+
     @Override
     public MovieDetail getMovieDetail() {
         return mMovieDetail;
@@ -177,8 +204,10 @@ public class MovieDataService extends Observable implements MovieData {
 
     private void setMovieDetail(MovieDetail movieDetail) {
         if (mMovieDetail != movieDetail) {
+            Log.d(TAG, "movie detail changed to " + movieDetail.title);
             setChanged();
-            notifyObservers(mMovieDetail = movieDetail);
+            mMovieDetail = movieDetail;
+            notifyObservers(mMovieDetail);
         }
     }
 
@@ -189,8 +218,8 @@ public class MovieDataService extends Observable implements MovieData {
 
     private void setReviewList(List<Review> reviewList) {
         if (!reviewList.isEmpty()) {
-            setChanged();
             mReviewList.addAll(reviewList);
+            setChanged();
             notifyObservers(mReviewList);
         }
     }
@@ -202,8 +231,9 @@ public class MovieDataService extends Observable implements MovieData {
 
     private void setVideoList(List<Video> videoList) {
         if (!videoList.isEmpty()) {
+            mVideoList.addAll(videoList);
             setChanged();
-            notifyObservers(mVideoList.addAll(videoList));
+            notifyObservers(mVideoList);
         }
     }
 
@@ -303,13 +333,16 @@ public class MovieDataService extends Observable implements MovieData {
             // We have the detail data, we're done.
             return;
 
+        if (null == mMovie)
+            return;
+
         LocalDBHelper dbHelper = new LocalDBHelper(mContext);
-        mMovieDetail = dbHelper.getMovieDetailFromDB(mMovie.id);
-        if (null != mMovieDetail) {
+        MovieDetail dbMovieDetail = dbHelper.getMovieDetailFromDB(mMovie.id);
+        if (null != dbMovieDetail) {
             // We are in luck, we have the movie details handy already.
             mDataReceivedDetail = true;
             // Let the activities know the detail is available
-            setMovieDetail(mMovieDetail);
+            setMovieDetail(dbMovieDetail);
         } else {
             // We have to get the movie from the cloud
             // Start listening for the Movie Detail loaded event
@@ -318,7 +351,6 @@ public class MovieDataService extends Observable implements MovieData {
             //  Now request that the movie details be loaded
             String apiKey = mContext.getString(R.string.movie_api_key);
             LoadMovieDetailEvent loadMovieRequest = new LoadMovieDetailEvent(apiKey, mMovie.id);
-
             getBus().post(loadMovieRequest);
         }
     }
@@ -334,7 +366,7 @@ public class MovieDataService extends Observable implements MovieData {
             newReviews.add(new Review(data));
         }
 
-        if (event.endOfInput) {
+        if (event.endOfInput || newReviews.isEmpty()) {
             mDataReceivedReviewList = true;
             if (mReviewList.isEmpty() && newReviews.isEmpty()) {
                 newReviews.add(new Review(EMPTY_REVIEW));
@@ -406,15 +438,16 @@ public class MovieDataService extends Observable implements MovieData {
     @Subscribe
     public void videosLoaded(VideosLoadedEvent event) {
         Log.i(TAG, "videos Loaded callback! Number of trailers: " + event.trailerResults.size());
-
+        List<Video> newVideos = new ArrayList<Video>();
         // load the movie data into our movies list
         for (VideoModel data : event.trailerResults) {
-            mVideoList.add(new Video(data));
+            newVideos.add(new Video(data));
         }
         mDataReceivedVideoList = true;
 
-        if (mVideoList.isEmpty()) {
-            mVideoList.add(new Video(EMPTY_VIDEO));
+        if (newVideos.isEmpty()) {
+            newVideos.add(new Video(EMPTY_VIDEO));
         }
+        setVideoList(newVideos);
     }
 }
