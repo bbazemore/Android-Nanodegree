@@ -38,15 +38,20 @@ interface MovieData {
     String TRAILER_KEY = packageName + ".TrailerList";
 
     int getMovieId();
+
     Movie getMovie();
+
     MovieDetail getMovieDetail();
+
     List<Review> getReviewList();
+
     List<Video> getVideoList();
 
     // String getYouTubeKey(int videoPosition);
     String getYouTubeURL(int videoPosition);
 
     int getFavorite();
+
     void setFavorite(int value);
 }
 
@@ -132,7 +137,7 @@ public class MovieDataService extends Observable implements MovieData {
         requestData = true;
         readInstanceState(context, savedInstanceState);
     }
-
+    @SuppressWarnings("Convert2Diamond")
     private void initialize() {
         mDataReceivedDetail = false;
         mDataReceivedReviewList = false;
@@ -167,9 +172,10 @@ public class MovieDataService extends Observable implements MovieData {
     public Movie getMovie() {
         return mMovie;
     }
+
     private boolean setMovie(Movie movie) {
         boolean movieChanged = false;
-        if (movie == null ){
+        if (movie == null) {
             if (mMovie != null) {
                 movieChanged = true;
                 Log.d(TAG, "setMovie to null when old movie was " + mMovie.title);
@@ -357,6 +363,7 @@ public class MovieDataService extends Observable implements MovieData {
 
     // reviewsLoaded gets called when we get a list of reviews back from TMDB
     @Subscribe
+    @SuppressWarnings("Convert2Diamond")
     public void reviewsLoaded(ReviewsLoadedEvent event) {
         Log.d(TAG, "reviews Loaded callback! Number of reviews: " + event.reviewResults.size());
 
@@ -379,6 +386,7 @@ public class MovieDataService extends Observable implements MovieData {
     }
 
     protected void getReviews(int nextPage) {
+        if (null == mMovie) return;
         if (mDataReceivedReviewList)
             // we have all the reviews for this movie,
             // don't keep asking.
@@ -397,16 +405,15 @@ public class MovieDataService extends Observable implements MovieData {
         receiveEvents();
 
         //  Now request that the reviews be loaded
-        if (null != mMovie) {
-            String apiKey = mContext.getString(R.string.movie_api_key);
-            LoadReviewsEvent loadReviewsRequest = new LoadReviewsEvent(apiKey, mMovie.id, nextPage);
+        String apiKey = mContext.getString(R.string.movie_api_key);
+        LoadReviewsEvent loadReviewsRequest = new LoadReviewsEvent(apiKey, mMovie.id, nextPage);
 
-            Log.i(TAG, "request reviews");
-            getBus().post(loadReviewsRequest);
-        }
+        Log.i(TAG, "request reviews");
+        getBus().post(loadReviewsRequest);
     }
 
     protected void getVideos(int nextPage) {
+        if (null == mMovie) return;
         if (mDataReceivedVideoList)
             // we have all the videos for this movie
             return;
@@ -425,20 +432,18 @@ public class MovieDataService extends Observable implements MovieData {
         receiveEvents();
 
         //  Now request that the trailers be loaded
-        if (null != mMovie) {
-            String apiKey = mContext.getString(R.string.movie_api_key);
-            LoadVideosEvent loadVideosRequest = new LoadVideosEvent(apiKey, mMovie.id);
+        String apiKey = mContext.getString(R.string.movie_api_key);
+        LoadVideosEvent loadVideosRequest = new LoadVideosEvent(apiKey, mMovie.id);
 
-            Log.i(TAG, "request video trailers");
-            getBus().post(loadVideosRequest);
-        }
+        Log.i(TAG, "request video trailers");
+        getBus().post(loadVideosRequest);
     }
 
     // reviewsLoaded gets called when we get a list of reviews back from TMDB
     @Subscribe
     public void videosLoaded(VideosLoadedEvent event) {
         Log.i(TAG, "videos Loaded callback! Number of trailers: " + event.trailerResults.size());
-        List<Video> newVideos = new ArrayList<Video>();
+        List<Video> newVideos = new ArrayList<>();
         // load the movie data into our movies list
         for (VideoModel data : event.trailerResults) {
             newVideos.add(new Video(data));
