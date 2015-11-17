@@ -337,7 +337,7 @@ public final class DetailFragment extends Fragment implements Observer {
 
     public void onClickFavoriteButton(View view) {
         // toggle favorite on/off in database
-        MovieData data = (MovieData) getActivity();
+        MovieDataService data = MovieDataService.getInstance();
 
         if (data.getFavorite() == 0) {
             Log.d(TAG, "buttonFavoriteClick  add Favorite");
