@@ -177,9 +177,12 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
     public void onResume() {
         Log.d(TAG, "on resume");
         super.onResume();
-
         // We are back on display. Pay attention to movie results again.
         receiveEvents();
+
+        // In this app the settings are full page, so
+        // we only see the settings change during our resume
+        // See if the sort type changed on us in updateMovies
         updateMovies();
     }
 
@@ -233,7 +236,7 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
         // TODO: check for end of data?
         // Create an event requesting that the movie list with the new sort order be updated from the
         // Movie DB web service
-        String apiKey = mRootView.getContext().getString(R.string.movie_api_key);
+        String apiKey = getResources().getString(R.string.movie_api_key);
         LoadMoviesEvent loadMoviesRequest = new LoadMoviesEvent(apiKey, sortType, mPageRequest++);
         getBus().post(loadMoviesRequest);
     }
@@ -248,13 +251,16 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
         updatePosition();
     }
 
-    // TODO: Clean up Settings <-> SortType <-> Data
-    // create a MovieListDataService that tracks and responds to sort type
-    private void updateSortType(String sortType) {
-        Log.d(TAG, "updateSortType to " + sortType);
-       // if (mCurrentlyDisplayedSortType != sortType)
-       //     mCurrentlyDisplayedSortTitle = false;
-        mCurrentlyDisplayedSortType = sortType;
+    public String getSortType() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String apiKey = mRootView.getContext().getString(R.string.movie_api_key);
+        return prefs.getString(getString(R.string.settings_sort_key), getString(R.string.settings_sort_now_playing));
+    }
+
+    protected void updateSortType(String sortType) {
+        if (mCurrentlyDisplayedSortType.equals(sortType))
+            return;
+        Log.d(TAG, "updateSortType from " + mCurrentlyDisplayedSortType + " to " + sortType);
 
         // Display sort type in the title bar
         if (null == mToolbar)
@@ -266,15 +272,14 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
             int index = Arrays.asList(sortKeyStrings).indexOf(sortType);
             if (index >= 0) {
                 String[] sortFriendlyStrings = getResources().getStringArray(R.array.settings_sort_labels);
-                mToolbar.setTitle(sortFriendlyStrings[index]);
+                mCurrentlyDisplayedSortTitle = sortFriendlyStrings[index];
+                mToolbar.setTitle(mCurrentlyDisplayedSortTitle);
             } else {
                 Log.d(TAG, "Error updateSortType for " + sortType + " index was " + index);
             }
         }
-    }
-    private String getSortType() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        return prefs.getString(getString(R.string.settings_sort_key), getString(R.string.settings_sort_now_playing));
+        // And now this sort type is being displayed
+        mCurrentlyDisplayedSortType = sortType;
     }
 
     private void updatePosition() {
@@ -345,6 +350,7 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
     private void restoreState(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
             mCurrentlyDisplayedSortType = savedInstanceState.getString(getString(R.string.settings_sort_key));
+            mCurrentlyDisplayedSortTitle = savedInstanceState.getString(getString(R.string.settings_sort_label));
             mMovieList = savedInstanceState.getParcelableArrayList(getString(R.string.key_movielist));
             mCurrentlyDisplayedPosterQuality = savedInstanceState.getString(getString(R.string.settings_image_quality_key));
             mGridviewPosition = savedInstanceState.getInt(getString(R.string.key_gridview_position));

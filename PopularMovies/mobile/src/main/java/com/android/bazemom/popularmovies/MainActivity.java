@@ -68,7 +68,6 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Call
         // using our buddies Retrofit and Otto.
         DispatchTMDB dispatchTMDB = DispatchTMDB.getInstance();
         dispatchTMDB.shareBus().register(this);
-        dispatchTMDB.getMoviesNow();
     }
 
     @Override
@@ -119,7 +118,6 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Call
         onMovieSelected(movie);
     }
 
-
     protected void onMovieSelected(Movie movie) {
         // Start the process of getting the details for the selected movie
         MovieDataService.getInstance(this, movie);
@@ -133,7 +131,7 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Call
 
         // pass Movie detail through to the tab container fragment
         Fragment oldDetailFragment = fragMan.findFragmentByTag(DETAILFRAGMENT_TAG);
-        Fragment detailFragment = new DetailFragment();
+        Fragment detailFragment = new TabContainerFragment();
         Bundle detailArgs = new Bundle();
         detailArgs.putParcelable(MovieData.MOVIE, movie);
         detailFragment.setArguments(detailArgs);
