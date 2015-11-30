@@ -83,8 +83,12 @@ public class VideoFragment extends Fragment {
             trailerLink = trailerUri.toString();
         if (trailerLink.isEmpty()) {
             // default to the first trailer
-            MovieData movieData = (MovieData) getActivity();
-            trailerLink = movieData.getYouTubeURL(0);
+            MovieDataService dataService = MovieDataService.getInstance();
+            if (null == dataService) {
+                // bug out, we're screwed, probably out of memory
+                return false;
+            }
+            trailerLink = dataService.getYouTubeURL(0);
         }
         if (!trailerLink.isEmpty()) {
             Log.d(TAG, "Share trailer link " + trailerLink);
