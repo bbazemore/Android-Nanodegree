@@ -1,0 +1,15 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:theme="@style/AppTheme"
+    >
+<include
+    android:id="@+id/toolbar"
+    layout="@layout/toolbar" />
+
+<include
+    android:id="@+id/master_container"
+    layout="@layout/fragment_main"/>
+</LinearLayout>

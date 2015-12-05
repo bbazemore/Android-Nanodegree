@@ -8,14 +8,17 @@
     </style>
     <!-- Base theme applied no matter what API -->
     <!-- From https://github.com/xamarin/monodroid-samples/tree/master/Supportv7/AppCompat/Toolbar/Supportv7Toolbar/Resources/values -->
-    <style name="MaterialTheme.Base" parent="Theme.AppCompat.Light.DarkActionBar">
+    <!-- Turn off normal application bar so we can put our toolbars where we please.
+         Do this by replacing "Theme.AppCompat.Light.DarkActionBar" with NoActionBar
+         per http://www.truiton.com/2015/04/android-action-bar-dialog-using-toolbar/ -->
+    <style name="MaterialTheme.Base" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="windowNoTitle">true</item>
         <!--We will be using the toolbar so no need to show ActionBar-->
         <item name="windowActionBar">false</item>
         <!-- Set theme colors from http://www.google.com/design/spec/style/color.html#color-color-palette-->
-        <!-- colorPrimary is used for the default action bar background -->
+        <!-- colorPrimary is used for the Blue 500 default action bar background -->
         <item name="colorPrimary">#2196F3</item>
-        <!-- colorPrimaryDark is used for the status bar -->
+        <!-- colorPrimaryDark is used for the Blue 700 status bar -->
         <item name="colorPrimaryDark">#1976D2</item>
         <!-- colorAccent is used as the default value for colorControlActivated
              which is used to tint widgets -->
@@ -24,11 +27,16 @@
         <item name="colorControlHighlight">#FF4081</item>
         <!-- You can also set colorControlNormal, colorControlActivated
            colorControlHighlight and colorSwitchThumbNormal. -->
+        <item name="android:textColorPrimary">@android:color/white</item>
+        <item name="android:textColorSecondary">@android:color/white</item>
+        <item name="android:textColor">@color/primary_text_default_material_light</item>
+
     </style>
     <!--style name="TabTheme" parent="Theme.AppCompat.NoActionBar">
         <!- -item name="windowActionBar">false</item -->  <!-- so we can do tab toolbar for reviews / videos - ->
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+           <item name="actionMenuTextColor">@android:color/holo_blue_dark</item>
     </style-->
     <!--Display  White text over a background image with black shadow to make it stand out -->
     <style name="DetailShadowedText">

@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -30,6 +31,10 @@ public class DetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_detail);
         mRootView = findViewById(R.id.detail_container);
 
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        if (null != toolbar)
+            setSupportActionBar(toolbar);
+
         if (savedInstanceState == null) {
             // get Movie detail from argument
             if (setMovieFromIntent()) {
@@ -39,7 +44,7 @@ public class DetailActivity extends AppCompatActivity {
                 mTabContainerFragment.setArguments(getIntent().getExtras());
 
                 fragMan.beginTransaction()
-                        .add(R.id.detail_container, mTabContainerFragment, TabContainerFragment.TAG)
+                        .replace(R.id.detail_container, mTabContainerFragment, TabContainerFragment.TAG)
                         .commit();
 
                 // Activity is set up. Now let's get the data service started getting data about the movie.

@@ -5,16 +5,4 @@
              android:layout_width="match_parent"
              android:layout_height="match_parent"
              tools:context="com.android.bazemom.popularmovies.app.DetailActivity"
-             tools:ignore="MergeRootFrame"
-    >
-    <!-- used to be in activity frame layout tools:ignore="MergeRootFrame" -->
-
-    <!--fragment android:id="@+id/fragment_tab_container"
-              android:name="com.android.bazemom.popularmovies.TabContainerFragment"
-              android:layout_width="0px"
-              android:layout_height="match_parent"
-              android:layout_weight="1">
-
-
-    </fragment-->
-</FrameLayout>
+    />

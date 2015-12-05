@@ -137,6 +137,7 @@ public class MovieDataService extends Observable implements MovieData {
         requestData = true;
         readInstanceState(context, savedInstanceState);
     }
+
     @SuppressWarnings("Convert2Diamond")
     private void initialize() {
         mDataReceivedDetail = false;
@@ -257,7 +258,7 @@ public class MovieDataService extends Observable implements MovieData {
 
     @Override
     public int getFavorite() {
-        return mMovieDetail.getFavorite();
+        return (mMovieDetail == null ? 0 : mMovieDetail.getFavorite());
     }
 
     @Override

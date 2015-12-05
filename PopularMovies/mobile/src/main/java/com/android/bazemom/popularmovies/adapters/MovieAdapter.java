@@ -72,19 +72,23 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
         }
 
         final ImageView posterView = (ImageView) convertView.findViewById(R.id.list_item_movie_imageview);
+
+        // update the UI now we can put the poster up with the right aspect ratio
+        loadPoster(getContext(), posterView, movie.posterPath);
+
         /* Todo: store poster locally, Picasso load from local path first, if that image file does not
          * exist, get the poster from the internet TMDB and then stash it locally.
          * See http://stackoverflow.com/questions/27729976/download-and-save-images-using-picasso
          */
         // Wait until the ImageView has a size before filling it in
-        posterView.post(new Runnable() {
+    /*   posterView.post(new Runnable() {
             @Override
             public void run() {
                 //Log.d("TAG", "MovieAdapter post-run");
                 // update the UI now we can put the poster up with the right aspect ratio
                 loadPoster(getContext(), posterView, movie.posterPath);
             }});
-
+*/
 
         return convertView;
     }

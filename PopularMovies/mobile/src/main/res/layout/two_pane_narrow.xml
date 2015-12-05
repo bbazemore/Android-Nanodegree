@@ -1,0 +1,46 @@
+<android.support.design.widget.CoordinatorLayout
+    android:id="@+id/root_container"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:baselineAligned="false"
+    android:divider="?android:attr/dividerHorizontal"
+    android:orientation="horizontal"
+    tools:name="com.android.bazemom.popularmovies.MainActivity"
+    >
+    <!--
+  This layout is a two-pane layout for the Items master/detail flow.
+  -->
+    <!-- The Tab rests directly below the Toolbar, attached below it -->
+    <include
+        android:id="@+id/detail_container"
+        layout="@layout/fragment_tab_container"
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:layout_gravity="top"
+        tools:name="com.android.bazemom.popularmovies.TabContainerFragment"
+        />
+
+    <!-- divider -->
+    <View android:id="@+id/divider"
+          android:layout_width="wrap_content"
+          android:layout_height="1dp"
+          android:background="#000000"
+        />
+
+    <FrameLayout android:id="@+id/master_container"
+                 android:name="com.android.bazemom.popularmovies.MainFragment"
+                 xmlns:android="http://schemas.android.com/apk/res/android"
+                 xmlns:tools="http://schemas.android.com/tools"
+                 android:layout_width="fill_parent"
+                 android:layout_height="0dp"
+                 android:layout_weight="3"
+                 android:layout_gravity="bottom"
+                 tools:layout="@layout/fragment_main_two_pane_narrow"
+                 tools:name="com.android.bazemom.popularmovies.MainFragment"
+        />
+
+</android.support.design.widget.CoordinatorLayout>
+

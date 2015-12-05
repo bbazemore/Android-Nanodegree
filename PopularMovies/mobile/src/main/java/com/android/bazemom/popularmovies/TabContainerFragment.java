@@ -31,6 +31,7 @@ public class TabContainerFragment extends Fragment  {
     // Our cache of the views & data to display
     private DetailTabViewHolder mViewHolder;
     private View mRootView;
+    private boolean mTwoPane;
 
     private Movie mMovie;
 
@@ -60,8 +61,17 @@ public class TabContainerFragment extends Fragment  {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
-        mRootView = inflater.inflate(R.layout.fragment_tab_container, container, false);
-        Log.d(TAG, "onCreateView");
+
+        mTwoPane = getResources().getBoolean(R.bool.has_two_panes);
+     /* if (mTwoPane) {
+            // tabs should already be inflated. Find them
+            mRootView = getActivity().findViewById(R.id.detail_container);
+            Log.d(TAG, "onCreateView two panes. RootView from detail_container is null? " + Boolean.toString(mRootView == null));
+        } else {
+            Log.d(TAG, "onCreateView one pane"); */
+            mRootView = inflater.inflate(R.layout.fragment_tab_container, container, false);
+      // }
+
         // Get the ids of the View elements so we don't have to fetch them over and over
         mViewHolder = new DetailTabViewHolder();
 
@@ -69,6 +79,12 @@ public class TabContainerFragment extends Fragment  {
         Bundle args = getArguments();
         if (args != null ) {
             mMovie = args.getParcelable(MovieData.EXTRA_MOVIE);
+            Log.d(TAG, "onCreate has movie " + mMovie);
+        }
+        // Tab layout set up, if 2pane, 2nd toolbar needs to be activated
+        if (/*mTwoPane  &&*/ mViewHolder.toolbar != null) {
+            Log.d(TAG, "SetSupportActionBar to tabs toolbar");
+            ((AppCompatActivity) getActivity()).setSupportActionBar(mViewHolder.toolbar);
         }
 
         // Create a fragment to handle each tab.  Cache them away so we can poke them
@@ -78,15 +94,15 @@ public class TabContainerFragment extends Fragment  {
                 mViewHolder.reviewFragment = new ReviewFragment();
                 mViewHolder.videoFragment = new VideoFragment();
 
-            // Give each fragment / tab the basics about the movie so they
-            // have the freedom to use the title and such.
-            mViewHolder.detailFragment.setArguments(args);
-            mViewHolder.reviewFragment.setArguments(args);
-            mViewHolder.videoFragment.setArguments(args);
+            if (args != null) {
+                // Give each fragment / tab the basics about the movie so they
+                // have the freedom to use the title and such.
+                mViewHolder.detailFragment.setArguments(args);
+                mViewHolder.reviewFragment.setArguments(args);
+                mViewHolder.videoFragment.setArguments(args);
+            }
         }
 
-        // Tab layout set up
-        ((AppCompatActivity)getActivity()).setSupportActionBar(mViewHolder.toolbar);
         setupViewPager(mViewHolder.viewPager);
         mViewHolder.tabLayout.setupWithViewPager(mViewHolder.viewPager);
         return mRootView;
@@ -198,7 +214,15 @@ public class TabContainerFragment extends Fragment  {
         VideoFragment videoFragment;
 
         DetailTabViewHolder() {
-            toolbar = (Toolbar) mRootView.findViewById(R.id.tabanim_toolbar);
+          /*  if (mTwoPane) {
+                toolbar = (Toolbar) mRootView.findViewById(R.id.toolbar_detail);
+                Log.d(TAG, "DetailTabViewHolder two panes. toolbar_detail from rootView is null? " + Boolean.toString(toolbar == null));
+
+            } else { */
+                toolbar = (Toolbar) mRootView.findViewById(R.id.toolbar);
+           // }
+            Log.d(TAG, "DetailTabViewHolder toolbar findView from rootview is null? " + Boolean.toString(toolbar == null));
+
             viewPager = (ViewPager) mRootView.findViewById(R.id.tabanim_viewpager);
             tabLayout = (TabLayout) mRootView.findViewById(R.id.tabanim_tabs);
 
@@ -231,7 +255,14 @@ public class TabContainerFragment extends Fragment  {
                 @Override
                 public void run() {
                     // Anything we need to fix up in the display once it is up
-                    Log.d("TAG", "DetailTabView post-run");
+                    Log.d("TAG", "DetailTabView post-run, poke UI");
+                    // Poke the tab to refresh the UI
+                    updateTab( tabLayout.getTabAt(tabLayout.getSelectedTabPosition()));
+                    // layout the tabs below the coordinator layout + toolbar at run-time
+                   /*RelativeLayout.LayoutParams belowLayout = new RelativeLayout.LayoutParams(tabLayout.getWidth(),
+                            tabLayout.getHeight());
+                    belowLayout.addRule(RelativeLayout.BELOW, R.id.toolbar);
+                    mRootView.setLayoutParams(belowLayout); */
                 }
             });
         }

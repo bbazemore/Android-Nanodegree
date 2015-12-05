@@ -222,7 +222,7 @@ public final class DetailFragment extends Fragment implements Observer {
         // Note the image quality values are different for posters and backdrops, so fix up equivalent high, medium, and low values here.
         if (movieDetail.backdropPath != null && !mMovieDetail.backdropPath.isEmpty()
                 && mViewHolder.backgroundWidth > 0) {
-            int backgroundSizeId = R.string.settings_backddrop_quality_high;
+            int backgroundSizeId = R.string.settings_backdrop_quality_high;
 
             // Tine to build the image URL again. Yes, this code looks familiar.
             // We do the same look up in the basic UI fill in, but that is not usually

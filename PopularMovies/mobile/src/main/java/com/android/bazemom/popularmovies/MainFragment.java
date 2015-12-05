@@ -1,13 +1,11 @@
 package com.android.bazemom.popularmovies;
 
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -34,7 +32,6 @@ import com.squareup.otto.Subscribe;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-
 /**
  * This is where we will display a grid view of movies
  * See About.txt for more detail.
@@ -42,6 +39,8 @@ import java.util.Arrays;
 public class MainFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
     private final static String TAG = MainFragment.class.getSimpleName();
     private static final int FAVORITE_LOADER = 0;
+    public static final int MAX_VISIBLE_ITEM_COUNT = 30;
+    private static final int MOVIE_COLUMN_WIDTH_DP = 300;
 
     private ArrayList<Movie> mMovieList;
     private MovieAdapter mAdapter;
@@ -102,39 +101,45 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
         mHintView = (TextView) mRootView.findViewById(R.id.favorite_hint);
         mHintView.setVisibility(View.GONE);
 
-        if (getActivity().findViewById(R.id.detail_container) != null) {
-            // The detail container view will be present only in the large-screen layouts
-            // (res/layout-sw600dp). If this view is present, then the activity should be
-            // in two-pane mode.
-            mTwoPane = true;
-            Log.d(TAG, "Two pane mode");
-        }
+        mTwoPane = getResources().getBoolean(R.bool.has_two_panes);
+
         if (savedInstanceState == null || !savedInstanceState.containsKey(getString(R.string.key_movielist))) {
             // MoviesAvailableEvent (load whatever we have now)
             mMovieList = new ArrayList<>();
 
             // Fill the list with movies from TMDB
-            updateMovies();
+            //updateMovies();
         } else {
             // Restore the movie list as we last saw it.
             restoreState(savedInstanceState);
-
-            // Things to do once and only once the view is up and running
-            mRootView.post(new Runnable() {
-                @Override
-                public void run() {
-                    Log.d("TAG", "RootView post-run lambda");
-                    // Make sure the sort title is accurate
-                    updateSortType(getSortType());
-                    // update the UI now we can scroll the last selected movie into position
-                    updatePosition();
-                }
-            });
         }
+        // Things to do once and only once the view is up and running
+        mRootView.post(new Runnable() {
+            @Override
+            public void run() {
+                Log.d("TAG", "RootView post-run lambda");
+              /*  if (mTwoPane) {
+                    // compute optimal number of movie poster columns based on available width
+                    setOptimalColumnWidth();
+                    //RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getContext(), optimalColumnCount);
+                    //mGridView.setLayoutManager(layoutManager);
+                    // Force re-render
+                    mGridView.setAdapter(mAdapter);
+
+                } */
+                // Make sure the sort title is accurate
+                updateSortType(getSortType());
+                // update the UI now we can scroll the last selected movie into position
+                updatePosition();
+            }
+        });
 
         // Connect the UI with our fine list of movies
         mAdapter = new MovieAdapter(getActivity(), mMovieList);
         mGridView = (GridView) mRootView.findViewById(R.id.movies_grid);
+
+        setOptimalColumnWidth();
+
         mGridView.setAdapter(mAdapter);
 
         // In Master-Detail two pane mode, keep the movie in the
@@ -153,9 +158,8 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
 
                 // remember where we were in the list for when we return
                 mGridviewPosition = position;
-                launchDetailFragment(movie);
-                /*  ((Callback) getActivity())
-                        .onItemSelected(movie); */
+                ((Callback) getActivity())
+                        .onItemSelected(movie);
             }
         });
         mGridView.setOnScrollListener(new AbsListView.OnScrollListener() {
@@ -164,6 +168,8 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
                 if (totalItemCount == 0)
                     // can't scroll past bottom if there is nothing in the list, don't loop through the workflow on this condition
                     return;
+                // cap the count at 50. In the landscape case the count increases seemingly without end.
+                visibleItemCount = Math.min(visibleItemCount, MAX_VISIBLE_ITEM_COUNT);
                 if (totalItemCount - firstVisibleItem < (visibleItemCount * 2 + 1)) {
                     updateMovies();
                 }
@@ -177,18 +183,20 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
         return mRootView;
     }
 
-    public void launchDetailFragment(Movie movie) {
-        if (mTwoPane) {
-            // Replace framelayout with new detail fragment with Tabs
-            TabContainerFragment fragmentItem = TabContainerFragment.newInstance(movie);
-            FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
-            ft.replace(R.id.detail_container, fragmentItem);
-            ft.commit();
-        } else {  // one pane
-            // Pass the Movie to the Detail Activity that holds the tab container
-            Intent detailIntent = new Intent(getActivity(), DetailActivity.class);
-            detailIntent.putExtra(MovieData.EXTRA_MOVIE, movie);
-            startActivity(detailIntent);
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        // The toolbar may be in the detail fragment, which may be laid out after this master.
+        // Be patient and fill this in when it is likely to be there
+        if (null == mToolbar) {
+            Log.d(TAG, "OnViewCreated setting toolbar.");
+            mToolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
+            updateSortType(getSortType());
+        }
+        // Fill the list with movies from TMDB
+        if (mMovieList.size() == 0) {
+            Log.d(TAG, "OnViewCreated updateMovies.");
+            updateMovies();
         }
     }
 
@@ -196,9 +204,6 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
     public void onResume() {
         Log.d(TAG, "on resume");
         super.onResume();
-
-        // Make sure we have the right sort type displayed
-        //mCurrentlyDisplayedSortType = "";
 
         // We are back on display. Pay attention to movie results again.
         receiveEvents();
@@ -228,7 +233,7 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
     }
 
     public void updateMovies() {
-         String sortType = getSortType();
+        String sortType = getSortType();
         // Clear the list of movies if the sort type is changing.  The sort is a misnomer since
         // the app is fetching a different set of movies depending on the type requested.
         if (!sortType.contentEquals(mCurrentlyDisplayedSortType)) {
@@ -310,20 +315,32 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
 
     private void updatePosition() {
         Log.d(TAG, "updatePosition: " + mGridviewPosition);
-        if (null == mGridView) return;
+        if (null == mGridView) {
+            Log.d(TAG, "updatePosition: no gridview to process");
+            return;
+        }
 
-        if (mGridviewPosition == GridView.INVALID_POSITION) {
+        if (mGridView.getChildCount() == 0) {
+            Log.d(TAG, "updatePosition: no children to process");
+            return;
+        }
+        // Initialize the detail view in 2pane mode
+        if (mTwoPane
+            && mGridviewPosition == GridView.INVALID_POSITION
+                && mGridView.getFirstVisiblePosition() != GridView.INVALID_POSITION) {
             Log.d(TAG, "updatePosition 2pane, first visible position is: " + mGridView.getFirstVisiblePosition());
             // When 2 pane view starts up, select the first visible movie in the list
-            mGridView.performItemClick(mGridView, mGridView.getFirstVisiblePosition(), 0 );
+            mGridView.performItemClick(mGridView, mGridView.getFirstVisiblePosition(), 0);
         }
         if (mGridviewPosition != mGridView.getFirstVisiblePosition()
                 && mGridviewPosition != GridView.INVALID_POSITION) {
+            Log.d(TAG, "updatePosition firstVisiblePosition is: " + mGridView.getFirstVisiblePosition());
             // The position we want is different than the position we have
             // Back to where we were in the list the last time the user clicked
             mGridView.smoothScrollToPosition(mGridviewPosition);
         }
     }
+
 
     @Override
     public void onPause() {
@@ -377,7 +394,7 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
         mToolbar = null;
         mCurrentlyDisplayedSortType = ""; // Force Sort type title to update
         if (savedInstanceState != null) {
-            updateSortType( savedInstanceState.getString(getString(R.string.settings_sort_key)));
+            updateSortType(savedInstanceState.getString(getString(R.string.settings_sort_key)));
             //mCurrentlyDisplayedSortTitle = savedInstanceState.getString(getString(R.string.settings_sort_label));
             mMovieList = savedInstanceState.getParcelableArrayList(getString(R.string.key_movielist));
             mCurrentlyDisplayedPosterQuality = savedInstanceState.getString(getString(R.string.settings_image_quality_key));
@@ -459,6 +476,19 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
         // mAdapter.clear();
         // mMovieList.clear();
         //mAdapter.swapCursor(null);
+    }
+
+    protected void setOptimalColumnWidth() {
+        int viewWidth = Utility.getScreenWidth(getContext());
+        Log.d(TAG, "setOptimalColumnWidth width is " + viewWidth);
+        int optimalColumnCount = Math.round(viewWidth / MOVIE_COLUMN_WIDTH_DP);
+        int actualPosterViewWidth = viewWidth / optimalColumnCount;
+        //mGridView.setLayoutParams((actualPosterViewWidth * 1.3);
+        mGridView.setNumColumns(optimalColumnCount);
+        mGridView.setColumnWidth(actualPosterViewWidth);
+        mGridView.setStretchMode(GridView.STRETCH_COLUMN_WIDTH);
+        Log.d(TAG, "Grid view columns: " + optimalColumnCount + " width: " + actualPosterViewWidth);
+
     }
 }
 
