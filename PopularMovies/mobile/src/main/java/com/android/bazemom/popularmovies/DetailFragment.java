@@ -2,13 +2,11 @@ package com.android.bazemom.popularmovies;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
@@ -195,16 +193,8 @@ public final class DetailFragment extends Fragment implements Observer {
 
             updateFavoriteButton(mViewHolder.favoriteButton, mMovieDetail.getFavorite());
 
-            // To build an image URL, we need 3 pieces of data. The baseurl, size and filepath.
-            // First get the size from the preferences, user can select high, medium or low
-            // Initialize it up here because it is needed in the general UI initialization
-            // and the big background init section.
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
-            String posterSize = prefs.getString(getString(R.string.settings_image_quality_key), getString(R.string.settings_poster_quality_high));
-
-            if (movieDetail.posterPath != null && !movieDetail.posterPath.isEmpty()) {
-                String posterURL = context.getString(R.string.TMDB_image_base_url) + posterSize + mMovieDetail.posterPath;
-
+            String posterURL = mMovie.getPosterUrl(getActivity());
+            if (!posterURL.isEmpty()) {
                 // Here’s an example URL: http://image.tmdb.org/t/p/w500/8uO0gUM8aNqYLs1OsTBQiXu0fEv.jpg
                 Picasso.with(context)
                         .load(posterURL)
@@ -217,32 +207,8 @@ public final class DetailFragment extends Fragment implements Observer {
             return;
         }
 
-        // Now set the background image for the whole frame in the Detail View
-        // Stolen from http://stackoverflow.com/questions/29777354/how-do-i-set-background-image-with-picasso-in-code
-        // Note the image quality values are different for posters and backdrops, so fix up equivalent high, medium, and low values here.
-        if (movieDetail.backdropPath != null && !mMovieDetail.backdropPath.isEmpty()
-                && mViewHolder.backgroundWidth > 0) {
-            int backgroundSizeId = R.string.settings_backdrop_quality_high;
-
-            // Tine to build the image URL again. Yes, this code looks familiar.
-            // We do the same look up in the basic UI fill in, but that is not usually
-            // done in the same invocation of this method. If I call these outside
-            // the if clauses they get called a lot more times.  Not good for performance.
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
-            String posterSize = prefs.getString(getString(R.string.settings_image_quality_key), getString(R.string.settings_poster_quality_high));
-
-            // drop down the resolution on larger devices to keep from getting out of memory
-            // sadly the devices with best resolution get the lowest quality image.
-            if (posterSize.equals(getString(R.string.settings_poster_quality_medium))) {
-                backgroundSizeId = R.string.settings_backdrop_quality_medium;
-            } else if (posterSize.equals(getString(R.string.settings_poster_quality_low))) {
-                backgroundSizeId = R.string.settings_backdrop_quality_low;
-            }
-
-            String backgroundURL = context.getString(R.string.TMDB_image_base_url);
-            backgroundURL += context.getString(backgroundSizeId);
-            backgroundURL += mMovieDetail.backdropPath;
-
+        String backgroundURL = mMovieDetail.getBackgroundURL(getActivity(), mViewHolder.backgroundWidth);
+        if (!backgroundURL.isEmpty()) {
             Picasso.with(getActivity()).load(backgroundURL)
                     //.memoryPolicy(MemoryPolicy.NO_CACHE) // we run out of memory on tablets
                     .resize(mViewHolder.backgroundWidth, mViewHolder.backgroundHeight)

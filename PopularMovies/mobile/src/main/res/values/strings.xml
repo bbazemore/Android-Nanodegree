@@ -22,6 +22,9 @@
 
     <string name="key_movielist" translatable="false">com.android.bazemom.popularmovies.movielist
     </string>
+    <string name="key_gridview_position" translatable="false">gridview_position</string>
+    <string name="key_movie_page_request" translatable="false">page_request</string>
+
     <string name="TMDB_endpoint_url" translatable="false">https://api.themoviedb.org/3</string>
     <string name="TMDB_image_base_url" translatable="false">http://image.tmdb.org/t/p/w</string>
 
@@ -55,6 +58,7 @@
         <item>@string/settings_sort_now_playing</item>
         <item>@string/settings_sort_favorite</item>
     </string-array>
+    <string name="settings_sort_default">@string/settings_sort_popular</string>
 
     <string name="settings_image_quality_label">Image quality. Pick Low for slow internet
         connection.
@@ -62,7 +66,6 @@
     <string name="settings_image_quality_key" translatable="false">
         com.android.bazemom.popularmovies.image_quality
     </string>
-    <string name="key_gridview_position">gridview_position</string>
     <string name="tab_title_detail">DETAIL</string>
     <string name="tab_title_review">REVIEW</string>
     <string name="tab_title_trailer">TRAILER</string>

@@ -2,8 +2,7 @@ package com.android.bazemom.popularmovies.adapters;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,7 +21,9 @@ import java.util.List;
 // I love that components exist that make this so easy.
 //
 public class MovieAdapter extends ArrayAdapter<Movie> {
-    private static final String LOG_TAG = MovieAdapter.class.getSimpleName();
+    private static final String TAG = MovieAdapter.class.getSimpleName();
+    // The movie list can be Favorite, Now_Playing, Popular, or Top_Rated
+    private String mFlavor = "";
 
     /**
      * This is our own custom constructor (it doesn't mirror a superclass constructor).
@@ -32,13 +33,17 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
      * @param context   The current context. Used to inflate the layout file.
      * @param movieList A List of Movie objects to display in a list
      */
-    public MovieAdapter(Activity context, List<Movie> movieList) {
+    public MovieAdapter(Activity context, String sortType, List<Movie> movieList) {
         // Here, we initialize the ArrayAdapter's internal storage for the context and the list.
         // the second argument is used when the ArrayAdapter is populating a single TextView.
         // Because this is a custom adapter for two TextViews and an ImageView, the adapter is not
         // going to use this second argument, so it can be any value. Here, we used 0.
         super(context, 0, movieList);
+        mFlavor = sortType;
+        Log.d(TAG, "constructor received " + movieList.size() + " movies of type " + mFlavor);
     }
+
+    public String getFlavor() { return mFlavor; }
 
     public void addAll(MovieResults movieResults) {
         // because we add one page worth of data at a time, this is incremental.
@@ -73,38 +78,31 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
 
         final ImageView posterView = (ImageView) convertView.findViewById(R.id.list_item_movie_imageview);
 
-        // update the UI now we can put the poster up with the right aspect ratio
-        loadPoster(getContext(), posterView, movie.posterPath);
+        // update the UI. The imageview may be bigger than needed and waste memory.
+        // hold off on loading the image until we know how big the item in the gridview will be.
+        loadPoster(getContext(), posterView, movie.getPosterUrl(getContext()));
 
-        /* Todo: store poster locally, Picasso load from local path first, if that image file does not
-         * exist, get the poster from the internet TMDB and then stash it locally.
-         * See http://stackoverflow.com/questions/27729976/download-and-save-images-using-picasso
-         */
         // Wait until the ImageView has a size before filling it in
-    /*   posterView.post(new Runnable() {
+     /*   posterView.post(new Runnable() {
             @Override
             public void run() {
                 //Log.d("TAG", "MovieAdapter post-run");
                 // update the UI now we can put the poster up with the right aspect ratio
-                loadPoster(getContext(), posterView, movie.posterPath);
+                //oadPoster(getContext(), posterView, movie.getPosterUrl(getContext()));
             }});
-*/
-
+   */
         return convertView;
     }
-    private void loadPoster(Context context, ImageView posterView, String posterPath) {
-        // To build an image URL, we need 3 pieces of data. The baseurl, size and filepath.
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        String posterSize = prefs.getString(context.getString(R.string.settings_image_quality_key), context.getString(R.string.settings_poster_quality_high));
-        String posterURL = context.getString(R.string.TMDB_image_base_url)  + posterSize + posterPath;
-
+    private static void loadPoster(Context context, ImageView posterView, String posterURL) {
         // Here’s an example URL: http://image.tmdb.org/t/p/w500/8uO0gUM8aNqYLs1OsTBQiXu0fEv.jpg
-        Picasso.with(getContext())
-                .load(posterURL)
-                        //.placeholder(R.mipmap.ic_launcher) too busy looking
-                .error(R.mipmap.ic_error_fallback)         // optional]
-                .fit()
-                .into(posterView);
+        if (!posterURL.isEmpty()) {
+            Picasso.with(context)
+                    .load(posterURL)
+                            //.placeholder(R.mipmap.ic_launcher) too busy looking
+                    .error(R.mipmap.ic_error_fallback)         // optional]
+                    .fit()
+                    .into(posterView);
+        }
     }
 }

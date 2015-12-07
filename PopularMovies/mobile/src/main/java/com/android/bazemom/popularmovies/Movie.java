@@ -1,8 +1,11 @@
 package com.android.bazemom.popularmovies;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.preference.PreferenceManager;
 
 import com.android.bazemom.popularmovies.movielocaldb.LocalDBContract;
 import com.android.bazemom.popularmovies.moviemodel.MovieModel;
@@ -116,4 +119,22 @@ public class Movie implements Parcelable {
         }
 
     };
+    public String getPosterUrl(Context context) {
+        String posterURL = "";
+        // To build an image URL, we need 3 pieces of data. The baseurl, size and filepath.
+        // First get the size from the preferences, user can select high, medium or low
+        // Initialize it up here because it is needed in the general UI initialization
+        // and the big background init section.
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
+        String posterSize = prefs.getString(context.getString(R.string.settings_image_quality_key), context.getString(R.string.settings_poster_quality_high));
+
+        /* Todo: store poster locally, Picasso load from local path first, if that image file does not
+         * exist, get the poster from the internet TMDB and then stash it locally.
+         * See http://stackoverflow.com/questions/27729976/download-and-save-images-using-picasso
+         */
+        if (posterPath != null && !posterPath.isEmpty()) {
+            posterURL = context.getString(R.string.TMDB_image_base_url) + posterSize + posterPath;
+        }
+        return posterURL;
+    }
 }

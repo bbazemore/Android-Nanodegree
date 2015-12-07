@@ -1,8 +1,11 @@
 package com.android.bazemom.popularmovies;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.preference.PreferenceManager;
 
 import com.android.bazemom.popularmovies.movielocaldb.LocalDBContract;
 import com.android.bazemom.popularmovies.moviemodel.MovieDetailModel;
@@ -190,6 +193,39 @@ public class MovieDetail implements  Parcelable{
 
     public void setFavorite(int favorite) {
         this.favorite = favorite;
+    }
+
+    // Returns the URL of the movie background image, or "" if there is no image.
+    public String getBackgroundURL(Context context, int backgroundWidth) {
+        String backgroundURL = "";
+
+        // Now set the background image for the whole frame in the Detail View
+        // Stolen from http://stackoverflow.com/questions/29777354/how-do-i-set-background-image-with-picasso-in-code
+        // Note the image quality values are different for posters and backdrops, so fix up equivalent high, medium, and low values here.
+        if (backdropPath != null && !backdropPath.isEmpty()
+                && backgroundWidth > 0) {
+            int backgroundSizeId = R.string.settings_backdrop_quality_high;
+
+            // Tine to build the image URL again. Yes, this code looks familiar.
+            // We do the same look up in the basic UI fill in, but that is not usually
+            // done in the same invocation of this method. If I call these outside
+            // the if clauses they get called a lot more times.  Not good for performance.
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
+            String posterSize = prefs.getString(context.getString(R.string.settings_image_quality_key), context.getString(R.string.settings_poster_quality_high));
+
+            // drop down the resolution on larger devices to keep from getting out of memory
+            // sadly the devices with best resolution get the lowest quality image.
+            if (posterSize.equals(context.getString(R.string.settings_poster_quality_medium))) {
+                backgroundSizeId = R.string.settings_backdrop_quality_medium;
+            } else if (posterSize.equals(context.getString(R.string.settings_poster_quality_low))) {
+                backgroundSizeId = R.string.settings_backdrop_quality_low;
+            }
+
+            backgroundURL = context.getString(R.string.TMDB_image_base_url);
+            backgroundURL += context.getString(backgroundSizeId);
+            backgroundURL += backdropPath;
+        }
+        return backgroundURL;
     }
 }
 
