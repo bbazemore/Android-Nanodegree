@@ -1,10 +1,10 @@
 <RelativeLayout android:id="@+id/fragment_main"
                 xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                tools:context=".MainFragment"
     >
+    <!--  xmlns:tools="http://schemas.android.com/tools"
+          tools:context=".MainFragment" -->
     <!-- TODO: make this a frame instead of relative layout -->
     <!--include
         android:id="@+id/toolbar"
@@ -12,7 +12,6 @@
     <GridView
         android:id="@+id/movies_grid"
         xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:background="@mipmap/ic_launcher"

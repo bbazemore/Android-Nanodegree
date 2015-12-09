@@ -11,7 +11,7 @@ public class MoviesLoadedEvent {
     public MoviesLoadedEvent(MovieResults moviesReturned)
     {
         movieResults = moviesReturned;
-        Log.i(TAG, "MoviesLoadedEvent created with " + movieResults.getTotalResults() + " results");
+        Log.i(TAG, "MoviesLoadedEvent created with " + movieResults.getResults().size() + " results");
     }
 }
 

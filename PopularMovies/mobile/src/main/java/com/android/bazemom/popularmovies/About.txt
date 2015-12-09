@@ -44,7 +44,7 @@ Author: Barbara Bazemore Kiszka, with borrowed bits attributed in the code
 
 General design and dependencies:
     Display movie posters in a GridView in the main view using a traditional Model View Controller
-    (MVC) pattern.  It requires Java SDK 1.7 and Android API 11 (Honeycomb) or better.
+    (MVC) pattern.  It requires Java SDK 1.7 and Android API 16 (Jellybean) or better.
 
     Movie data is fetched from The Movie Database (TMDB, https://www.themoviedb.org/)
     in a RESTful manner using the Retrofit type-safe HTTP client for Android and Java,

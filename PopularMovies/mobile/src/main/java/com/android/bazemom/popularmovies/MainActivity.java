@@ -76,9 +76,9 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Call
                         .replace(R.id.detail_container, new DetailFragment(), DETAILFRAGMENT_TAG)
                         .commit();
             }
-        } else {
+        } /*else {
             getSupportActionBar().setElevation(0f);
-        }
+        } */
         // Set up the RESTful connection to the movie database
         // using our buddies Retrofit and Otto.
         DispatchTMDB dispatchTMDB = DispatchTMDB.getInstance();

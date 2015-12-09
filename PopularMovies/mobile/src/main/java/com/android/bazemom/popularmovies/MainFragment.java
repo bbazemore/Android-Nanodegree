@@ -4,6 +4,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -82,7 +83,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
         receiveEvents();
     }
 
- /*   @Override
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -90,7 +91,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
         setRetainInstance(true);
         Log.d(TAG, "onCreate with retain instance");
     }
-*/
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -99,8 +100,15 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
         mHintView = (TextView) mRootView.findViewById(R.id.favorite_hint);
         mTwoPane = getResources().getBoolean(R.bool.has_two_panes);
 
+        String currentSortType = getSortType();
+        mCurrentlyDisplayedSortType = ""; // Force Sort type title in toolbar to update
+        setOptimalColumnWidth();
+
         // Restore the movie list as we last saw it, or create a whole new list
-        restoreState(savedInstanceState);
+        if (savedInstanceState == null) {
+            initMovieList();
+        } else
+            restoreState(savedInstanceState);
 
         // Things to do once and only once the view is up and running
      /*   mRootView.post(new Runnable() {
@@ -123,6 +131,10 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
             }
         });
         */
+        assert(mMovieList != null);
+        Log.d(TAG, "onCreateView for " + currentSortType + " with " + mMovieList.size() + " movies");
+        mAdapter = new MovieAdapter(getActivity(), currentSortType, mMovieList);
+        mGridView.setAdapter(mAdapter);
 
         // In Master-Detail two pane mode, keep the movie in the
         // master grid-view selected to indicate it is associated
@@ -135,9 +147,10 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
             public void onItemClick(AdapterView<?> parent, View v,
                                     int position, long id) {
                 // User clicked on a movie at "position".
-                if (mTwoPane)
-                    mGridView.setItemChecked(position, true);
-
+              /*  if (mTwoPane) {
+                    // clear previously checked item
+                    mAdapter.setSelectedItem(position);
+                } */
                 // Display the details for that movie
                 Movie movie = mAdapter.getItem(position);
 
@@ -164,20 +177,20 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
             }
         });
 
+        // Update the title
+        updateToolbarTitle(currentSortType);
+        updateMovies();
+        receiveEvents();
         return mRootView;
     }
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        Log.d(TAG, "onViewCreated savedstate null: " + (savedInstanceState == null));
         // The toolbar may be in the detail fragment, which may be laid out after this master.
         // Be patient and fill this in when it is likely to be there
-        if (mTwoPane) {
-            updateToolbarTitle(getSortType());
-        }
-        // Fill the list with movies from TMDB
-        Log.d(TAG, "OnViewCreated updateMovies.");
-        updateMovies();
+        updateToolbarTitle(getSortType());
     }
 
     @Override
@@ -185,11 +198,6 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
         Log.d(TAG, "on resume");
         super.onResume();
 
-        // if the user changed the movie list type in the settings,
-        // clear the movie list and start over.
-        if (!getSortType().contentEquals(mAdapter.getFlavor())) {
-            restoreState(null);
-        }
         // We are back on display. Pay attention to movie results again.
         receiveEvents();
 
@@ -202,7 +210,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
     @Override
     public void onSaveInstanceState(Bundle outState) {
         // our custom save to parcelablearraylist here
-        Log.d(TAG, "Saving " + mMovieList.size() + " movies for " + mAdapter.getFlavor() + " at position " + mGridView.getFirstVisiblePosition());
+        Log.d(TAG, "Saving " + mMovieList.size() + " movies for " + mAdapter.getFlavor() + " at position " + mGridView.getFirstVisiblePosition() + ", Adapter movie list count = " + mAdapter.getCount());
         outState.putParcelableArrayList(getString(R.string.key_movielist), mMovieList);
         outState.putString(getString(R.string.settings_sort_key), mAdapter.getFlavor());
         outState.putString(getString(R.string.settings_image_quality_key), mCurrentlyDisplayedPosterQuality);
@@ -217,13 +225,27 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
         super.onViewStateRestored(savedInstanceState);
         restoreState(savedInstanceState);
         receiveEvents();
+        updateMovies();
     }
 
+    private void initMovieList() {
+        // first make sure the favorites empty list message is not visible.
+        mHintView.setVisibility(View.GONE);
+
+        // Really starting a new set of movies, rather than restoring the last one
+        mMovieList = new ArrayList<>();
+        mMoreMoviesToFetch = true;
+        mGridviewPosition = GridView.INVALID_POSITION;
+        mPageRequest = 1; // start from the beginning of the new movie type
+    }
     public void updateMovies() {
-
-        if (!mMoreMoviesToFetch) return;
-
         String sortType = getSortType();
+        // if the user changed the movie list type in the settings,
+        // clear the movie list and start over.
+        if (!sortType.contentEquals(mAdapter.getFlavor())) {
+            restoreState(null);
+            updateToolbarTitle(sortType);
+        }
         // Special case fetching favorite movies from database.
         // only do the fetch once when the setting changes.
         // Since all the favorites are fetched in one go, we don't
@@ -236,27 +258,30 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
 
         // Create an event requesting that the movie list with the new sort order be updated from the
         // Movie DB web service
-        String apiKey = getResources().getString(R.string.movie_api_key);
-        LoadMoviesEvent loadMoviesRequest = new LoadMoviesEvent(apiKey, sortType, mPageRequest++);
-        getBus().post(loadMoviesRequest);
+        if (mMoreMoviesToFetch) {
+            String apiKey = getResources().getString(R.string.movie_api_key);
+            LoadMoviesEvent loadMoviesRequest = new LoadMoviesEvent(apiKey, sortType, mPageRequest++);
+            getBus().post(loadMoviesRequest);
+        }
     }
 
 
     @Subscribe
     public void onMoviesLoaded(MoviesLoadedEvent event) {
-        Log.i(TAG, "onMoviesLoaded " + event.movieResults.getResults().size() + " movies");
+        Log.i(TAG, "onMoviesLoaded " + event.movieResults.getResults().size() + " movies, page " + event.movieResults.getPage());
         if (!event.movieResults.getResults().isEmpty()) {
             // Mash new movie results into the View that is displayed to user
             mAdapter.addAll(event.movieResults);
 
             // If there is a request outstanding to scroll to a particular position
-            // process it now.
-            if (mGridviewPosition > 0)
-                updatePosition(mGridviewPosition);
+            // process it now. TODO: ??
+           /* if (mGridviewPosition > 0)
+                updatePosition(mGridviewPosition); */
         }
         // Don't keep asking for more movies if we are at the end of the list
-        if (event.movieResults.getTotalPages() >= event.movieResults.getPage()) {
-            Log.d(TAG, "onMoviesLoaded reached end of input at page " + event.movieResults.getPage());
+        int totalPagesAvailable = event.movieResults.getTotalPages();
+        if (totalPagesAvailable > 0 && event.movieResults.getPage() >= totalPagesAvailable) {
+            Log.d(TAG, "onMoviesLoaded reached end of input at page " + totalPagesAvailable);
             mMoreMoviesToFetch = false;
         }
     }
@@ -267,7 +292,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
     }
 
     protected void updateToolbarTitle(String sortType) {
-        if (mCurrentlyDisplayedSortType.contentEquals(sortType)) {
+      if (mCurrentlyDisplayedSortType.contentEquals(sortType)) {
             Log.d(TAG, "updateToolbarTitle - title up to date for " + sortType);
             return;
         }
@@ -275,6 +300,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
 
         // Display sort type in the title bar
         Toolbar toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
+        //android.app.ActionBar toolbar = getActivity().getActionBar();
         if (null != toolbar) {
             // we have the sort type value - which is what we hand to the UI.
             // Convert it to the user friendly label. They don't make this easy :(
@@ -284,7 +310,11 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
             if (index >= 0) {
                 String[] sortFriendlyStrings = getResources().getStringArray(R.array.settings_sort_labels);
                 mCurrentlyDisplayedSortTitle = sortFriendlyStrings[index];
-                toolbar.setTitle(mCurrentlyDisplayedSortTitle);
+                AppCompatActivity activity = (AppCompatActivity) getActivity();
+                if (null != activity && null != activity.getSupportActionBar())
+                    activity.getSupportActionBar().setTitle(mCurrentlyDisplayedSortTitle);
+                else
+                    toolbar.setTitle(mCurrentlyDisplayedSortTitle);
 
                 // And now this sort type is being displayed
                 mCurrentlyDisplayedSortType = sortType;
@@ -301,29 +331,29 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
             return;
         }
 
-        if (mGridView.getChildCount() == 0) {
+     /*   if (mGridView.getChildCount() == 0) {
             Log.d(TAG, "updatePosition: no children to process");
             return;
-        }
+        } */
         // Initialize the detail view in 2pane mode
-        if (mTwoPane
+     /*   if (mTwoPane
                 && newPosition == GridView.INVALID_POSITION
                 && mGridView.getFirstVisiblePosition() != GridView.INVALID_POSITION) {
             Log.d(TAG, "updatePosition 2pane, first visible position is: " + mGridView.getFirstVisiblePosition());
             // When 2 pane view starts up, select the first visible movie in the list
             mGridView.performItemClick(mGridView, mGridView.getFirstVisiblePosition(), 0);
-        }
-        if (newPosition != mGridView.getFirstVisiblePosition()
-                && newPosition != GridView.INVALID_POSITION) {
+        } else if (newPosition != GridView.INVALID_POSITION) {
             Log.d(TAG, "updatePosition to " + newPosition);
             // The position we want is different than the position we have
             // Back to where we were in the list the last time the user clicked
-            mGridView.smoothScrollToPosition(newPosition);
+            //mGridView.smoothScrollToPosition(newPosition);
+            mAdapter.setSelectedItem(newPosition);
 
             // We've successfully scrolled to the requested position
             // Clear the request.
             mGridviewPosition = GridView.INVALID_POSITION;
         }
+        */
     }
 
 
@@ -381,9 +411,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
     // Will return false if the saved state was null or a different sort type
     private boolean restoreState(Bundle savedInstanceState) {
         String currentSortType = getSortType();
-        mCurrentlyDisplayedSortType = ""; // Force Sort type title in toolbar to update
-        setOptimalColumnWidth();
-
+        updateToolbarTitle(currentSortType);
         if (savedInstanceState != null) {
             mCurrentlyDisplayedPosterQuality = savedInstanceState.getString(getString(R.string.settings_image_quality_key));
 
@@ -391,37 +419,25 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
             // else, restore current movie list and gridview position
             String savedSortType = savedInstanceState.getString(getString(R.string.settings_sort_key), getString(R.string.settings_sort_default));
             if (savedSortType.contentEquals(currentSortType)) {
+                int currentMovieListSize = mMovieList == null ? 0 :  mMovieList.size();
+                Log.d(TAG, "restoreState from saved. Before: movieList size is " + currentMovieListSize);
                 mMovieList = savedInstanceState.getParcelableArrayList(getString(R.string.key_movielist));
                 mGridviewPosition = savedInstanceState.getInt(getString(R.string.key_gridview_position));
                 mPageRequest = savedInstanceState.getInt(getString(R.string.key_movie_page_request));
+                mMoreMoviesToFetch = true;
 
-                Log.d(TAG, "restoreState for " + currentSortType + " with " + mMovieList.size() + " movies");
-                mAdapter = new MovieAdapter(getActivity(), currentSortType,  mMovieList);
-                mGridView.setAdapter(mAdapter);
-                updatePosition(mGridviewPosition);
-                updateToolbarTitle(currentSortType);
+                // Update the UI through the adapter
+                if (null != mAdapter) {
+                    mAdapter = new MovieAdapter(getActivity(), currentSortType, mMovieList);
+                    mGridView.setAdapter(mAdapter);
+                }
                 return true;
             }
         }
-        if (null != mAdapter && mAdapter.getFlavor().contentEquals(currentSortType)) {
-            // movie list is already initialized to correct type. Leave it alone
-            Log.d(TAG, "restoreState for " + currentSortType + " using existing adapter " + mMovieList.size() + " movies");
-            return true;
-        }
-        Log.d(TAG, "restoreState, start over with new sort type " + currentSortType);
-
-        // first make sure the favorites empty list message is not visible.
-        mHintView.setVisibility(View.GONE);
-
-        // Really starting a new set of movies, rather than restoring the last one
-        mMovieList = new ArrayList<>();
-        mMoreMoviesToFetch = true;
-        mGridviewPosition = GridView.INVALID_POSITION;
-        mAdapter = new MovieAdapter(getActivity(), currentSortType, mMovieList);
-        mGridView.setAdapter(mAdapter);
-        mPageRequest = 1; // start from the beginning of the new movie type
-        // Update the title
-        updateToolbarTitle(currentSortType);
+        // Starting over with new data
+        Log.d(TAG, "restoreState start over");
+        if (mAdapter != null) mAdapter.setFlavor(currentSortType);
+        initMovieList();
         return false;
     }
 /*
@@ -455,13 +471,18 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
     }
 */
     private void loadFavoriteMovies() {
+        String favorite = getSortType();
+        if (mAdapter.getFlavor().contentEquals(favorite)  && mAdapter.getCount() > 0) {
+            Log.d(TAG, "loadFavoriteMovies already loaded.");
+            return;
+        }
+        Log.d(TAG, "loadFavoriteMovies.");
         LocalDBHelper dbHelper = new LocalDBHelper(getContext());
         mMovieList = dbHelper.getMovieFavoritesFromDB();
-        if (null != mAdapter) {
-            mAdapter.clear();
-            mAdapter.addAll(mMovieList);
-            mMoreMoviesToFetch = false;
-        }
+        mAdapter.setFlavor(favorite);
+        mAdapter.addAll(mMovieList);
+        mMoreMoviesToFetch = false;
+
         // Give the user a hint if the list is empty
         mHintView.setVisibility(mMovieList.isEmpty() ? View.VISIBLE : View.GONE);
         /*

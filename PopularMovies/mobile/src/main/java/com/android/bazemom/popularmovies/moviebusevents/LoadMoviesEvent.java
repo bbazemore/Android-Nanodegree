@@ -16,7 +16,7 @@ public class LoadMoviesEvent {
 
         public LoadMoviesEvent(String key, String sortTypeIn , int pageIn )
         {
-            Log.i(TAG, "LoadMoviesEvent created");
+            Log.i(TAG, "LoadMoviesEvent created for " + sortTypeIn + " page " + pageIn);
             sortType = sortTypeIn;
             page = pageIn;
             api_key = key;

@@ -44,6 +44,13 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
     }
 
     public String getFlavor() { return mFlavor; }
+    public void setFlavor(String sortFlavor) {
+        if (!mFlavor.contentEquals(sortFlavor) ) {
+            // remove old values.  Make way for new ones
+            clear();
+        }
+        mFlavor = sortFlavor;
+    }
 
     public void addAll(MovieResults movieResults) {
         // because we add one page worth of data at a time, this is incremental.
@@ -93,6 +100,27 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
    */
         return convertView;
     }
+
+    /*public void setSelectedItem(int position) {
+        if (mParent == null) return;
+
+        if (mSelectedItem != GridView.INVALID_POSITION) {
+            // unselect the last selected item
+            setImageSelected(mSelectedItem, 0);
+        }
+        // highlight by lifting out of grid
+        setImageSelected(position, 4);
+        mSelectedItem = position;
+
+    }
+    protected void setImageSelected(int position, int height) {
+        View childAt = mParent.getChildAt(position);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            childAt.setElevation(height);
+        } else {
+            childAt.setSelected(height==0 ? false : true );
+        }
+    } */
 
     private static void loadPoster(Context context, ImageView posterView, String posterURL) {
         // Here’s an example URL: http://image.tmdb.org/t/p/w500/8uO0gUM8aNqYLs1OsTBQiXu0fEv.jpg
