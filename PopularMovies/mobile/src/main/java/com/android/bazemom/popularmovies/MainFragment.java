@@ -211,11 +211,12 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
     public void onSaveInstanceState(Bundle outState) {
         // our custom save to parcelablearraylist here
         Log.d(TAG, "Saving " + mMovieList.size() + " movies for " + mAdapter.getFlavor() + " at position " + mGridView.getFirstVisiblePosition() + ", Adapter movie list count = " + mAdapter.getCount());
-        outState.putParcelableArrayList(getString(R.string.key_movielist), mMovieList);
+
         outState.putString(getString(R.string.settings_sort_key), mAdapter.getFlavor());
         outState.putString(getString(R.string.settings_image_quality_key), mCurrentlyDisplayedPosterQuality);
         outState.putInt(getString(R.string.key_gridview_position), mGridView.getFirstVisiblePosition());
         outState.putInt(getString(R.string.key_movie_page_request), mPageRequest);
+        outState.putParcelableArrayList(getString(R.string.key_movielist), mAdapter.getMovieList());
         super.onSaveInstanceState(outState);
     }
 
@@ -419,8 +420,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
             // else, restore current movie list and gridview position
             String savedSortType = savedInstanceState.getString(getString(R.string.settings_sort_key), getString(R.string.settings_sort_default));
             if (savedSortType.contentEquals(currentSortType)) {
-                int currentMovieListSize = mMovieList == null ? 0 :  mMovieList.size();
-                Log.d(TAG, "restoreState from saved. Before: movieList size is " + currentMovieListSize);
+                Log.d(TAG, "restoreState from saved. Before: movieList size is " + mAdapter.getCount());
                 mMovieList = savedInstanceState.getParcelableArrayList(getString(R.string.key_movielist));
                 mGridviewPosition = savedInstanceState.getInt(getString(R.string.key_gridview_position));
                 mPageRequest = savedInstanceState.getInt(getString(R.string.key_movie_page_request));

@@ -15,6 +15,7 @@ import com.android.bazemom.popularmovies.moviemodel.MovieModel;
 import com.android.bazemom.popularmovies.moviemodel.MovieResults;
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
 import java.util.List;
 // Take a list of movies (Model), mash (control) the poster image for each one into an ImageGridView
 // A nice clean implementation of the Model View Controller (MVC) pattern.
@@ -133,4 +134,26 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
                     .into(posterView);
         }
     }
+
+    // Pass the current movie set out so it can be saved / parceled
+    // This is not optimal because it creates a temporary copy of the movies
+    // rather than writing them into the parcel / bundle directly.
+    // I can't make MovieAdapter parcelable because it requires a Context for the constructor,
+    // and there is no way to pass the context in when reconstituting from a Parcel/Bundle. :(
+    public ArrayList<Movie> getMovieList() {
+        // Get the movie list into a parcelable format
+        ArrayList<Movie> movieList = new ArrayList<>(getCount());
+        for (int i = 0; i < getCount(); i++) {
+            movieList.add(getItem(i));
+        }
+        return movieList;
+    }
+   /* public void readMoviesFromParcel(Parcel parcel) {
+        // Get the movie list into a parcelable format
+        mFlavor = parcel.readString();
+        int movieCount = parcel.readInt();
+        for (int i = 0; i < movieCount; i++) {
+            add((Movie) parcel.readParcelable(Movie.class.getClassLoader()));
+        }
+    } */
 }
