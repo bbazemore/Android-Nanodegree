@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.graphics.Palette;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,6 +20,8 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.android.bazemom.popularmovies.adapters.PaletteTransformation;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
@@ -194,31 +197,30 @@ public final class DetailFragment extends Fragment implements Observer {
             updateFavoriteButton(mViewHolder.favoriteButton, mMovieDetail.getFavorite());
 
             String posterURL = mMovie.getPosterUrl(getActivity());
+            final PaletteTransformation paletteTransformation = PaletteTransformation.instance();
+
             if (!posterURL.isEmpty()) {
                 // Here’s an example URL: http://image.tmdb.org/t/p/w500/8uO0gUM8aNqYLs1OsTBQiXu0fEv.jpg
                 Picasso.with(context)
                         .load(posterURL)
+                        .transform(paletteTransformation)
                                 //.placeholder(R.mipmap.ic_launcher) too busy looking
                         .error(R.mipmap.ic_error_fallback)         // optional
-                        .into(mViewHolder.posterView);
+                        .into(mViewHolder.posterView, new Callback.EmptyCallback() {
+                            @Override
+                            public void onSuccess() {
+                                Bitmap bitmap = ((BitmapDrawable) mViewHolder.posterView.getDrawable()).getBitmap(); // Ew!
+                                Palette palette = PaletteTransformation.getPalette(bitmap);
+
+                                // Now get a matching color for the background
+                                int mutedLight = palette.getLightMutedColor(0x000000);
+                                mViewHolder.detailLayout.setBackgroundColor(mutedLight);
+                                mBackgroundInitialzed = true;
+                            }
+                        });
             }
-        } else if (mBackgroundInitialzed) {
-            Log.d(TAG, "UI background for " + movieDetail.getTitle() + " already initialized. Skipping.");
-            return;
         }
 
-        String backgroundURL = mMovieDetail.getBackgroundURL(getActivity(), mViewHolder.backgroundWidth);
-        if (!backgroundURL.isEmpty()) {
-            Picasso.with(getActivity()).load(backgroundURL)
-                    //.memoryPolicy(MemoryPolicy.NO_CACHE) // we run out of memory on tablets
-                    .resize(mViewHolder.backgroundWidth, mViewHolder.backgroundHeight)
-                    .onlyScaleDown()  // the image will only be resized if it is too big
-                    .centerInside()
-                    .error(R.mipmap.ic_launcher)         // optional
-                    .into(mViewHolder.backgroundTarget);
-            // The background image is especially expensive, make sure we do it once and only once
-            mBackgroundInitialzed = true;
-        }
         mUIInitialized = true;
     }
 
