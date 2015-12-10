@@ -120,6 +120,10 @@ public class Movie implements Parcelable {
 
     };
     public String getPosterUrl(Context context) {
+        return getPosterURLFromPath(context, posterPath);
+    }
+
+    public static String getPosterURLFromPath(Context context, String posterPath) {
         String posterURL = "";
         // To build an image URL, we need 3 pieces of data. The baseurl, size and filepath.
         // First get the size from the preferences, user can select high, medium or low

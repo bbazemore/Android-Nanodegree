@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <item name="main_layout" type="layout">@layout/two_pane_narrow</item>
+    <item name="main_layout" type="layout">@layout/two_pane_wide</item>
     <bool name="has_two_panes">true</bool>
 </resources>

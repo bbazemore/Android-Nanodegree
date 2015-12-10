@@ -196,10 +196,11 @@ public final class DetailFragment extends Fragment implements Observer {
 
             updateFavoriteButton(mViewHolder.favoriteButton, mMovieDetail.getFavorite());
 
-            String posterURL = mMovie.getPosterUrl(getActivity());
-            final PaletteTransformation paletteTransformation = PaletteTransformation.instance();
+            String posterURL = Movie.getPosterURLFromPath(context,mMovieDetail.getPosterPath());
 
-            if (!posterURL.isEmpty()) {
+            if (posterURL.length() > 0) {
+                final PaletteTransformation paletteTransformation = PaletteTransformation.instance();
+
                 // Here’s an example URL: http://image.tmdb.org/t/p/w500/8uO0gUM8aNqYLs1OsTBQiXu0fEv.jpg
                 Picasso.with(context)
                         .load(posterURL)
@@ -306,7 +307,7 @@ public final class DetailFragment extends Fragment implements Observer {
                     backgroundHeight = detailLayout.getHeight(); //height is ready
                     backgroundWidth = detailLayout.getWidth();
                     mBackgroundInitialzed = false;
-                    Log.d("TAG", String.format("Background width, height from run: %d %d", backgroundWidth, backgroundHeight));
+                    Log.d(TAG, String.format("Background width, height from run: %d %d", backgroundWidth, backgroundHeight));
 
                     // update the UI now we can put the poster up with the right aspect ratio
                     updateDetailUI(mMovieDetail);

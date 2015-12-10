@@ -42,6 +42,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
     private GridView mGridView;
     private TextView mHintView;
     boolean mTwoPane = false;
+    boolean mTwoPaneClicked = false;
     View mRootView = null;
 
     // UI state
@@ -111,26 +112,27 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
             restoreState(savedInstanceState);
 
         // Things to do once and only once the view is up and running
-     /*   mRootView.post(new Runnable() {
+        mRootView.post(new Runnable() {
             @Override
             public void run() {
                 Log.d("TAG", "RootView post-run lambda");
-              /*  if (mTwoPane) {
+               if (mTwoPane) {
+                   updatePosition(mGridviewPosition);
                     // compute optimal number of movie poster columns based on available width
-                    setOptimalColumnWidth();
+                   // setOptimalColumnWidth();
                     //RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getContext(), optimalColumnCount);
                     //mGridView.setLayoutManager(layoutManager);
                     // Force re-render
-                    mGridView.setAdapter(mAdapter);
+                   // mGridView.setAdapter(mAdapter);
 
-                } * /
+                }
                 // Make sure the sort title is accurate
                 updateToolbarTitle(getSortType());
                 // update the UI now we can scroll the last selected movie into position
                 // updatePosition();
             }
         });
-        */
+
         assert(mMovieList != null);
         Log.d(TAG, "onCreateView for " + currentSortType + " with " + mMovieList.size() + " movies");
         mAdapter = new MovieAdapter(getActivity(), currentSortType, mMovieList);
@@ -146,6 +148,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
         mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v,
                                     int position, long id) {
+                mGridviewPosition = position;
                 // User clicked on a movie at "position".
               /*  if (mTwoPane) {
                     // clear previously checked item
@@ -276,8 +279,9 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
 
             // If there is a request outstanding to scroll to a particular position
             // process it now. TODO: ??
-           /* if (mGridviewPosition > 0)
-                updatePosition(mGridviewPosition); */
+           // if (mGridviewPosition > 0)
+            if (mTwoPane && !mTwoPaneClicked)
+                updatePosition(mGridviewPosition);
         }
         // Don't keep asking for more movies if we are at the end of the list
         int totalPagesAvailable = event.movieResults.getTotalPages();
@@ -332,29 +336,30 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
             return;
         }
 
-     /*   if (mGridView.getChildCount() == 0) {
+       if (mGridView.getChildCount() == 0) {
             Log.d(TAG, "updatePosition: no children to process");
             return;
-        } */
+        }
         // Initialize the detail view in 2pane mode
-     /*   if (mTwoPane
-                && newPosition == GridView.INVALID_POSITION
+        if (mTwoPane
+                && !mTwoPaneClicked
                 && mGridView.getFirstVisiblePosition() != GridView.INVALID_POSITION) {
             Log.d(TAG, "updatePosition 2pane, first visible position is: " + mGridView.getFirstVisiblePosition());
             // When 2 pane view starts up, select the first visible movie in the list
             mGridView.performItemClick(mGridView, mGridView.getFirstVisiblePosition(), 0);
+            mTwoPaneClicked = true;
         } else if (newPosition != GridView.INVALID_POSITION) {
             Log.d(TAG, "updatePosition to " + newPosition);
             // The position we want is different than the position we have
             // Back to where we were in the list the last time the user clicked
             //mGridView.smoothScrollToPosition(newPosition);
-            mAdapter.setSelectedItem(newPosition);
+            mGridView.setSelection(newPosition);
+            //mAdapter.setSelectedItem(newPosition);
 
             // We've successfully scrolled to the requested position
             // Clear the request.
             mGridviewPosition = GridView.INVALID_POSITION;
         }
-        */
     }
 
 

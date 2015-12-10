@@ -35,7 +35,8 @@
         <android.support.v4.view.ViewPager
             android:id="@+id/tabanim_viewpager"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="200dp"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
 
 </LinearLayout>
