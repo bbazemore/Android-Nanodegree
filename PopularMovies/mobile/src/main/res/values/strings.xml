@@ -17,8 +17,8 @@
     <string name="detail_movie_default_rating">Rating</string>
     <string name="detail_movie_default_runtime">Runtime</string>
     <string name="detail_movie_default_release">Release</string>
-    <string name="detail_release_date">"Release Date: "</string>
-    <string name="detail_movie_user_rating">TMDB user rating:  <xliff:g id="rating">%1$.2f</xliff:g> </string>
+    <string name="detail_release_date">"Released: "</string>
+    <string name="detail_movie_user_rating">TMDB rating:  <xliff:g id="rating">%1$.2f</xliff:g> / 10 </string>
 
     <string name="key_movielist" translatable="false">com.android.bazemom.popularmovies.movielist
     </string>

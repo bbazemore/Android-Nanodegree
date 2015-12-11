@@ -18,7 +18,19 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="left"
+            android:minHeight="225dp"
+            android:minWidth="150dp"
+            android:scaleType="fitCenter"
             android:background="@mipmap/ic_launcher"/>
+        <TextView
+            android:id="@+id/detail_movie_user_rating"
+            style="@style/DetailShadowedText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:layout_toRightOf="@id/detail_movie_poster"
+            android:textSize="@dimen/abc_text_size_subhead_material"
+            android:text="@string/detail_movie_default_rating"/>
         <TextView
             android:id="@+id/detail_movie_release_date"
             style="@style/DetailShadowedText"
@@ -26,6 +38,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="right"
             android:layout_toRightOf="@id/detail_movie_poster"
+            android:layout_below="@id/detail_movie_user_rating"
+            android:textSize="@dimen/abc_text_size_subhead_material"
             android:text="@string/detail_movie_default_release"/>
         <TextView
             android:id="@+id/detail_movie_runtime"
@@ -36,15 +50,7 @@
             android:layout_gravity="right"
             android:layout_toRightOf="@id/detail_movie_poster"
             android:text="@string/detail_movie_default_runtime"/>
-        <TextView
-            android:id="@+id/detail_movie_user_rating"
-            style="@style/DetailShadowedText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/detail_movie_runtime"
-            android:layout_gravity="right"
-            android:layout_toRightOf="@id/detail_movie_poster"
-            android:text="@string/detail_movie_default_rating"/>
+
 
         <TextView
             android:id="@+id/detail_movie_overview"
@@ -52,6 +58,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
+            android:layout_toRightOf="@id/detail_movie_poster"
             android:layout_below="@id/detail_movie_user_rating"
             android:gravity="center"
             android:padding="20dp"
