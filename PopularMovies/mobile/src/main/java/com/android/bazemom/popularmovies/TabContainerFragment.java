@@ -50,7 +50,7 @@ public class TabContainerFragment extends Fragment  {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d(TAG, "onCreateView");
+        Log.d(TAG, "onCreate");
         if (null != savedInstanceState) {
             // restores state from saved instance
             mMovie = savedInstanceState.getParcelable(MovieData.MOVIE);
@@ -251,7 +251,7 @@ public class TabContainerFragment extends Fragment  {
                 mViewHolder.reviewFragment = (ReviewFragment) fragMan.findFragmentById(R.id.fragment_review);
                 mViewHolder.videoFragment = (VideoFragment) fragMan.findFragmentById(R.id.fragment_video);
             }
-            tabLayout.post(new Runnable() {
+        /*    tabLayout.post(new Runnable() {
                 @Override
                 public void run() {
                     // Anything we need to fix up in the display once it is up
@@ -262,9 +262,9 @@ public class TabContainerFragment extends Fragment  {
                    /*RelativeLayout.LayoutParams belowLayout = new RelativeLayout.LayoutParams(tabLayout.getWidth(),
                             tabLayout.getHeight());
                     belowLayout.addRule(RelativeLayout.BELOW, R.id.toolbar);
-                    mRootView.setLayoutParams(belowLayout); */
+                    mRootView.setLayoutParams(belowLayout); * /
                 }
-            });
+            }); */
         }
     }
 }

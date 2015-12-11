@@ -5,41 +5,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 tools:context="com.android.bazemom.popularmovies.app.DetailActivity.DetailFragment">
-    <!-- material design icons from https://github.com/google/material-design-icons -->
-    <RelativeLayout
-        android:id="@+id/detail_movie_title_frame"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@color/background_material_dark">
-        <!--android.support.design.widget.FloatingActionButton
-            android:id="@+id/detail_favorite_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="left"
-            android:background="@drawable/button_states"
-            app:elevation="4dp"/-->
-        <ImageButton
-            android:id="@+id/detail_favorite_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="left"
-            android:background="@drawable/button_states"
-            android:paddingBottom="7dp"
-            android:paddingEnd="7dp"
-            android:paddingLeft="7dp"
-            android:paddingTop="7dp"
-            />
-        <TextView
-            android:id="@+id/detail_movie_title"
-            style="@style/DetailShadowedText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_toRightOf="@id/detail_favorite_button"
-            android:gravity="center|top"
-            android:text="Title"
-            android:textSize="@dimen/abc_text_size_title_material"/>
-    </RelativeLayout>
+    <include layout="@layout/detail_movie_title"/>
     <RelativeLayout
         android:id="@+id/detail_movie_poster_frame"
         android:layout_width="wrap_content"

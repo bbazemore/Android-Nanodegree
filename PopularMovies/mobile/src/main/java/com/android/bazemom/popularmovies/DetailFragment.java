@@ -9,7 +9,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.graphics.Palette;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -56,23 +55,7 @@ public final class DetailFragment extends Fragment implements Observer {
         mViewHolder = new DetailViewHolder();
         // slide nerd was doing mRootView.setTag(mViewHolder) - I'm just keeping it in a member variable
 
-        // Set the title frame to be partially opaque so the Favorite star will show up better
-        View titleBackground = mRootView.findViewById(R.id.detail_movie_title_frame);
-        Drawable background = titleBackground.getBackground();
-        // 0-255, 255 is opaque, 204 = 80%
-        if (null != background) {
-            background.setAlpha(0xCC);
-        }
-
-        // Set up the click listeners for the Detail fragment.  Unfortunately the
-        // onClick attribute in the xml can only be used if the handler is in the Activity proper,
-        // not the fragment
-        mViewHolder.favoriteButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onClickFavoriteButton(v);
-            }
-        });
+        Utility.initDetailTitle(getContext(), mRootView, mViewHolder.favoriteButton);
 
         boolean haveGoodMovieDetail = false;
         if (null != savedInstanceState) {
@@ -194,7 +177,7 @@ public final class DetailFragment extends Fragment implements Observer {
             mViewHolder.rating.setText(String.format(context.getString(R.string.detail_movie_user_rating),
                     mMovieDetail.voteAverage));
 
-            updateFavoriteButton(mViewHolder.favoriteButton, mMovieDetail.getFavorite());
+            Utility.updateFavoriteButton(mViewHolder.favoriteButton, mMovieDetail.getFavorite());
 
             String posterURL = Movie.getPosterURLFromPath(context,mMovieDetail.getPosterPath());
 
@@ -213,9 +196,15 @@ public final class DetailFragment extends Fragment implements Observer {
                                 Bitmap bitmap = ((BitmapDrawable) mViewHolder.posterView.getDrawable()).getBitmap(); // Ew!
                                 Palette palette = PaletteTransformation.getPalette(bitmap);
 
+                                Log.d(TAG, "Poster loaded into detail, width: " + bitmap.getWidth() + " height " + bitmap.getHeight());
+
                                 // Now get a matching color for the background
-                                int mutedLight = palette.getLightMutedColor(0x000000);
-                                mViewHolder.detailLayout.setBackgroundColor(mutedLight);
+                                MovieDataService data = MovieDataService.getInstance();
+                                data.setLightBackground(palette.getLightMutedColor(data.getLightBackground()));
+                                mViewHolder.detailLayout.setBackgroundColor(data.getLightBackground());
+
+                                data.setDarkBackground(palette.getDarkVibrantColor(data.getDarkBackground()));
+                                mViewHolder.titleBackground.setBackgroundColor(data.getDarkBackground());
                                 mBackgroundInitialzed = true;
                             }
                         });
@@ -248,6 +237,7 @@ public final class DetailFragment extends Fragment implements Observer {
     // time we refresh the UI.  We only need to fetch them after the inflate in onCreateView
     class DetailViewHolder {
         TextView titleView;
+        View titleBackground;
         TextView overview;
         TextView releaseDate;
         TextView runtime;
@@ -262,6 +252,7 @@ public final class DetailFragment extends Fragment implements Observer {
 
         DetailViewHolder() {
             titleView = (TextView) mRootView.findViewById(R.id.detail_movie_title);
+            titleBackground = mRootView.findViewById(R.id.detail_movie_title_frame);
             overview = (TextView) mRootView.findViewById(R.id.detail_movie_overview);
             releaseDate = (TextView) mRootView.findViewById(R.id.detail_movie_release_date);
             runtime = (TextView) mRootView.findViewById(R.id.detail_movie_runtime);
@@ -319,35 +310,6 @@ public final class DetailFragment extends Fragment implements Observer {
         }
     } // end DetailViewHolder
 
-
-    public void onClickFavoriteButton(View view) {
-        // toggle favorite on/off in database
-        MovieDataService data = MovieDataService.getInstance();
-
-        if (data.getFavorite() == 0) {
-            Log.d(TAG, "buttonFavoriteClick  add Favorite");
-            data.setFavorite(1);  // we may order favorites later so this is an int, for now it is just on/off
-
-        } else {
-            Log.d(TAG, "buttonFavoriteClick  remove Favorite");
-            data.setFavorite(0);
-        }
-        updateFavoriteButton((ImageButton) view, data.getFavorite());
-    }
-
-    @SuppressWarnings("deprecation")
-    @SuppressLint("NewApi")
-    private void updateFavoriteButton(ImageButton favoriteButton, int favoriteValue) {
-        Drawable favorite = (favoriteValue == 1) ?
-                ContextCompat.getDrawable(getContext(), R.drawable.ic_favorite_on) :
-                ContextCompat.getDrawable(getContext(), R.drawable.ic_favorite_off);
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-            favoriteButton.setBackgroundDrawable(favorite);
-        } else {
-            favoriteButton.setBackground(favorite);
-        }
-    }
 
     // Make way for a new movie
     @SuppressWarnings("deprecation")

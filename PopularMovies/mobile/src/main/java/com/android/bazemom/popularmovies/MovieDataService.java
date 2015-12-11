@@ -36,7 +36,8 @@ interface MovieData {
     String REVIEW_KEY = packageName + ".ReviewList";
     String MOVIE_DETAIL = packageName + ".MovieDetail";
     String TRAILER_KEY = packageName + ".TrailerList";
-
+    String DARK_BACKGROUND_COLOR = packageName + ".DarkBackgroundColor";
+    String LIGHT_BACKGROUND_COLOR = packageName + ".LightBackgroundColor";
     int getMovieId();
 
     Movie getMovie();
@@ -52,7 +53,13 @@ interface MovieData {
 
     int getFavorite();
 
-    void setFavorite(int value);
+    void setFavorite(Context context, int value);
+
+    int getDarkBackground();
+    void setDarkBackground(int darkBackround);
+    int getLightBackground();
+    void setLightBackground(int lightBackround);
+
 }
 
 // The MovieDataService pulls data from a local database and from the TMDB RESTful Web API
@@ -61,12 +68,13 @@ interface MovieData {
 public class MovieDataService extends Observable implements MovieData {
     private final static String TAG = MovieDataService.class.getSimpleName();
 
-    private final ReviewModel EMPTY_REVIEW = new ReviewModel();
-    private final VideoModel EMPTY_VIDEO = new VideoModel();
+    private static final ReviewModel EMPTY_REVIEW = new ReviewModel();
+    private static final VideoModel EMPTY_VIDEO = new VideoModel();
 
-    private Context mContext;
-    private Bus mBus; // the bus that is used to deliver messages to the TMDB dispatcher
-    private DispatchTMDB mDispatchTMDB;
+    private static Bus mBus; // the bus that is used to deliver messages to the TMDB dispatcher
+    private static DispatchTMDB mDispatchTMDB;
+    private static String mAPIKey;
+    private static LocalDBHelper mDBHelper;
 
     // Otto gets upset if the Fragment disappears while still subscribed to outstanding events
     // Turn event notification off when we are shutting down, register for events once when
@@ -87,12 +95,26 @@ public class MovieDataService extends Observable implements MovieData {
     protected ArrayList<Review> mReviewList;
     protected ArrayList<Video> mVideoList;
 
+    private int mDarkBackground;
+    private int mLightBackround;
+
     private MovieDataService() {
     }
 
     private void initializeConstructor(Context context, Movie movie) {
-        // so we can get to string resources
-        mContext = context;
+        // initialize the things that require context, like strings
+        mAPIKey = context.getString(R.string.movie_api_key);
+        mDBHelper = new LocalDBHelper(context);
+
+        // Set up in case we have movies with no reviews or trailers
+        // This one little get of a string from resources is the reason we need
+        // to keep passing the current context around.  Yeesh.
+        EMPTY_REVIEW.setAuthor("");
+        EMPTY_REVIEW.setContent(context.getString(R.string.review_no_reviews));
+
+        EMPTY_VIDEO.setSite(context.getString(R.string.tmdb_site_value_YouTube));
+        EMPTY_VIDEO.setName(context.getString(R.string.video_no_videos));
+
         setMovie(movie);
     }
 
@@ -112,16 +134,23 @@ public class MovieDataService extends Observable implements MovieData {
         return SingletonHelper.INSTANCE;
     }
 
-    public void readInstanceState(Context context, Bundle savedInstanceState) {
-        mContext = context;
+    public void readInstanceState(Bundle savedInstanceState) {
         setMovie((Movie) savedInstanceState.getParcelable(MOVIE));
         setMovieDetail((MovieDetail) savedInstanceState.getParcelable(MOVIE_DETAIL));
+        setDarkBackground(savedInstanceState.getInt(DARK_BACKGROUND_COLOR));
+        setLightBackground(savedInstanceState.getInt(LIGHT_BACKGROUND_COLOR));
+
         if (null != mMovieDetail) {
+            mDataReceivedDetail = true;
+            // Restore reviews from cache
             List<Review> existingReviews = savedInstanceState.getParcelableArrayList(REVIEW_KEY);
             setReviewList(existingReviews);
+
+            // Restore trailer info from cache
             List<Video> existingVideos = savedInstanceState.getParcelableArrayList(TRAILER_KEY);
             setVideoList(existingVideos);
         } else {
+            // Start the data cooking
             initialize();
         }
     }
@@ -130,14 +159,17 @@ public class MovieDataService extends Observable implements MovieData {
         outState.putParcelable(MOVIE_DETAIL, mMovieDetail);
         outState.putParcelableArrayList(REVIEW_KEY, mReviewList);
         outState.putParcelableArrayList(TRAILER_KEY, mVideoList);
+        outState.putInt(DARK_BACKGROUND_COLOR, mDarkBackground);
+        outState.putInt(LIGHT_BACKGROUND_COLOR, mLightBackround);
         return outState;
     }
 
-    public MovieDataService(Context context, Bundle savedInstanceState) {
+    public MovieDataService(Bundle savedInstanceState) {
         requestData = true;
-        readInstanceState(context, savedInstanceState);
+        readInstanceState(savedInstanceState);
     }
 
+    // Must set the API key before this is called.
     @SuppressWarnings("Convert2Diamond")
     private void initialize() {
         mDataReceivedDetail = false;
@@ -150,12 +182,12 @@ public class MovieDataService extends Observable implements MovieData {
         mReviewList = new ArrayList<Review>();
         mVideoList = new ArrayList<Video>();
 
-        // Set up in case we have movies with no reviews or trailers
-        EMPTY_REVIEW.setAuthor("");
-        EMPTY_REVIEW.setContent(mContext.getString(R.string.review_no_reviews));
+        // UI colors
+        mDarkBackground = R.color.background_material_dark;
+        mLightBackround = R.color.background_material_light;
 
         // Start the data cooking
-        getDetails(1);
+        getDetails();
         getReviews(1);
         getVideos(1);
     }
@@ -224,7 +256,7 @@ public class MovieDataService extends Observable implements MovieData {
     }
 
     private void setReviewList(List<Review> reviewList) {
-        if (!reviewList.isEmpty()) {
+        if (reviewList != null && !reviewList.isEmpty()) {
             mReviewList.addAll(reviewList);
             setChanged();
             notifyObservers(mReviewList);
@@ -237,7 +269,7 @@ public class MovieDataService extends Observable implements MovieData {
     }
 
     private void setVideoList(List<Video> videoList) {
-        if (!videoList.isEmpty()) {
+        if (videoList != null && !videoList.isEmpty()) {
             mVideoList.addAll(videoList);
             setChanged();
             notifyObservers(mVideoList);
@@ -262,16 +294,44 @@ public class MovieDataService extends Observable implements MovieData {
     }
 
     @Override
-    public void setFavorite(int value) {
+    public void setFavorite(Context context, int value) {
+        if (null == mMovieDetail) {
+            Toast.makeText(context, R.string.favorite_unavailable, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        boolean favoriteChanged =  mMovieDetail.getFavorite() != value;
         mMovieDetail.setFavorite(value);
 
         // Persist the favorite setting in the local database
-        LocalDBHelper dbHelper = new LocalDBHelper(mContext);
+        LocalDBHelper dbHelper = new LocalDBHelper(context);
         dbHelper.updateMovieInLocalDB(mMovieDetail);
+        if (favoriteChanged) {
+            setChanged();
+            notifyObservers(mMovieDetail);
+        }
         if (value == 1)
-            Toast.makeText(mContext, R.string.favorite_added, Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, R.string.favorite_added, Toast.LENGTH_SHORT).show();
     }
+
+    @Override
+    public int getDarkBackground() {
+        return mDarkBackground;
+    }
+    @Override
+    public void setDarkBackground(int darkBackground) {
+        mDarkBackground = darkBackground;
+    }
+    @Override
+    public int getLightBackground() {
+        return mLightBackround;
+    }
+    @Override
+    public void setLightBackground(int lightBackround) {
+        mLightBackround = lightBackround;
+    }
+
     /// end MovieData interface
+
 
     public void onResume() {
         // Log.d(TAG, "on resume");
@@ -334,7 +394,7 @@ public class MovieDataService extends Observable implements MovieData {
         Log.i(TAG, "movie detail Loaded ");
     }
 
-    private void getDetails(int nextPage) {
+    private void getDetails() {
         // Is this movie cached in the local DB?
         if (mDataReceivedDetail)
             // We have the detail data, we're done.
@@ -343,8 +403,7 @@ public class MovieDataService extends Observable implements MovieData {
         if (null == mMovie)
             return;
 
-        LocalDBHelper dbHelper = new LocalDBHelper(mContext);
-        MovieDetail dbMovieDetail = dbHelper.getMovieDetailFromDB(mMovie.id);
+        MovieDetail dbMovieDetail = mDBHelper.getMovieDetailFromDB(mMovie.id);
         if (null != dbMovieDetail) {
             // We are in luck, we have the movie details handy already.
             mDataReceivedDetail = true;
@@ -356,8 +415,7 @@ public class MovieDataService extends Observable implements MovieData {
             receiveEvents();
 
             //  Now request that the movie details be loaded
-            String apiKey = mContext.getString(R.string.movie_api_key);
-            LoadMovieDetailEvent loadMovieRequest = new LoadMovieDetailEvent(apiKey, mMovie.id);
+            LoadMovieDetailEvent loadMovieRequest = new LoadMovieDetailEvent(mAPIKey, mMovie.id);
             getBus().post(loadMovieRequest);
         }
     }
@@ -366,7 +424,7 @@ public class MovieDataService extends Observable implements MovieData {
     @Subscribe
     @SuppressWarnings("Convert2Diamond")
     public void reviewsLoaded(ReviewsLoadedEvent event) {
-        Log.d(TAG, "reviews Loaded callback! Number of reviews: " + event.reviewResults.size());
+        Log.d(TAG, "reviews Loaded callback! Number of reviews: " + ((event.reviewResults == null) ? "0" : event.reviewResults.size()));
 
         List<Review> newReviews = new ArrayList<Review>();
         // load the review data into our movies list
@@ -383,6 +441,7 @@ public class MovieDataService extends Observable implements MovieData {
             // Ask for another page of reviews
             getReviews(event.currentPage + 1);
         }
+        Log.d(TAG, "reviewsLoaded setting reviews list with " + newReviews.size() + " reviews.");
         setReviewList(newReviews);
     }
 
@@ -394,8 +453,8 @@ public class MovieDataService extends Observable implements MovieData {
             return;
 
         //  TODO: Is this movie cached in the local DB?
-        /*LocalDBHelper dbHelper = new LocalDBHelper(mRootView.getContext());
-        mReviewList = dbHelper.getMovieReviewsFromDB(mMovieId);
+        /*LocalDBHelper mDBHelper = new LocalDBHelper(mRootView.getContext());
+        mReviewList = mDBHelper.getMovieReviewsFromDB(mMovieId);
         if (null != mReviewList) {
             // We are in luck, we have the movie details handy already.
             // We can update the UI right away
@@ -406,8 +465,7 @@ public class MovieDataService extends Observable implements MovieData {
         receiveEvents();
 
         //  Now request that the reviews be loaded
-        String apiKey = mContext.getString(R.string.movie_api_key);
-        LoadReviewsEvent loadReviewsRequest = new LoadReviewsEvent(apiKey, mMovie.id, nextPage);
+        LoadReviewsEvent loadReviewsRequest = new LoadReviewsEvent(mAPIKey, mMovie.id, nextPage);
 
         Log.i(TAG, "request reviews");
         getBus().post(loadReviewsRequest);
@@ -420,8 +478,8 @@ public class MovieDataService extends Observable implements MovieData {
             return;
 
         //  TODO: Is this movie cached in the local DB?
-        /*LocalDBHelper dbHelper = new LocalDBHelper(mRootView.getContext());
-        mVideoList = dbHelper.getMovieVideosFromDB(mMovieId);
+        /*LocalDBHelper mDBHelper = new LocalDBHelper(mRootView.getContext());
+        mVideoList = mDBHelper.getMovieVideosFromDB(mMovieId);
         if (null != mReviewList) {
             // We are in luck, we have the movie details handy already.
             mDataReceivedVideoList = true;
@@ -433,14 +491,13 @@ public class MovieDataService extends Observable implements MovieData {
         receiveEvents();
 
         //  Now request that the trailers be loaded
-        String apiKey = mContext.getString(R.string.movie_api_key);
-        LoadVideosEvent loadVideosRequest = new LoadVideosEvent(apiKey, mMovie.id);
+        LoadVideosEvent loadVideosRequest = new LoadVideosEvent(mAPIKey, mMovie.id);
 
         Log.i(TAG, "request video trailers");
         getBus().post(loadVideosRequest);
     }
 
-    // reviewsLoaded gets called when we get a list of reviews back from TMDB
+    // videosLoaded gets called when we get a list of reviews back from TMDB
     @Subscribe
     public void videosLoaded(VideosLoadedEvent event) {
         Log.i(TAG, "videos Loaded callback! Number of trailers: " + event.trailerResults.size());

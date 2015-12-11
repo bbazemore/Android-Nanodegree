@@ -10,6 +10,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
+import android.widget.TextView;
 
 import com.android.bazemom.popularmovies.adapters.VideoAdapter;
 
@@ -20,7 +22,7 @@ import com.android.bazemom.popularmovies.adapters.VideoAdapter;
 public class VideoFragment extends Fragment {
     private static final String TAG = VideoFragment.class.getSimpleName();
     private View mRootView;
-    private RecyclerView mRecyclerView;
+    VideoViewHolder mViewHolder;
     VideoAdapter adapter;
 
     public VideoFragment() {
@@ -31,22 +33,28 @@ public class VideoFragment extends Fragment {
         Log.d(TAG, "VideoFragment.onCreateView called");
 
         mRootView = inflater.inflate(R.layout.fragment_video, container, false);
-        mRecyclerView = (RecyclerView) mRootView.findViewById(R.id.video_recycler_view);
+        mViewHolder = new VideoViewHolder();
+        Utility.initDetailTitle(getContext(), mRootView, mViewHolder.favoriteButton);
 
         // Use the default layout manager
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity().getBaseContext());
-        mRecyclerView.setLayoutManager(linearLayoutManager);
+        mViewHolder.recyclerView.setLayoutManager(linearLayoutManager);
 
+        MovieDataService data = MovieDataService.getInstance();
+        adapter = new VideoAdapter(data.getVideoList());
+        mViewHolder.recyclerView.setAdapter(adapter);
+
+        updateUI();
         // If there is anything we need to fix up after the layout is known,
         // do it in the post-layout lambda
-        mRootView.post(new Runnable() {
+    /*   mRootView.post(new Runnable() {
             @Override
             public void run() {
                 Log.d("TAG", "VideoFragment post-run");
                 // update the UI now we can put the poster up with the right aspect ratio
                 updateUI();
             }
-        });
+        }); */
 
         return mRootView;
     }
@@ -55,9 +63,11 @@ public class VideoFragment extends Fragment {
     void updateUI() {
         MovieDataService data = MovieDataService.getInstance();
         Log.d(TAG, "updateVideoUI from Activity: " + getActivity());
-        if (null != data && null != mRecyclerView) {
-            adapter = new VideoAdapter(data.getVideoList());
-            mRecyclerView.setAdapter(adapter);
+        if (null != data && null != mViewHolder.recyclerView) {
+            mViewHolder.titleView.setText(data.getMovie().title);
+            mViewHolder.titleBackground.setBackgroundColor(data.getDarkBackground());
+            Utility.updateFavoriteButton(mViewHolder.favoriteButton, data.getFavorite());
+
             Log.d(TAG, "updateDetailUI mission accomplished");
         }
     }
@@ -100,5 +110,18 @@ public class VideoFragment extends Fragment {
         } else
             Log.d(TAG, "Trailer card container did not have trailer link.");
         return false;
+    }
+    class VideoViewHolder {
+        final TextView titleView;
+        View titleBackground;
+        final ImageButton favoriteButton;
+        final RecyclerView recyclerView;
+
+        VideoViewHolder () {
+            titleView = (TextView) mRootView.findViewById(R.id.detail_movie_title);
+            titleBackground = mRootView.findViewById(R.id.detail_movie_title_frame);
+            favoriteButton = (ImageButton) mRootView.findViewById(R.id.detail_favorite_button);
+            recyclerView = (RecyclerView) mRootView.findViewById(R.id.video_recycler_view);
+        }
     }
 }
