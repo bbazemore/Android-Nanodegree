@@ -106,6 +106,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
         setOptimalColumnWidth();
 
         // Restore the movie list as we last saw it, or create a whole new list
+        // Sets up Adapter
         if (savedInstanceState == null) {
             initMovieList();
         } else
@@ -133,9 +134,8 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
             }
         });
 
-        assert(mMovieList != null);
-        Log.d(TAG, "onCreateView for " + currentSortType + " with " + mMovieList.size() + " movies");
-        mAdapter = new MovieAdapter(getActivity(), currentSortType, mMovieList);
+        Log.d(TAG, "onCreateView for " + currentSortType + " with " + mAdapter.getCount() + " movies");
+      //  mAdapter = new MovieAdapter(getActivity(), currentSortType, mMovieList);
         mGridView.setAdapter(mAdapter);
 
         // In Master-Detail two pane mode, keep the movie in the
@@ -213,7 +213,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
     @Override
     public void onSaveInstanceState(Bundle outState) {
         // our custom save to parcelablearraylist here
-        Log.d(TAG, "Saving " + mMovieList.size() + " movies for " + mAdapter.getFlavor() + " at position " + mGridView.getFirstVisiblePosition() + ", Adapter movie list count = " + mAdapter.getCount());
+        Log.d(TAG, "Saving " + mAdapter.getCount() + " movies for " + mAdapter.getFlavor() + " at position " + mGridView.getFirstVisiblePosition());
 
         outState.putString(getString(R.string.settings_sort_key), mAdapter.getFlavor());
         outState.putString(getString(R.string.settings_image_quality_key), mCurrentlyDisplayedPosterQuality);
@@ -237,7 +237,14 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
         mHintView.setVisibility(View.GONE);
 
         // Really starting a new set of movies, rather than restoring the last one
-        mMovieList = new ArrayList<>();
+        if (mAdapter == null) {
+            Log.d(TAG, "initMovieList create empty Movie adapter");
+            mAdapter = new MovieAdapter(getActivity(), getSortType(), new ArrayList<Movie>());
+        } else {
+            Log.d(TAG, "initMovieList clear Movie Adapter that had " + mAdapter.getCount() + " movies.");
+            mAdapter.clear();
+            mAdapter.setFlavor(getSortType());
+        }
         mMoreMoviesToFetch = true;
         mGridviewPosition = GridView.INVALID_POSITION;
         mPageRequest = 1; // start from the beginning of the new movie type
@@ -268,7 +275,6 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
             getBus().post(loadMoviesRequest);
         }
     }
-
 
     @Subscribe
     public void onMoviesLoaded(MoviesLoadedEvent event) {
@@ -426,22 +432,29 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
             String savedSortType = savedInstanceState.getString(getString(R.string.settings_sort_key), getString(R.string.settings_sort_default));
             if (savedSortType.contentEquals(currentSortType)) {
                 Log.d(TAG, "restoreState from saved. Before: movieList size is " + mAdapter.getCount());
-                mMovieList = savedInstanceState.getParcelableArrayList(getString(R.string.key_movielist));
+                ArrayList<Movie> movieList = savedInstanceState.getParcelableArrayList(getString(R.string.key_movielist));
                 mGridviewPosition = savedInstanceState.getInt(getString(R.string.key_gridview_position));
                 mPageRequest = savedInstanceState.getInt(getString(R.string.key_movie_page_request));
                 mMoreMoviesToFetch = true;
 
                 // Update the UI through the adapter
-                if (null != mAdapter) {
-                    mAdapter = new MovieAdapter(getActivity(), currentSortType, mMovieList);
-                    mGridView.setAdapter(mAdapter);
+                if (null == mAdapter) {
+                    Log.d(TAG, "restoreState Adapter was null. This should not happen. Leave everything alone for now.");
+                    mAdapter = new MovieAdapter(getActivity(), currentSortType, movieList);
+                  //  mGridView.setAdapter(mAdapter);
+                }
+                // The adapter should live between rotations. Do a sanity check.
+                if (!mAdapter.matches(null == movieList ? 0 : movieList.size(),
+                                      null == movieList ? null : movieList.get(0))) {
+                    Log.d(TAG, "restoreState found Adapter out of date, resetting from saved movies.");
+                    mAdapter.clear();
+                    mAdapter.addAll(movieList);
                 }
                 return true;
             }
         }
         // Starting over with new data
         Log.d(TAG, "restoreState start over");
-        if (mAdapter != null) mAdapter.setFlavor(currentSortType);
         initMovieList();
         return false;
     }
@@ -483,13 +496,12 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
         }
         Log.d(TAG, "loadFavoriteMovies.");
         LocalDBHelper dbHelper = new LocalDBHelper(getContext());
-        mMovieList = dbHelper.getMovieFavoritesFromDB();
         mAdapter.setFlavor(favorite);
-        mAdapter.addAll(mMovieList);
+        mAdapter.addAll(dbHelper.getMovieFavoritesFromDB());
         mMoreMoviesToFetch = false;
 
         // Give the user a hint if the list is empty
-        mHintView.setVisibility(mMovieList.isEmpty() ? View.VISIBLE : View.GONE);
+        mHintView.setVisibility(mAdapter.getCount() == 0 ? View.VISIBLE : View.GONE);
         /*
         String sortOrder = LocalDBContract.MovieEntry.COLUMN_RELEASE_DATE + " DSC";
         Uri favoriteUri = LocalDBContract.getFavoriteUri();

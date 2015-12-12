@@ -10,10 +10,10 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 
 import com.android.bazemom.popularmovies.Movie;
+import com.android.bazemom.popularmovies.MovieApplication;
 import com.android.bazemom.popularmovies.R;
 import com.android.bazemom.popularmovies.moviemodel.MovieModel;
 import com.android.bazemom.popularmovies.moviemodel.MovieResults;
-import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +48,7 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
     public void setFlavor(String sortFlavor) {
         if (!mFlavor.contentEquals(sortFlavor) ) {
             // remove old values.  Make way for new ones
+            Log.d(TAG, "Flavor has changed, clear movies out of Adapter");
             clear();
         }
         mFlavor = sortFlavor;
@@ -124,9 +125,10 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
     } */
 
     private static void loadPoster(Context context, ImageView posterView, String posterURL) {
+
         // Here’s an example URL: http://image.tmdb.org/t/p/w500/8uO0gUM8aNqYLs1OsTBQiXu0fEv.jpg
         if (!posterURL.isEmpty()) {
-            Picasso.with(context)
+            MovieApplication.getPicasso()
                     .load(posterURL)
                             //.placeholder(R.mipmap.ic_launcher) too busy looking
                     .error(R.mipmap.ic_error_fallback)         // optional]
@@ -156,4 +158,28 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
             add((Movie) parcel.readParcelable(Movie.class.getClassLoader()));
         }
     } */
+
+    public boolean matches(int movieCount, Movie firstMovie) {
+        if (movieCount == 0) {
+            if (getCount() == 0) {
+                Log.d(TAG, "Adapter & movie list both empty");
+                return true;
+            }
+            Log.d(TAG, "Adapter has " + getCount() + " movies but movieList has none.");
+            return false;
+        }
+        // Non-zero movie list.
+        if (movieCount != getCount()) {
+            Log.d(TAG, "Adapter has " + getCount() + " movies, movieList has " + movieCount);
+            return false;
+        }
+        // The sizes are equal. Is the first movie the same?
+        if (getItem(0) == firstMovie) {
+            Log.d(TAG, "Adapter and movie list have same size and first object. Assume they match");
+            return true;
+        }
+        Log.d(TAG, "Adapter and movie list have different first object. No match.");
+        return false;
+    }
+
 }

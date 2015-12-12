@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -21,7 +20,6 @@ import android.widget.TextView;
 
 import com.android.bazemom.popularmovies.adapters.PaletteTransformation;
 import com.squareup.picasso.Callback;
-import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
 import java.util.Observable;
@@ -185,7 +183,7 @@ public final class DetailFragment extends Fragment implements Observer {
                 final PaletteTransformation paletteTransformation = PaletteTransformation.instance();
 
                 // Here’s an example URL: http://image.tmdb.org/t/p/w500/8uO0gUM8aNqYLs1OsTBQiXu0fEv.jpg
-                Picasso.with(context)
+                MovieApplication.getPicasso()
                         .load(posterURL)
                         .transform(paletteTransformation)
                                 //.placeholder(R.mipmap.ic_launcher) too busy looking
@@ -262,7 +260,9 @@ public final class DetailFragment extends Fragment implements Observer {
             detailLayout = (RelativeLayout) mRootView.findViewById(R.id.fragment_detail);
 
             // Detail movie background set up
-            backgroundTarget = new Target() {
+            // Commented out because we are now using a Palette color instead of the
+            // backdrop for the background
+    /*        backgroundTarget = new Target() {
                 @Override
                 @SuppressWarnings("deprecation")
                 @SuppressLint("NewApi")
@@ -290,7 +290,7 @@ public final class DetailFragment extends Fragment implements Observer {
                     Log.d("TAG", "Prepare background image Load");
                 }
             };
-
+*/
             // Get the height and width once, and only once after the fragment is laid out
             detailLayout.post(new Runnable() {
                 @Override

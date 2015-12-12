@@ -9,6 +9,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
+import com.squareup.picasso.Picasso;
 
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
@@ -31,6 +32,9 @@ public class MovieApplication extends Application {
     private DispatchTMDB mMovieService;
     public static Bus bus = new Bus(); // we can get fancy later and allow injection BusProvider.getInstance();
 
+    // Singleton Picasso image helper
+    private static Picasso mPicasso;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -39,7 +43,19 @@ public class MovieApplication extends Application {
         bus.register(mMovieService);
 
         bus.register(this); //listen for "global" events
+
+           /* If we run into out of memory problems things to try:
+             1. set largeHeap = true in the AndroidManifest
+             2. use skipMemoryCache()
+             3. use single thread Picasso:
+             mPicasso = new Picasso.Builder(this).executor(Executors.newSingleThreadExecutor()).build();
+             4. Debug by calling Picasso.getSnapShot() every so often */
+        // Create a singleton Picasso using the Application context,
+        // so all the fragments will be able to use it and share the cache
+        mPicasso = new Picasso.Builder(this).build();
     }
+
+    public static Picasso getPicasso() { return mPicasso;}
 
     // Connect to the TMDB movie api in a RESTful way using a Retrofit adapter
     private MovieDBService buildApi() {
@@ -62,7 +78,7 @@ public class MovieApplication extends Application {
         StringBuilder message = new StringBuilder(retrofitError.getMessage())
                     .append(retrofitError.getKind().toString())
                     .append(retrofitError.getUrl())
-                    .append(retrofitError.getStackTrace().toString());
+                    .append(retrofitError.getStackTrace());
         Log.e(TAG, message.toString() );
     }
 }

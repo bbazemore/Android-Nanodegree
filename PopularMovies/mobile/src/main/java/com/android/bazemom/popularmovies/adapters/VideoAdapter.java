@@ -9,10 +9,10 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.android.bazemom.popularmovies.MovieApplication;
 import com.android.bazemom.popularmovies.R;
 import com.android.bazemom.popularmovies.Video;
 import com.android.bazemom.popularmovies.VideoFragment;
-import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -106,7 +106,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
             String youtubeThumbnailURL = "http://img.youtube.com/vi/" + youtubeTrailerId + "/0.jpg";
             Uri youtubeURL = Uri.parse("http://www.youtube.com/watch?v=" + youtubeTrailerId);
 
-            Picasso.with(thumbnailPlayView.getContext())
+            MovieApplication.getPicasso()
                     .load(youtubeThumbnailURL)
                             //.placeholder(R.mipmap.ic_launcher) too busy looking
                     .error(R.mipmap.ic_error_fallback)         // optional
