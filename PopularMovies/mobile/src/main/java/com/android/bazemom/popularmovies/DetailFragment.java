@@ -52,8 +52,7 @@ public final class DetailFragment extends Fragment implements Observer {
         // Get the ids of the View elements so we don't have to fetch them over and over
         mViewHolder = new DetailViewHolder();
         // slide nerd was doing mRootView.setTag(mViewHolder) - I'm just keeping it in a member variable
-
-        Utility.initDetailTitle(getContext(), mRootView, mViewHolder.favoriteButton);
+        Utility.initDetailTitle(mRootView, mViewHolder.favoriteButton);
 
         boolean haveGoodMovieDetail = false;
         if (null != savedInstanceState) {
@@ -74,6 +73,7 @@ public final class DetailFragment extends Fragment implements Observer {
                 updateDetailUI(mMovieDetail);
             }
         }
+
         // If there is anything we need to fix up after the layout is known,
         // do it in the post-layout lambda
         mRootView.post(new Runnable() {
@@ -177,7 +177,7 @@ public final class DetailFragment extends Fragment implements Observer {
 
             Utility.updateFavoriteButton(mViewHolder.favoriteButton, mMovieDetail.getFavorite());
 
-            String posterURL = Movie.getPosterURLFromPath(context,mMovieDetail.getPosterPath());
+            String posterURL = Movie.getPosterURLFromPath(context, mMovieDetail.getPosterPath());
 
             if (posterURL.length() > 0) {
                 final PaletteTransformation paletteTransformation = PaletteTransformation.instance();

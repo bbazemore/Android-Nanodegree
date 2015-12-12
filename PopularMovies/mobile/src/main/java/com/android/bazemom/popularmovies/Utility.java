@@ -12,6 +12,9 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageButton;
 
+import com.android.bazemom.popularmovies.moviebusevents.FavoriteChangeEvent;
+import com.android.bazemom.popularmovies.moviemodel.DispatchTMDB;
+
 /**
  * Courtesy https://github.com/vickychijwani/udacity-p1-p2-popular-movies/blob/project-1/app/src/main/java/me/vickychijwani/popularmovies/util/Util.java
  */
@@ -25,7 +28,7 @@ public class Utility {
         return displayMetrics.widthPixels;
     }
 
-    public static void initDetailTitle(final Context context, View rootView, ImageButton favoriteButton) {
+    public static void initDetailTitle(View rootView, ImageButton favoriteButton) {
         // Set the title frame to be partially opaque so the Favorite star will show up better
         View titleBackground = rootView.findViewById(R.id.detail_movie_title_frame);
         if (null != titleBackground) {
@@ -33,7 +36,9 @@ public class Utility {
             // 0-255, 255 is opaque, 204 = 80%
             if (null != background) {
                 background.setAlpha(0xCC);
-        }}
+            }
+        }
+
         // Set up the click listeners for the Detail fragment.  Unfortunately the
         // onClick attribute in the xml can only be used if the handler is in the Activity proper,
         // not the fragment
@@ -59,22 +64,26 @@ public class Utility {
                 favoriteButton.setBackground(favorite);
             }
         } catch (Exception e) {
-            Log.d(TAG, "updateFavoriteButton got an exeption: " + e.getLocalizedMessage());
+            Log.d(TAG, "updateFavoriteButton got an exception: " + e.getLocalizedMessage());
         }
     }
+
     public static void onClickFavoriteButton(View view) {
         // toggle favorite on/off in database
         MovieDataService data = MovieDataService.getInstance();
         Context context = view.getContext();
+        boolean isFavorite;
 
         if (data.getFavorite() == 0) {
             Log.d(TAG, "buttonFavoriteClick  add Favorite");
             data.setFavorite(context, 1);  // we may order favorites later so this is an int, for now it is just on/off
-
+            isFavorite = true;
         } else {
             Log.d(TAG, "buttonFavoriteClick  remove Favorite");
             data.setFavorite(context, 0);
+            isFavorite = false;
         }
         Utility.updateFavoriteButton((ImageButton) view, data.getFavorite());
+        DispatchTMDB.getInstance().shareBus().post(new FavoriteChangeEvent(isFavorite));
     }
 }

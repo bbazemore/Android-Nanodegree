@@ -38,7 +38,7 @@ public class ReviewFragment extends Fragment implements Observer {
 
         mRootView = inflater.inflate(R.layout.fragment_review, container, false);
         mViewHolder = new ReviewViewHolder();
-        Utility.initDetailTitle(getContext(), mRootView, mViewHolder.favoriteButton);
+        Utility.initDetailTitle(mRootView, mViewHolder.favoriteButton);
 
         // Use the default layout manager
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity().getBaseContext());

@@ -34,7 +34,7 @@ public class VideoFragment extends Fragment {
 
         mRootView = inflater.inflate(R.layout.fragment_video, container, false);
         mViewHolder = new VideoViewHolder();
-        Utility.initDetailTitle(getContext(), mRootView, mViewHolder.favoriteButton);
+        Utility.initDetailTitle(mRootView, mViewHolder.favoriteButton);
 
         // Use the default layout manager
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity().getBaseContext());
@@ -111,13 +111,14 @@ public class VideoFragment extends Fragment {
             Log.d(TAG, "Trailer card container did not have trailer link.");
         return false;
     }
+
     class VideoViewHolder {
         final TextView titleView;
         View titleBackground;
         final ImageButton favoriteButton;
         final RecyclerView recyclerView;
 
-        VideoViewHolder () {
+        VideoViewHolder() {
             titleView = (TextView) mRootView.findViewById(R.id.detail_movie_title);
             titleBackground = mRootView.findViewById(R.id.detail_movie_title_frame);
             favoriteButton = (ImageButton) mRootView.findViewById(R.id.detail_favorite_button);

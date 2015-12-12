@@ -17,6 +17,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.android.bazemom.popularmovies.adapters.MovieAdapter;
+import com.android.bazemom.popularmovies.moviebusevents.FavoriteChangeEvent;
 import com.android.bazemom.popularmovies.moviebusevents.LoadMoviesEvent;
 import com.android.bazemom.popularmovies.moviebusevents.MoviesLoadedEvent;
 import com.android.bazemom.popularmovies.movielocaldb.LocalDBHelper;
@@ -117,14 +118,14 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
             @Override
             public void run() {
                 Log.d("TAG", "RootView post-run lambda");
-               if (mTwoPane) {
-                   updatePosition(mGridviewPosition);
+                if (mTwoPane) {
+                    updatePosition(mGridviewPosition);
                     // compute optimal number of movie poster columns based on available width
-                   // setOptimalColumnWidth();
+                    // setOptimalColumnWidth();
                     //RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getContext(), optimalColumnCount);
                     //mGridView.setLayoutManager(layoutManager);
                     // Force re-render
-                   // mGridView.setAdapter(mAdapter);
+                    // mGridView.setAdapter(mAdapter);
 
                 }
                 // Make sure the sort title is accurate
@@ -135,7 +136,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
         });
 
         Log.d(TAG, "onCreateView for " + currentSortType + " with " + mAdapter.getCount() + " movies");
-      //  mAdapter = new MovieAdapter(getActivity(), currentSortType, mMovieList);
+        //  mAdapter = new MovieAdapter(getActivity(), currentSortType, mMovieList);
         mGridView.setAdapter(mAdapter);
 
         // In Master-Detail two pane mode, keep the movie in the
@@ -249,6 +250,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
         mGridviewPosition = GridView.INVALID_POSITION;
         mPageRequest = 1; // start from the beginning of the new movie type
     }
+
     public void updateMovies() {
         String sortType = getSortType();
         // if the user changed the movie list type in the settings,
@@ -285,7 +287,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
 
             // If there is a request outstanding to scroll to a particular position
             // process it now. TODO: ??
-           // if (mGridviewPosition > 0)
+            // if (mGridviewPosition > 0)
             if (mTwoPane && !mTwoPaneClicked)
                 updatePosition(mGridviewPosition);
         }
@@ -297,13 +299,26 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
         }
     }
 
+    @Subscribe
+    public void onFavoriteChange(FavoriteChangeEvent event) {
+        Log.d(TAG, "onFavoriteChange favorite added? " + event.favoriteAdded);
+        if (mAdapter.getFlavor().equals(getString(R.string.settings_sort_favorite))) {
+            Log.d(TAG, "Reset Favorite list in grid");
+            // clear out current list of favorites
+            mAdapter.clear();
+
+            // populate the movies from the database
+            loadFavoriteMovies();
+        }
+    }
+
     public String getSortType() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
         return prefs.getString(getString(R.string.settings_sort_key), getString(R.string.settings_sort_default));
     }
 
     protected void updateToolbarTitle(String sortType) {
-      if (mCurrentlyDisplayedSortType.contentEquals(sortType)) {
+        if (mCurrentlyDisplayedSortType.contentEquals(sortType)) {
             Log.d(TAG, "updateToolbarTitle - title up to date for " + sortType);
             return;
         }
@@ -342,7 +357,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
             return;
         }
 
-       if (mGridView.getChildCount() == 0) {
+        if (mGridView.getChildCount() == 0) {
             Log.d(TAG, "updatePosition: no children to process");
             return;
         }
@@ -441,11 +456,11 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
                 if (null == mAdapter) {
                     Log.d(TAG, "restoreState Adapter was null. This should not happen. Leave everything alone for now.");
                     mAdapter = new MovieAdapter(getActivity(), currentSortType, movieList);
-                  //  mGridView.setAdapter(mAdapter);
+                    //  mGridView.setAdapter(mAdapter);
                 }
                 // The adapter should live between rotations. Do a sanity check.
                 if (!mAdapter.matches(null == movieList ? 0 : movieList.size(),
-                                      null == movieList ? null : movieList.get(0))) {
+                        null == movieList ? null : movieList.get(0))) {
                     Log.d(TAG, "restoreState found Adapter out of date, resetting from saved movies.");
                     mAdapter.clear();
                     mAdapter.addAll(movieList);
@@ -458,39 +473,40 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
         initMovieList();
         return false;
     }
-/*
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        Log.d(TAG, "onActivityCreated");
-        getLoaderManager().initLoader(FAVORITE_LOADER, null, this);
-        super.onActivityCreated(savedInstanceState);
-    }
 
-    @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        // This is called when a new Loader needs to be created.  This
-        // fragment only uses one loader for favorites, so we don't care about checking the id.
-        Log.d(TAG, "onCreateLoader ");
-
-        // Sort order:  Most recent first
-        String sortOrder = LocalDBContract.MovieEntry.COLUMN_RELEASE_DATE + " DSC";
-        Uri favoriteUri = LocalDBContract.getFavoriteUri();
-        return new CursorLoader(getActivity(), favoriteUri, null, null, null, sortOrder);
-    }
-
-    @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        Log.d(TAG, "onLoadFinished ");
-
-        // add each movie in favorites to the adapter
-        if (null != data) {
-            displayFavoriteMovies(data);
+    /*
+        @Override
+        public void onActivityCreated(Bundle savedInstanceState) {
+            Log.d(TAG, "onActivityCreated");
+            getLoaderManager().initLoader(FAVORITE_LOADER, null, this);
+            super.onActivityCreated(savedInstanceState);
         }
-    }
-*/
+
+        @Override
+        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+            // This is called when a new Loader needs to be created.  This
+            // fragment only uses one loader for favorites, so we don't care about checking the id.
+            Log.d(TAG, "onCreateLoader ");
+
+            // Sort order:  Most recent first
+            String sortOrder = LocalDBContract.MovieEntry.COLUMN_RELEASE_DATE + " DSC";
+            Uri favoriteUri = LocalDBContract.getFavoriteUri();
+            return new CursorLoader(getActivity(), favoriteUri, null, null, null, sortOrder);
+        }
+
+        @Override
+        public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+            Log.d(TAG, "onLoadFinished ");
+
+            // add each movie in favorites to the adapter
+            if (null != data) {
+                displayFavoriteMovies(data);
+            }
+        }
+    */
     private void loadFavoriteMovies() {
         String favorite = getSortType();
-        if (mAdapter.getFlavor().contentEquals(favorite)  && mAdapter.getCount() > 0) {
+        if (mAdapter.getFlavor().contentEquals(favorite) && mAdapter.getCount() > 0) {
             Log.d(TAG, "loadFavoriteMovies already loaded.");
             return;
         }
@@ -514,33 +530,33 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
 
     }
 
- /*   private void displayFavoriteMovies(Cursor movieCursor) {
-        if (mCurrentlyDisplayedSortType.equals(getString(R.string.settings_sort_favorite))) {
-            mMovieList.clear();
-            // Convert from rows of data to movie object
-            if (null != movieCursor && movieCursor.moveToFirst()) {
-                do {
-                    mMovieList.add(new Movie(movieCursor));
-                } while (movieCursor.moveToNext());
-            }
+    /*   private void displayFavoriteMovies(Cursor movieCursor) {
+           if (mCurrentlyDisplayedSortType.equals(getString(R.string.settings_sort_favorite))) {
+               mMovieList.clear();
+               // Convert from rows of data to movie object
+               if (null != movieCursor && movieCursor.moveToFirst()) {
+                   do {
+                       mMovieList.add(new Movie(movieCursor));
+                   } while (movieCursor.moveToNext());
+               }
 
-            if (null != mAdapter)
-                mAdapter.addAll(mMovieList);
+               if (null != mAdapter)
+                   mAdapter.addAll(mMovieList);
 
-            // Give the user a hint if the list is empty
-            mHintView.setVisibility(mMovieList.isEmpty() ? View.VISIBLE : View.GONE);
-        }
-    }
+               // Give the user a hint if the list is empty
+               mHintView.setVisibility(mMovieList.isEmpty() ? View.VISIBLE : View.GONE);
+           }
+       }
 
-    @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
-        Log.d(TAG, "onLoaderReset");
-        // not currently used. May use for favorites
-        // mAdapter.clear();
-        // mMovieList.clear();
-        //mAdapter.swapCursor(null);
-    }
-*/
+       @Override
+       public void onLoaderReset(Loader<Cursor> loader) {
+           Log.d(TAG, "onLoaderReset");
+           // not currently used. May use for favorites
+           // mAdapter.clear();
+           // mMovieList.clear();
+           //mAdapter.swapCursor(null);
+       }
+   */
     protected void setOptimalColumnWidth() {
         int viewWidth = Utility.getScreenWidth(getContext());
         Log.d(TAG, "setOptimalColumnWidth width is " + viewWidth);

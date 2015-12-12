@@ -17,6 +17,7 @@ import com.android.bazemom.popularmovies.moviemodel.MovieResults;
 
 import java.util.ArrayList;
 import java.util.List;
+
 // Take a list of movies (Model), mash (control) the poster image for each one into an ImageGridView
 // A nice clean implementation of the Model View Controller (MVC) pattern.
 // I love that components exist that make this so easy.
@@ -44,9 +45,12 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
         Log.d(TAG, "constructor received " + movieList.size() + " movies of type " + mFlavor);
     }
 
-    public String getFlavor() { return mFlavor; }
+    public String getFlavor() {
+        return mFlavor;
+    }
+
     public void setFlavor(String sortFlavor) {
-        if (!mFlavor.contentEquals(sortFlavor) ) {
+        if (!mFlavor.contentEquals(sortFlavor)) {
             // remove old values.  Make way for new ones
             Log.d(TAG, "Flavor has changed, clear movies out of Adapter");
             clear();
@@ -57,8 +61,7 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
     public void addAll(MovieResults movieResults) {
         // because we add one page worth of data at a time, this is incremental.
         // don't clear the old data from previous pages
-        for ( MovieModel movieData : movieResults.getResults())
-        {
+        for (MovieModel movieData : movieResults.getResults()) {
             add(new Movie(movieData));
         }
     }
