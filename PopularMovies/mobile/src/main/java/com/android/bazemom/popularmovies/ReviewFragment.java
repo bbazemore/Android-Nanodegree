@@ -47,7 +47,6 @@ public class ReviewFragment extends Fragment implements Observer {
         MovieDataService data = MovieDataService.getInstance();
         adapter = new ReviewAdapter(data.getReviewList());
         mViewHolder.recyclerView.setAdapter(adapter);
-        data.addObserver(this);
 
         updateUI();
 
@@ -64,26 +63,25 @@ public class ReviewFragment extends Fragment implements Observer {
         return mRootView;
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        // Make sure we are pointing at the currently selected movie
-        updateUI();
-    }
-
     // Once ReviewList is filled in, get the adapter to fill in the recycler view
     void updateUI() {
-        Log.d(TAG, "updateReviewUI");
+
         MovieDataService data = MovieDataService.getInstance();
         if (null != data && null != mViewHolder) {
             {
+                Log.d(TAG, "updateReviewUI for " + data.getMovie().title);
                 mViewHolder.titleView.setText(data.getMovie().title);
                 mViewHolder.titleBackground.setBackgroundColor(data.getDarkBackground());
                 Utility.updateFavoriteButton(mViewHolder.favoriteButton, data.getFavorite());
 
-                adapter = new ReviewAdapter(data.getReviewList());
-                mViewHolder.recyclerView.setAdapter(adapter);
-                data.addObserver(this);
+                if (data.reviewListComplete()) {
+                    if (adapter == null) {
+                        adapter = new ReviewAdapter(data.getReviewList());
+                    }
+                    mViewHolder.recyclerView.setAdapter(adapter);
+                } else {
+                    data.addObserver(this);
+                }
             }
         } else {
             Log.d(TAG, "UpdateReviewUI missing data or viewholder");
@@ -122,4 +120,12 @@ public class ReviewFragment extends Fragment implements Observer {
             frameLayout = (LinearLayout) mRootView.findViewById(R.id.fragment_review);
         }
     } // end ReviewViewHolder
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        // Don't leave our observer lying around after we're gone
+        MovieDataService.getInstance().deleteObserver(this);
+    }
 }

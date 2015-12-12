@@ -43,10 +43,13 @@ interface MovieData {
     Movie getMovie();
 
     MovieDetail getMovieDetail();
+    boolean movieDetailComplete();
 
     List<Review> getReviewList();
+    boolean reviewListComplete();
 
     List<Video> getVideoList();
+    boolean videoListComplete();
 
     // String getYouTubeKey(int videoPosition);
     String getYouTubeURL(int videoPosition);
@@ -241,6 +244,11 @@ public class MovieDataService extends Observable implements MovieData {
         return mMovieDetail;
     }
 
+    @Override
+    public boolean movieDetailComplete() {
+        return mDataReceivedDetail;
+    }
+
     private void setMovieDetail(MovieDetail movieDetail) {
         if (mMovieDetail != movieDetail) {
             Log.d(TAG, "movie detail changed to " + movieDetail.title);
@@ -255,6 +263,11 @@ public class MovieDataService extends Observable implements MovieData {
         return mReviewList;
     }
 
+    @Override
+    public boolean reviewListComplete() {
+        return mDataReceivedReviewList;
+    }
+
     private void setReviewList(List<Review> reviewList) {
         if (reviewList != null && !reviewList.isEmpty()) {
             mReviewList.addAll(reviewList);
@@ -266,6 +279,11 @@ public class MovieDataService extends Observable implements MovieData {
     @Override
     public List<Video> getVideoList() {
         return mVideoList;
+    }
+
+    @Override
+    public boolean videoListComplete() {
+        return mDataReceivedVideoList;
     }
 
     private void setVideoList(List<Video> videoList) {
