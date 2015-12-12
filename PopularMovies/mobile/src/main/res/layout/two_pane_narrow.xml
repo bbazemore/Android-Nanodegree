@@ -67,7 +67,6 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         tools:layout="@layout/fragment_main_two_pane_narrow"
-                        tools:name="com.android.bazemom.popularmovies.MainFragment"
             />
     </LinearLayout>
 </LinearLayout>

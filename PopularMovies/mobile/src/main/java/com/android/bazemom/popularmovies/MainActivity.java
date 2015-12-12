@@ -11,7 +11,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.android.bazemom.popularmovies.moviemodel.DispatchTMDB;
 import com.android.debug.hv.ViewServer;
 
 // Welcome to the Main Activity for Popular Movies
@@ -36,20 +35,21 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Call
     private Toolbar mToolbar;
     private Movie mMovie;
     public boolean mTwoPane = false;
+    private MainFragment mMainFragment;
+    private DetailFragment mDetailFragment;
 
 
     protected void initMasterPane() {
         // Fill in the first pane
-        FragmentManager fragMan = getSupportFragmentManager();
-        if (null == fragMan) return;
-
-        Log.d(TAG, "Initialize master pane.");
-        Fragment masterFragment = new MainFragment();
-        fragMan.beginTransaction()
-                .add(R.id.master_container, masterFragment, MASTERFRAGMENT_TAG)
-                .commit();
-
-        // With luck this should select the first movie and invoke onMovieSelected.
+        if (mMainFragment == null) {
+            Log.d(TAG, "Initialize master pane.");
+            FragmentManager fragMan = getSupportFragmentManager();
+            if (null == fragMan) return;
+            mMainFragment = new MainFragment();
+            fragMan.beginTransaction()
+                    .add(R.id.master_container, mMainFragment, MASTERFRAGMENT_TAG)
+                    .commit();
+        }
     }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,7 +58,8 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Call
         mTwoPane = getResources().getBoolean(R.bool.has_two_panes);
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
-        initMasterPane();
+        if (savedInstanceState == null)
+            initMasterPane();
 
         // For debugging - View Hierarchy
         ViewServer.get(this).addWindow(this);
@@ -71,18 +72,15 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Call
             // In two-pane mode, show the detail view in this activity by
             // adding or replacing the detail fragment using a
             // fragment transaction.
-            if (savedInstanceState == null) {
+            if (savedInstanceState == null && mDetailFragment == null) {
+                mDetailFragment = new DetailFragment();
                 getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.detail_container, new DetailFragment(), DETAILFRAGMENT_TAG)
+                        .replace(R.id.detail_container, mDetailFragment, DETAILFRAGMENT_TAG)
                         .commit();
             }
         } /*else {
             getSupportActionBar().setElevation(0f);
         } */
-        // Set up the RESTful connection to the movie database
-        // using our buddies Retrofit and Otto.
-        DispatchTMDB dispatchTMDB = DispatchTMDB.getInstance();
-        dispatchTMDB.shareBus().register(this);
     }
 
     @Override
@@ -136,11 +134,11 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Call
         // Start the process of getting the details for the selected movie
         MovieDataService.getInstance(this, movie);
 
-        // Add or replace the detail view for the selected movie
-        FragmentManager fragMan = getSupportFragmentManager();
-        if (null == fragMan) return;
-
         if (mTwoPane) {
+            // Add or replace the detail view for the selected movie
+            FragmentManager fragMan = getSupportFragmentManager();
+            if (null == fragMan) return;
+
             // pass Movie detail through to the tab container fragment
             Fragment oldDetailFragment = fragMan.findFragmentByTag(DETAILFRAGMENT_TAG);
             Fragment detailFragment = new TabContainerFragment();
