@@ -1,32 +1,24 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:tools="http://schemas.android.com/tools"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                xmlns:app="http://schemas.android.com/apk/res-auto"
-                android:baselineAligned="false"
-                android:divider="?android:attr/dividerHorizontal"
-                android:orientation="horizontal"
-                tools:name="com.android.bazemom.popularmovies.MainActivity">
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:baselineAligned="false"
+              android:divider="?android:attr/dividerHorizontal"
+              android:orientation="horizontal"
+              tools:name="com.android.bazemom.popularmovies.MainActivity">
 
     <!--
     This layout is a two-pane layout for the Items master/detail flow.
     -->
-    <!--include
-        android:id="@+id/toolbar"
-        layout="@layout/toolbar"
-        /-->
     <RelativeLayout android:id="@+id/master_container"
-              xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:tools="http://schemas.android.com/tools"
-              android:layout_width="0dp"
-              android:layout_height="match_parent"
-              android:layout_weight="3"
-                 android:layout_gravity="start"
-              >
-        <include
-            android:id="@+id/toolbar"
-            layout="@layout/toolbar"
-            />
+                    xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:tools="http://schemas.android.com/tools"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="start"
+                    android:layout_weight="3"
+        >
         <GridView
             android:id="@+id/movies_grid"
             xmlns:android="http://schemas.android.com/apk/res/android"
@@ -42,25 +34,25 @@
             android:text="@string/main_favorite_hint"
             android:visibility="gone"
             />
-        </RelativeLayout>
+    </RelativeLayout>
     <!-- divider -->
     <View android:id="@+id/divider"
-          android:background="#000000"
           android:layout_width="1dp"
           android:layout_height="wrap_content"
+          android:background="#000000"
         />
     <FrameLayout android:id="@+id/detail_container"
                  android:layout_width="0dp"
                  android:layout_height="match_parent"
-                 android:layout_weight="2"
                  android:layout_gravity="end"
+                 android:layout_weight="2"
                  tools:name="com.android.bazemom.popularmovies.TabContainerFragment"
-                 >
+        >
         <!-- second toolbar that will be used for the tabs -->
         <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
             xmlns:android="http://schemas.android.com/apk/res/android"
             xmlns:app="http://schemas.android.com/apk/res-auto"
-            android:id="@+id/toolbar_detail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?attr/colorPrimary"
@@ -68,20 +60,19 @@
             app:layout_scrollFlags="scroll|enterAlways"
             />
 
-    <android.support.design.widget.TabLayout
-        android:id="@+id/tabanim_tabs"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        />
-    <!-- layout_below="toolbar" -->
+        <android.support.design.widget.TabLayout
+            android:id="@+id/tabanim_tabs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            />
 
-    <!-- Helps handing the Fragments to load for each Tab -->
-    <android.support.v4.view.ViewPager
-        android:id="@+id/tabanim_viewpager"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
- </FrameLayout>
+        <!-- Helps handing the Fragments to load for each Tab -->
+        <android.support.v4.view.ViewPager
+            android:id="@+id/tabanim_viewpager"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
+    </FrameLayout>
 
 </LinearLayout>
 

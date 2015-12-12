@@ -73,10 +73,8 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Call
             // adding or replacing the detail fragment using a
             // fragment transaction.
             if (savedInstanceState == null && mDetailFragment == null) {
-                mDetailFragment = new DetailFragment();
-                getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.detail_container, mDetailFragment, DETAILFRAGMENT_TAG)
-                        .commit();
+                // This will force an empty detail fragment to be set up
+                onItemSelected(MovieDataService.getInstance().getMovie());
             }
         } /*else {
             getSupportActionBar().setElevation(0f);
@@ -165,5 +163,14 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Call
         }
     }
 
+    @Override
+    public String updateActivityTitle(String sortType) {
+        // Display sort type in the title bar
+        if (null == mToolbar) {
+            mToolbar = (Toolbar) findViewById(R.id.toolbar);
+            setSupportActionBar(mToolbar);
+        }
+        return Utility.setToolbarTitle(this, mToolbar, sortType);
+    }
 }
 

@@ -6,10 +6,6 @@
                 android:paddingLeft="@dimen/activity_horizontal_margin"
                 android:paddingRight="@dimen/activity_horizontal_margin"
                 >
-    <!--include
-        android:paddingTop="@dimen/activity_vertical_margin"
-        android:id="@+id/toolbar"
-        layout="@layout/toolbar" /-->
     <GridView
         android:id="@+id/movies_grid"
         xmlns:android="http://schemas.android.com/apk/res/android"

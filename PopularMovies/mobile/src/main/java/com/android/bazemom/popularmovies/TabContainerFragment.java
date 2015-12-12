@@ -82,9 +82,13 @@ public class TabContainerFragment extends Fragment  {
             Log.d(TAG, "onCreate has movie " + mMovie);
         }
         // Tab layout set up, if 2pane, 2nd toolbar needs to be activated
-        if (/*mTwoPane  &&*/ mViewHolder.toolbar != null) {
+        if (mViewHolder.toolbar != null) {
             Log.d(TAG, "SetSupportActionBar to tabs toolbar");
-            ((AppCompatActivity) getActivity()).setSupportActionBar(mViewHolder.toolbar);
+            AppCompatActivity activity = ((AppCompatActivity) getActivity());
+            activity.setSupportActionBar(mViewHolder.toolbar);
+            if (mTwoPane) {
+                ((MainFragment.Callback) activity).updateActivityTitle(Utility.getSortType(activity));
+            }
         }
 
         // Create a fragment to handle each tab.  Cache them away so we can poke them

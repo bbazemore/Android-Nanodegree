@@ -35,8 +35,8 @@
             android:id="@+id/tabanim_tabs"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_below="@id/toolbar"
             />
-        <!-- layout_below="toolbar" -->
 
         <!-- Helps handing the Fragments to load for each Tab -->
         <android.support.v4.view.ViewPager

@@ -1,11 +1,7 @@
 package com.android.bazemom.popularmovies;
 
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,7 +22,6 @@ import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  * This is where we will display a grid view of movies
@@ -74,6 +69,9 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
          * Notify the activity when an item has been selected.
          */
         void onItemSelected(Movie movie);
+
+        // Notify the activity when the title needs to change
+        String updateActivityTitle(String sortType);
     }
 
     @Override
@@ -102,7 +100,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
         mHintView = (TextView) mRootView.findViewById(R.id.favorite_hint);
         mTwoPane = getResources().getBoolean(R.bool.has_two_panes);
 
-        String currentSortType = getSortType();
+        String currentSortType = Utility.getSortType(getActivity());
         mCurrentlyDisplayedSortType = ""; // Force Sort type title in toolbar to update
         setOptimalColumnWidth();
 
@@ -120,23 +118,15 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
                 Log.d("TAG", "RootView post-run lambda");
                 if (mTwoPane) {
                     updatePosition(mGridviewPosition);
-                    // compute optimal number of movie poster columns based on available width
-                    // setOptimalColumnWidth();
-                    //RecyclerView.LayoutManager layoutManager = new GridLayoutManager(getContext(), optimalColumnCount);
-                    //mGridView.setLayoutManager(layoutManager);
-                    // Force re-render
-                    // mGridView.setAdapter(mAdapter);
-
                 }
                 // Make sure the sort title is accurate
-                updateToolbarTitle(getSortType());
+                updateToolbarTitle(Utility.getSortType(getActivity()));
                 // update the UI now we can scroll the last selected movie into position
                 // updatePosition();
             }
         });
 
         Log.d(TAG, "onCreateView for " + currentSortType + " with " + mAdapter.getCount() + " movies");
-        //  mAdapter = new MovieAdapter(getActivity(), currentSortType, mMovieList);
         mGridView.setAdapter(mAdapter);
 
         // In Master-Detail two pane mode, keep the movie in the
@@ -194,7 +184,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
         Log.d(TAG, "onViewCreated savedstate null: " + (savedInstanceState == null));
         // The toolbar may be in the detail fragment, which may be laid out after this master.
         // Be patient and fill this in when it is likely to be there
-        updateToolbarTitle(getSortType());
+        updateToolbarTitle(Utility.getSortType(getActivity()));
     }
 
     @Override
@@ -238,13 +228,14 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
         mHintView.setVisibility(View.GONE);
 
         // Really starting a new set of movies, rather than restoring the last one
+        String sortType = Utility.getSortType(getActivity());
         if (mAdapter == null) {
             Log.d(TAG, "initMovieList create empty Movie adapter");
-            mAdapter = new MovieAdapter(getActivity(), getSortType(), new ArrayList<Movie>());
+            mAdapter = new MovieAdapter(getActivity(), sortType, new ArrayList<Movie>());
         } else {
             Log.d(TAG, "initMovieList clear Movie Adapter that had " + mAdapter.getCount() + " movies.");
             mAdapter.clear();
-            mAdapter.setFlavor(getSortType());
+            mAdapter.setFlavor(sortType);
         }
         mMoreMoviesToFetch = true;
         mGridviewPosition = GridView.INVALID_POSITION;
@@ -252,7 +243,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
     }
 
     public void updateMovies() {
-        String sortType = getSortType();
+        String sortType = Utility.getSortType(getActivity());
         // if the user changed the movie list type in the settings,
         // clear the movie list and start over.
         if (!sortType.contentEquals(mAdapter.getFlavor())) {
@@ -286,7 +277,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
             mAdapter.addAll(event.movieResults);
 
             // If there is a request outstanding to scroll to a particular position
-            // process it now. TODO: ??
+            // process it now.
             // if (mGridviewPosition > 0)
             if (mTwoPane && !mTwoPaneClicked)
                 updatePosition(mGridviewPosition);
@@ -312,43 +303,14 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
         }
     }
 
-    public String getSortType() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        return prefs.getString(getString(R.string.settings_sort_key), getString(R.string.settings_sort_default));
-    }
-
     protected void updateToolbarTitle(String sortType) {
         if (mCurrentlyDisplayedSortType.contentEquals(sortType)) {
             Log.d(TAG, "updateToolbarTitle - title up to date for " + sortType);
             return;
         }
         Log.d(TAG, "updateToolbarTitle from " + mCurrentlyDisplayedSortType + " to " + sortType);
-
-        // Display sort type in the title bar
-        Toolbar toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
-        //android.app.ActionBar toolbar = getActivity().getActionBar();
-        if (null != toolbar) {
-            // we have the sort type value - which is what we hand to the UI.
-            // Convert it to the user friendly label. They don't make this easy :(
-            Log.d(TAG, "Have a toolbar, we can change sort type");
-            String[] sortKeyStrings = getResources().getStringArray(R.array.settings_sort_values);
-            int index = Arrays.asList(sortKeyStrings).indexOf(sortType);
-            if (index >= 0) {
-                String[] sortFriendlyStrings = getResources().getStringArray(R.array.settings_sort_labels);
-                mCurrentlyDisplayedSortTitle = sortFriendlyStrings[index];
-                AppCompatActivity activity = (AppCompatActivity) getActivity();
-                if (null != activity && null != activity.getSupportActionBar())
-                    activity.getSupportActionBar().setTitle(mCurrentlyDisplayedSortTitle);
-                else
-                    toolbar.setTitle(mCurrentlyDisplayedSortTitle);
-
-                // And now this sort type is being displayed
-                mCurrentlyDisplayedSortType = sortType;
-            } else {
-                Log.d(TAG, "Error updateToolbarTitle for " + sortType + " index was " + index);
-            }
-        }
-    }
+        mCurrentlyDisplayedSortType = ((Callback) getActivity()).updateActivityTitle(sortType);
+       }
 
     private void updatePosition(int newPosition) {
         Log.d(TAG, "updatePosition: " + newPosition);
@@ -437,7 +399,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
     // Return true if we were able to restore the state based on the saved state
     // Will return false if the saved state was null or a different sort type
     private boolean restoreState(Bundle savedInstanceState) {
-        String currentSortType = getSortType();
+        String currentSortType = Utility.getSortType(getActivity());
         updateToolbarTitle(currentSortType);
         if (savedInstanceState != null) {
             mCurrentlyDisplayedPosterQuality = savedInstanceState.getString(getString(R.string.settings_image_quality_key));
@@ -460,7 +422,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
                 }
                 // The adapter should live between rotations. Do a sanity check.
                 if (!mAdapter.matches(null == movieList ? 0 : movieList.size(),
-                        null == movieList ? null : movieList.get(0))) {
+                        (null == movieList || movieList.size() == 0) ? null : movieList.get(0))) {
                     Log.d(TAG, "restoreState found Adapter out of date, resetting from saved movies.");
                     mAdapter.clear();
                     mAdapter.addAll(movieList);
@@ -505,7 +467,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
         }
     */
     private void loadFavoriteMovies() {
-        String favorite = getSortType();
+        String favorite = Utility.getSortType(getActivity());
         if (mAdapter.getFlavor().contentEquals(favorite) && mAdapter.getCount() > 0) {
             Log.d(TAG, "loadFavoriteMovies already loaded.");
             return;

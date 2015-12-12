@@ -3,12 +3,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
     >
-    <!--  xmlns:tools="http://schemas.android.com/tools"
-          tools:context=".MainFragment" -->
-    <!-- TODO: make this a frame instead of relative layout -->
-    <!--include
-        android:id="@+id/toolbar"
-        layout="@layout/toolbar" /-->
     <GridView
         android:id="@+id/movies_grid"
         xmlns:android="http://schemas.android.com/apk/res/android"

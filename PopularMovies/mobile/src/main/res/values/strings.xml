@@ -78,6 +78,9 @@
     <string name="video_thumbnail">Movie thumbnail will play the Youtube video trailer</string>
     <string name="favorite_unavailable">Movie not fully loaded. Favorite feature not available.
     </string>
+    <string name="detail_no_detail_title">No movie selected</string>
+    <string name="detail_no_detail_overview">"If you are in Airplane mode, try selecting 'Favorites' in the settings."</string>
+
     <string-array name="settings_image_quality">
         <item name="settings_image_quality_low_label">Low</item>
         <item name="settings_image_quality_medium_label">Medium</item>

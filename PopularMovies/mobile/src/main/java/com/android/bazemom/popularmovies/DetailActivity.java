@@ -20,6 +20,7 @@ public class DetailActivity extends AppCompatActivity {
     // UI items
     private View mRootView;
     private TabContainerFragment mTabContainerFragment;
+    private Toolbar mToolbar;
     private MovieDataService mMovieService;
     private Movie mMovie;
     private boolean mCreated = false;
@@ -31,9 +32,9 @@ public class DetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_detail);
         mRootView = findViewById(R.id.detail_container);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        if (null != toolbar)
-            setSupportActionBar(toolbar);
+        mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        if (null != mToolbar)
+            setSupportActionBar(mToolbar);
 
         if (savedInstanceState == null) {
             // get Movie detail from argument
@@ -53,46 +54,36 @@ public class DetailActivity extends AppCompatActivity {
             }
         } else {
             // restores state from saved instance
-            mMovie = savedInstanceState.getParcelable(MovieData.MOVIE);
+            setMovie((Movie) savedInstanceState.getParcelable(MovieData.MOVIE));
         }
     }
 
     // Returns true if the movie changed.
     private boolean setMovieFromIntent() {
         Intent intent = getIntent();
-        Movie intentMovie;
-        boolean movieChanged = false;
-
+       boolean movieChanged = false;
         if (intent != null) {
-            intentMovie = intent.getParcelableExtra(MovieData.EXTRA_MOVIE);
-            if (null == intentMovie) {
-                if (mMovie != null) {
-                    //movieChanged = true;
-                    Log.d(TAG, "Movie changing from '" + mMovie.title + "' to null. Do we want to notify the tabs?");
-                } else {
-                    Log.d(TAG, "Why are we getting a null Movie in the Detail intent?");
-                }
-            } else {
-                if (mMovie == null) {
-                    // Normal first time through
-                    Log.d(TAG, "Movie changing from Null to '" + intentMovie.title + "'.");
-                    movieChanged = true;
-                    mMovie = intentMovie;
-                } else if (mMovie.id != intentMovie.id) {
-                    // This is a genuine change in movie, pass it on
-                    Log.d(TAG, "Movie changing from '" + mMovie.title + "' to '" + intentMovie.title + "'. Movie service should notify the tabs.");
-                    movieChanged = true;
-                    mMovie = intentMovie;
-                }
-            }
-        }
-        // Tell data service we are focusing on a different movie
-        if (mCreated & movieChanged) {
-            mMovieService = MovieDataService.getInstance(this, mMovie);
+            movieChanged = setMovie((Movie) intent.getParcelableExtra(MovieData.EXTRA_MOVIE));
         }
         return movieChanged;
     }
 
+    // Return true if the movie changed
+    protected boolean setMovie(Movie movie) {
+        if (movie == mMovie) return false;
+        if (null == movie) {
+            Log.d(TAG, "Movie changing from '" + mMovie.title + "' to null. Do we want to notify the tabs?");
+        } else {
+            if (mMovie == null) {
+                Log.d(TAG, "Movie changing from Null to '" + movie.title + "'.");
+            } else {
+                Log.d(TAG, "Movie changing from '" + mMovie.title + "' to '" + movie.title + "'. Movie service will notify the tabs.");
+                mMovieService = MovieDataService.getInstance(this, movie);
+            }
+        }
+        mMovie = movie;
+        return true;
+    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.

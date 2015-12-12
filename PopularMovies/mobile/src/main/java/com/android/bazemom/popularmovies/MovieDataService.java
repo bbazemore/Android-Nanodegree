@@ -14,6 +14,8 @@ import com.android.bazemom.popularmovies.moviebusevents.ReviewsLoadedEvent;
 import com.android.bazemom.popularmovies.moviebusevents.VideosLoadedEvent;
 import com.android.bazemom.popularmovies.movielocaldb.LocalDBHelper;
 import com.android.bazemom.popularmovies.moviemodel.DispatchTMDB;
+import com.android.bazemom.popularmovies.moviemodel.MovieDetailModel;
+import com.android.bazemom.popularmovies.moviemodel.MovieModel;
 import com.android.bazemom.popularmovies.moviemodel.ReviewModel;
 import com.android.bazemom.popularmovies.moviemodel.VideoModel;
 import com.squareup.otto.Bus;
@@ -71,6 +73,8 @@ interface MovieData {
 public class MovieDataService extends Observable implements MovieData {
     private final static String TAG = MovieDataService.class.getSimpleName();
 
+    private static final MovieModel EMPTY_MOVIE = new MovieModel();
+    private static final MovieDetailModel EMPTY_DETAIL = new MovieDetailModel();
     private static final ReviewModel EMPTY_REVIEW = new ReviewModel();
     private static final VideoModel EMPTY_VIDEO = new VideoModel();
 
@@ -112,6 +116,12 @@ public class MovieDataService extends Observable implements MovieData {
         // Set up in case we have movies with no reviews or trailers
         // This one little get of a string from resources is the reason we need
         // to keep passing the current context around.  Yeesh.
+        EMPTY_MOVIE.setId(0);
+        EMPTY_MOVIE.setTitle(context.getString(R.string.detail_no_detail_title));
+
+        EMPTY_DETAIL.setId(0);
+        EMPTY_DETAIL.setTitle(context.getString(R.string.detail_no_detail_title));
+        EMPTY_DETAIL.setOverview(context.getString(R.string.detail_no_detail_overview));
         EMPTY_REVIEW.setAuthor("");
         EMPTY_REVIEW.setContent(context.getString(R.string.review_no_reviews));
 
@@ -201,11 +211,15 @@ public class MovieDataService extends Observable implements MovieData {
     ///////////////////////////////////////////////////
     @Override
     public int getMovieId() {
+        if (null == mMovie) return 0;
         return mMovie.id;
     }
 
     @Override
     public Movie getMovie() {
+        if (null == mMovie) {
+            return new Movie(EMPTY_MOVIE);
+        }
         return mMovie;
     }
 
@@ -241,6 +255,8 @@ public class MovieDataService extends Observable implements MovieData {
 
     @Override
     public MovieDetail getMovieDetail() {
+        if (null == mMovieDetail)
+            return new MovieDetail(EMPTY_DETAIL);
         return mMovieDetail;
     }
 

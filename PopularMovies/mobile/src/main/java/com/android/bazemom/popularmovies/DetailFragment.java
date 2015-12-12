@@ -384,12 +384,8 @@ public final class DetailFragment extends Fragment implements Observer {
             }
         }
         Log.d(TAG, "setMovieDetail: movie details null or out of date, retrieving from MovieDataService");
-        boolean haveGoodMovieDetail = false;
         movieDetail = dataService.getMovieDetail();
-
-        if (null == movieDetail) {
-            Log.d(TAG, "setMovieDetail: movie detail data is null.  Skip the update");
-        } else haveGoodMovieDetail = true;
+        boolean haveGoodMovieDetail = dataService.movieDetailComplete();
 
         if (null != mMovieDetail && null != movieDetail && mMovieDetail.id != movieDetail.id) {
             Log.d(TAG, "setMovieDetail: switching from '" + mMovieDetail.getTitle() + "' to " + movieDetail.getTitle());
