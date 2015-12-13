@@ -14,6 +14,7 @@ import java.util.Map;
 //
 //@Generated("org.jsonschema2pojo")
 public class MovieResults {
+    public final static String TAG = "MovieResults";
 
     private int page;
     private List<MovieModel> results = new ArrayList<MovieModel>();

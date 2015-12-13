@@ -3,6 +3,8 @@ package com.android.bazemom.popularmovies.moviemodel;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.android.bazemom.popularmovies.Review;
+import com.android.bazemom.popularmovies.Video;
 import com.android.bazemom.popularmovies.moviebusevents.LoadMovieDetailEvent;
 import com.android.bazemom.popularmovies.moviebusevents.LoadMoviesEvent;
 import com.android.bazemom.popularmovies.moviebusevents.LoadReviewsEvent;
@@ -118,7 +120,7 @@ public class DispatchTMDB {
             @Override
             public void failure(RetrofitError error) {
                 mAPIRequestInProcess = false;
-                mBus.post(new MovieApiErrorEvent(error));
+                mBus.post(new MovieApiErrorEvent(MovieResults.TAG, error));
             }
         });
 
@@ -160,7 +162,7 @@ public class DispatchTMDB {
 
             @Override
             public void failure(RetrofitError error) {
-                mBus.post(new MovieApiErrorEvent(error));
+                mBus.post(new MovieApiErrorEvent(MovieDetailModel.TAG, error));
                 mAPIDetailRequestMovieId = 0;  // request is no longer outstanding
             }
         });
@@ -220,11 +222,9 @@ public class DispatchTMDB {
                     Log.e(TAG, "Reviews Callback failed to post ReviewsLoadedEvent: " + e.getLocalizedMessage());
                 }
             }
-
             @Override
             public void failure(RetrofitError error) {
-                Log.d(TAG, "Reviews failed");
-                mBus.post(new MovieApiErrorEvent(error));
+                mBus.post(new MovieApiErrorEvent(Review.TAG, error));
                 mAPIReviewRequestMovieId = 0;  // request is no longer outstanding
             }
         });
@@ -260,7 +260,7 @@ public class DispatchTMDB {
             @Override
             public void failure(RetrofitError error) {
                 Log.d(TAG, "Videos failed");
-                mBus.post(new MovieApiErrorEvent(error));
+                mBus.post(new MovieApiErrorEvent(Video.TAG, error));
                 mAPITrailerRequestMovieId = 0;  // request is no longer outstanding
             }
         });

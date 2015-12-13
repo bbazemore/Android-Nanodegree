@@ -32,9 +32,8 @@ public class DetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_detail);
         mRootView = findViewById(R.id.detail_container);
 
-        mToolbar = (Toolbar) findViewById(R.id.toolbar);
-        if (null != mToolbar)
-            setSupportActionBar(mToolbar);
+        // Initialize toolbar
+        updateActivityTitle();
 
         if (savedInstanceState == null) {
             // get Movie detail from argument
@@ -98,6 +97,13 @@ public class DetailActivity extends AppCompatActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_share) {
+            Log.d(TAG, "onOptionsItemSelected share trailer");
+            if (null == mTabContainerFragment) {
+                FragmentManager fragMan = getSupportFragmentManager();
+                if (null != fragMan) {
+                    mTabContainerFragment = (TabContainerFragment) fragMan.findFragmentByTag(TabContainerFragment.TAG);
+                }
+            }
             // Launch share trailer
             if (null != mTabContainerFragment) {
                 return mTabContainerFragment.onShareTrailer(mRootView);
@@ -106,7 +112,20 @@ public class DetailActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
-
+    //@Override
+    public void updateActivityTitle() {
+        String sortType = Utility.getSortType(this);
+        // Display sort type in the title bar
+        if (null == mToolbar) {
+            Log.d(TAG, "Attempt to find toolbar");
+            mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        }
+        if (null != mToolbar) {
+            Log.d(TAG, "Update toolbar");
+            setSupportActionBar(mToolbar);
+            Utility.setToolbarTitle(this, mToolbar, sortType);
+        }
+    }
     @Override
     public void onResume() {
         Log.d(TAG, "on resume");
@@ -114,6 +133,7 @@ public class DetailActivity extends AppCompatActivity {
 
         // The movie may have changed while we were out
         setMovieFromIntent();
+        updateActivityTitle();
     }
 
     @Override

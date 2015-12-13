@@ -9,6 +9,7 @@ import android.widget.Toast;
 import com.android.bazemom.popularmovies.moviebusevents.LoadMovieDetailEvent;
 import com.android.bazemom.popularmovies.moviebusevents.LoadReviewsEvent;
 import com.android.bazemom.popularmovies.moviebusevents.LoadVideosEvent;
+import com.android.bazemom.popularmovies.moviebusevents.MovieApiErrorEvent;
 import com.android.bazemom.popularmovies.moviebusevents.MovieDetailLoadedEvent;
 import com.android.bazemom.popularmovies.moviebusevents.ReviewsLoadedEvent;
 import com.android.bazemom.popularmovies.moviebusevents.VideosLoadedEvent;
@@ -43,15 +44,17 @@ interface MovieData {
     int getMovieId();
 
     Movie getMovie();
-
+    String getMovieTitle();
     MovieDetail getMovieDetail();
     boolean movieDetailComplete();
 
     List<Review> getReviewList();
     boolean reviewListComplete();
+    int reviewCount();
 
     List<Video> getVideoList();
     boolean videoListComplete();
+    int videoCount();
 
     // String getYouTubeKey(int videoPosition);
     String getYouTubeURL(int videoPosition);
@@ -77,6 +80,9 @@ public class MovieDataService extends Observable implements MovieData {
     private static final MovieDetailModel EMPTY_DETAIL = new MovieDetailModel();
     private static final ReviewModel EMPTY_REVIEW = new ReviewModel();
     private static final VideoModel EMPTY_VIDEO = new VideoModel();
+    private static final MovieDetailModel ERROR_DETAIL = new MovieDetailModel();
+    private static final ReviewModel ERROR_REVIEW = new ReviewModel();
+    private static final VideoModel ERROR_VIDEO = new VideoModel();
 
     private static Bus mBus; // the bus that is used to deliver messages to the TMDB dispatcher
     private static DispatchTMDB mDispatchTMDB;
@@ -128,6 +134,12 @@ public class MovieDataService extends Observable implements MovieData {
         EMPTY_VIDEO.setSite(context.getString(R.string.tmdb_site_value_YouTube));
         EMPTY_VIDEO.setName(context.getString(R.string.video_no_videos));
 
+        ERROR_DETAIL.setOverview(context.getString(R.string.detail_movie_error));
+        ERROR_REVIEW.setContent(context.getString(R.string.review_error));
+        ERROR_VIDEO.setName(context.getString(R.string.video_error));
+        ERROR_VIDEO.setSite(context.getString(R.string.tmdb_site_value_YouTube));
+
+        // and finally...
         setMovie(movie);
     }
 
@@ -223,6 +235,11 @@ public class MovieDataService extends Observable implements MovieData {
         return mMovie;
     }
 
+    @Override
+    public String getMovieTitle() {
+        if (null == mMovie) return "";
+        return mMovie.title;
+    }
     private boolean setMovie(Movie movie) {
         boolean movieChanged = false;
         if (movie == null) {
@@ -284,6 +301,11 @@ public class MovieDataService extends Observable implements MovieData {
         return mDataReceivedReviewList;
     }
 
+    @Override
+    public int reviewCount() {
+        if (null == mReviewList) return 0;
+        return mReviewList.size();
+    }
     private void setReviewList(List<Review> reviewList) {
         if (reviewList != null && !reviewList.isEmpty()) {
             mReviewList.addAll(reviewList);
@@ -302,10 +324,17 @@ public class MovieDataService extends Observable implements MovieData {
         return mDataReceivedVideoList;
     }
 
+    @Override
+    public int videoCount() {
+        if (null == mVideoList) return 0;
+        return mVideoList.size();
+    }
+
     private void setVideoList(List<Video> videoList) {
         if (videoList != null && !videoList.isEmpty()) {
             mVideoList.addAll(videoList);
             setChanged();
+            Log.d(TAG, "stashed videos " + mVideoList.size());
             notifyObservers(mVideoList);
         }
     }
@@ -353,6 +382,7 @@ public class MovieDataService extends Observable implements MovieData {
     }
     @Override
     public void setDarkBackground(int darkBackground) {
+        Log.d(TAG, "setDarkBackground " + darkBackground);
         mDarkBackground = darkBackground;
     }
     @Override
@@ -425,7 +455,7 @@ public class MovieDataService extends Observable implements MovieData {
         // load the movie data into our movies list
         setMovieDetail(event.movieResult);
         mDataReceivedDetail = true;
-        Log.i(TAG, "movie detail Loaded ");
+        Log.d(TAG, "movie detail Loaded ");
     }
 
     private void getDetails() {
@@ -458,12 +488,12 @@ public class MovieDataService extends Observable implements MovieData {
     @Subscribe
     @SuppressWarnings("Convert2Diamond")
     public void reviewsLoaded(ReviewsLoadedEvent event) {
-        Log.d(TAG, "reviews Loaded callback! Number of reviews: " + ((event.reviewResults == null) ? "0" : event.reviewResults.size()));
+        Log.d(TAG, "reviews Loaded callback! Number of reviews: " + ((event.reviewResults == null) ? "0" : event.reviewResults.size()) + " " + getMovieTitle());
 
         List<Review> newReviews = new ArrayList<Review>();
         // load the review data into our movies list
-        for (ReviewModel data : event.reviewResults) {
-            newReviews.add(new Review(data));
+        for (ReviewModel newReview : event.reviewResults) {
+            newReviews.add(new Review(newReview));
         }
 
         if (event.endOfInput || newReviews.isEmpty()) {
@@ -475,7 +505,7 @@ public class MovieDataService extends Observable implements MovieData {
             // Ask for another page of reviews
             getReviews(event.currentPage + 1);
         }
-        Log.d(TAG, "reviewsLoaded setting reviews list with " + newReviews.size() + " reviews.");
+        Log.d(TAG, "reviewsLoaded setting reviews list with " + newReviews.size() + " reviews for " + getMovieTitle());
         setReviewList(newReviews);
     }
 
@@ -501,7 +531,7 @@ public class MovieDataService extends Observable implements MovieData {
         //  Now request that the reviews be loaded
         LoadReviewsEvent loadReviewsRequest = new LoadReviewsEvent(mAPIKey, mMovie.id, nextPage);
 
-        Log.i(TAG, "request reviews");
+        Log.d(TAG, "request reviews");
         getBus().post(loadReviewsRequest);
     }
 
@@ -527,24 +557,71 @@ public class MovieDataService extends Observable implements MovieData {
         //  Now request that the trailers be loaded
         LoadVideosEvent loadVideosRequest = new LoadVideosEvent(mAPIKey, mMovie.id);
 
-        Log.i(TAG, "request video trailers");
+        Log.d(TAG, "request video trailers");
         getBus().post(loadVideosRequest);
     }
 
     // videosLoaded gets called when we get a list of reviews back from TMDB
     @Subscribe
     public void videosLoaded(VideosLoadedEvent event) {
-        Log.i(TAG, "videos Loaded callback! Number of trailers: " + event.trailerResults.size());
-        List<Video> newVideos = new ArrayList<>();
+        Log.d(TAG, "videos Loaded callback! Number of trailers: " + event.trailerResults.size());
+        List<Video> newVideos = new ArrayList<Video>();
         // load the movie data into our movies list
         for (VideoModel data : event.trailerResults) {
             newVideos.add(new Video(data));
         }
-        mDataReceivedVideoList = true;
 
         if (newVideos.isEmpty()) {
             newVideos.add(new Video(EMPTY_VIDEO));
         }
         setVideoList(newVideos);
+        mDataReceivedVideoList = true;
+    }
+
+    // When we get an error, set up a dummy card with the error message and post it
+    // like regular results so the user can see it.
+    @Subscribe
+    public void movieApiError(MovieApiErrorEvent event) {
+        String eventMessage = "";
+        if (null != event && null != event.error) {
+            eventMessage = event.error.getLocalizedMessage();
+            if (eventMessage == null || eventMessage.isEmpty()) {
+                eventMessage = event.error.getMessage();
+            }
+            if (eventMessage == null || eventMessage.isEmpty()) {
+                eventMessage = "";
+            }
+
+        }
+        switch (event.objectTypeName) {
+            case (MovieDetailModel.TAG): {
+                MovieDetailModel errorDetail = new MovieDetailModel();
+                errorDetail.setId(this.getMovieId());
+                if (null != mMovie)
+                    errorDetail.setTitle(this.mMovie.title);
+                errorDetail.setOverview(errorDetail.getOverview().concat(eventMessage));
+                mDataReceivedDetail = true;
+                mBus.post(new MovieDetailLoadedEvent(errorDetail));
+                break;
+            }
+            case (Review.TAG): {
+                ReviewModel errorReview = new ReviewModel(ERROR_REVIEW);
+                errorReview.setContent(errorReview.getContent().concat(eventMessage));
+                mDataReceivedReviewList = true;
+                mBus.post(new ReviewsLoadedEvent(errorReview));
+                break;
+            }
+            case (Video.TAG): {
+                VideoModel errorVideo = new VideoModel(ERROR_VIDEO);
+                errorVideo.setName(errorVideo.getName().concat(eventMessage));
+                mDataReceivedVideoList = true;
+                mBus.post(new VideosLoadedEvent(errorVideo));
+                break;
+            }
+            default:
+                Log.d(TAG, "movieApiError: " + event.objectTypeName + " " + eventMessage);
+        }
+
+
     }
 }

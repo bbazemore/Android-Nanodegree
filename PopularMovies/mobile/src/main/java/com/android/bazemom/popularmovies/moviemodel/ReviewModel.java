@@ -63,6 +63,7 @@ public class ReviewModel {
      * The content
      */
     public String getContent() {
+        if (null == content) return "";
         return content;
     }
 
@@ -93,5 +94,18 @@ public class ReviewModel {
         this.url = url;
     }
 
+    /* items for error handling and reporting */
+    public ReviewModel() {
+        id = "0";
+        author = "";
+        content = "";
+        url = "";
+    }
+    public ReviewModel(ReviewModel in) {
+        id = in.id;
+        author = in.author;
+        content = in.content;
+        url = in.url;
+    }
 }
 

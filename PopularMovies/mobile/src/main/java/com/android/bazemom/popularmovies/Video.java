@@ -10,6 +10,7 @@ import com.android.bazemom.popularmovies.moviemodel.VideoModel;
  *   initialize from VideoModel or parcel 
  */
 public class Video implements Parcelable {
+    public static final String TAG = "Video";
     public final String id;
     public final String iso6391;
     public final String key;

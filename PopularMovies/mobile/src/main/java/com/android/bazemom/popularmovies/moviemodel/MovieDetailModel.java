@@ -10,6 +10,7 @@ import java.util.List;
 // Use this structure to capture the data, then map it to our MovieDetail constructor.
 //@Generated("org.jsonschema2pojo")
 public class MovieDetailModel {
+    public final static String TAG = "Detail";
 
     @Expose
     private boolean adult;
@@ -260,6 +261,7 @@ public class MovieDetailModel {
      * The overview
      */
     public String getOverview() {
+        if (null == overview) return "";
         return overview;
     }
 
@@ -522,6 +524,11 @@ public class MovieDetailModel {
      */
     public void setVoteCount(int voteCount) {
         this.voteCount = voteCount;
+    }
+
+    /*  methods to support error handling and reporting */
+    public MovieDetailModel() {
+        this.id = 0;
     }
 
 }

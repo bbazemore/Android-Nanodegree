@@ -85,6 +85,8 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Call
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        if (mTwoPane)
+            getMenuInflater().inflate(R.menu.menu_detail, menu);
         return true;
     }
 
@@ -104,6 +106,13 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Call
         }
         if (id == R.id.action_share) {
             // Launch share trailer
+            Log.d(TAG, "onOptionsItemSelected share trailer");
+            if (null == mTabContainerFragment) {
+                FragmentManager fragMan = getSupportFragmentManager();
+                if (null != fragMan) {
+                    mTabContainerFragment = (TabContainerFragment) fragMan.findFragmentByTag(DETAILFRAGMENT_TAG);
+                }
+            }
             if (null != mTabContainerFragment) {
                 return mTabContainerFragment.onShareTrailer(mRootView);
             }
@@ -139,7 +148,7 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Call
 
             // pass Movie detail through to the tab container fragment
             Fragment oldDetailFragment = fragMan.findFragmentByTag(DETAILFRAGMENT_TAG);
-            Fragment detailFragment = new TabContainerFragment();
+            Fragment detailFragment = mTabContainerFragment = new TabContainerFragment();
             Bundle detailArgs = new Bundle();
             detailArgs.putParcelable(MovieData.MOVIE, movie);
             detailFragment.setArguments(detailArgs);

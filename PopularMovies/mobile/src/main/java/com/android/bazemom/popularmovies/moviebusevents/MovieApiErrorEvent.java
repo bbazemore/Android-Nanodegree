@@ -9,10 +9,12 @@ import retrofit.RetrofitError;
  */
 public class MovieApiErrorEvent {
     private final static String TAG = MovieApiErrorEvent.class.getSimpleName();
+    public String objectTypeName;
     public RetrofitError error;
-    public MovieApiErrorEvent(RetrofitError apiError)
+    public MovieApiErrorEvent(String simpleClassName, RetrofitError apiError)
     {
-        Log.w(TAG, "MovieApiErrorEvent created with " + apiError.toString());
+        Log.w(TAG, "MovieApiErrorEvent created for" + simpleClassName + " " + (null == apiError ? "" : apiError.toString()));
+        objectTypeName = simpleClassName;
         error = apiError;
     }
 }

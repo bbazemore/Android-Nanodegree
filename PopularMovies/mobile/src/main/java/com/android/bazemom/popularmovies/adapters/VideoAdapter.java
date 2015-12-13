@@ -30,16 +30,16 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
     // Accept all the videos we can play
     /////////
     public VideoAdapter(List<Video> myDataset) {
-        if (null == mDataset)
+        if (null == mDataset) {
             mDataset = new ArrayList<Video>();
-
+        }
         // Only include Youtube videos since those are the only ones we
         // support playing
         try {
             for (Video video : myDataset) {
                 // why is it so awkward to get a string resource in an Adapter?
                 // getString(R.string.tmdb_site_value_YouTube))
-                if (video.site.contentEquals("YouTube")) {
+                if (null != video.site && video.site.contentEquals("YouTube")) {
                     mDataset.add(video);
                 }
             }

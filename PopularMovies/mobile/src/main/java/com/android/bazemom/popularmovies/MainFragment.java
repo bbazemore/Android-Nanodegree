@@ -11,13 +11,16 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.bazemom.popularmovies.adapters.MovieAdapter;
 import com.android.bazemom.popularmovies.moviebusevents.FavoriteChangeEvent;
 import com.android.bazemom.popularmovies.moviebusevents.LoadMoviesEvent;
+import com.android.bazemom.popularmovies.moviebusevents.MovieApiErrorEvent;
 import com.android.bazemom.popularmovies.moviebusevents.MoviesLoadedEvent;
 import com.android.bazemom.popularmovies.movielocaldb.LocalDBHelper;
 import com.android.bazemom.popularmovies.moviemodel.DispatchTMDB;
+import com.android.bazemom.popularmovies.moviemodel.MovieResults;
 import com.squareup.otto.Bus;
 import com.squareup.otto.Subscribe;
 
@@ -300,6 +303,17 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
 
             // populate the movies from the database
             loadFavoriteMovies();
+        }
+    }
+
+    @Subscribe
+    public void movieApiError(MovieApiErrorEvent event) {
+        if (event.objectTypeName.contentEquals(MovieResults.TAG)) {
+            // Something went wrong, display a message to the user
+            String errorMessage = getResources().getString(R.string.movie_list_error)
+                    .concat(event.error.getLocalizedMessage());
+            Toast.makeText(getContext(),errorMessage, Toast.LENGTH_LONG);
+            mMoreMoviesToFetch = false;
         }
     }
 

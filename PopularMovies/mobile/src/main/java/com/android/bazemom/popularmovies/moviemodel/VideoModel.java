@@ -91,6 +91,7 @@ public class VideoModel {
      * The name
      */
     public String getName() {
+        if (name == null) return "";
         return name;
     }
 
@@ -157,4 +158,16 @@ public class VideoModel {
         this.type = type;
     }
 
+    /* Methods to support error handling and reporting */
+    public VideoModel() {
+        id = "0";
+    }
+    public VideoModel(VideoModel in) {
+        id = in.id;
+        name = in.name;
+        site = in.site;
+        type = in.type;
+        key = in.key;
+        iso6391 = in.iso6391;
+    }
 }

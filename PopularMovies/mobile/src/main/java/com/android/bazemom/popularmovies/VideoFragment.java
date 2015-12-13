@@ -15,15 +15,22 @@ import android.widget.TextView;
 
 import com.android.bazemom.popularmovies.adapters.VideoAdapter;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
+
 /**
  * Tab that displays the video trailers for the selected movie
  * Requires the caller to support the MovieData interface
  */
-public class VideoFragment extends Fragment {
+public class VideoFragment extends Fragment implements Observer {
     private static final String TAG = VideoFragment.class.getSimpleName();
     private View mRootView;
     VideoViewHolder mViewHolder;
     VideoAdapter adapter;
+    private boolean mLayoutInitialized = false;
+    private boolean mUIInitialized = false;
 
     public VideoFragment() {
     }
@@ -41,8 +48,8 @@ public class VideoFragment extends Fragment {
         mViewHolder.recyclerView.setLayoutManager(linearLayoutManager);
 
         MovieDataService data = MovieDataService.getInstance();
-        adapter = new VideoAdapter(data.getVideoList());
-        mViewHolder.recyclerView.setAdapter(adapter);
+        updateVideoList((ArrayList<Video>) data.getVideoList());
+        mLayoutInitialized = true;
 
         updateUI();
         // If there is anything we need to fix up after the layout is known,
@@ -61,6 +68,8 @@ public class VideoFragment extends Fragment {
 
     // Once VideoList is filled in, get the adapter to fill in the recycler view
     void updateUI() {
+        if (mUIInitialized) return;
+
         MovieDataService data = MovieDataService.getInstance();
         Log.d(TAG, "updateVideoUI from Activity: " + getActivity());
         if (null != data && null != mViewHolder.recyclerView) {
@@ -68,7 +77,25 @@ public class VideoFragment extends Fragment {
             mViewHolder.titleBackground.setBackgroundColor(data.getDarkBackground());
             Utility.updateFavoriteButton(mViewHolder.favoriteButton, data.getFavorite());
 
-            Log.d(TAG, "updateDetailUI mission accomplished");
+            updateVideoList((ArrayList<Video>) data.getVideoList());
+        }
+    }
+
+    protected void updateVideoList(ArrayList<Video> videoList) {
+        MovieDataService data = MovieDataService.getInstance();
+
+        adapter = new VideoAdapter(videoList);
+        mViewHolder.recyclerView.setAdapter(adapter);
+
+        if (data.videoListComplete()  && data.videoCount() <= adapter.getItemCount()) {
+            data.deleteObserver(this);
+            mUIInitialized = true;
+            Log.d(TAG, "updateVideoUI mission accomplished for " + data.getMovieTitle());
+        } else {
+            // Still waiting for more video results
+            Log.d(TAG, "updateVideoUI standing by for more videos for " + data.getMovieTitle() + adapter.getItemCount());
+            mUIInitialized = false;
+            data.addObserver(this);
         }
     }
 
@@ -112,6 +139,23 @@ public class VideoFragment extends Fragment {
         return false;
     }
 
+    // If the data service tells us there are new reviews, pay attention
+    @Override
+    public void update(Observable observable, Object data) {
+        Log.d(TAG, "Video update callback");
+        // If we haven't been initialized, there is nothing to change.
+        if (!mLayoutInitialized) return;
+
+        if (data instanceof ArrayList) {
+            List list = (ArrayList) data;
+            if (!list.isEmpty()) {
+                if (list.get(0) instanceof Video) {
+                    Log.d(TAG, "Video update callback with " + list.size() + " reviews");
+                    updateVideoList((ArrayList<Video>) data);
+                }
+            }
+        }
+    }
     class VideoViewHolder {
         final TextView titleView;
         View titleBackground;
@@ -124,5 +168,20 @@ public class VideoFragment extends Fragment {
             favoriteButton = (ImageButton) mRootView.findViewById(R.id.detail_favorite_button);
             recyclerView = (RecyclerView) mRootView.findViewById(R.id.video_recycler_view);
         }
+    }
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        // Don't leave our observer lying around after we're gone
+        MovieDataService.getInstance().deleteObserver(this);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume");
+        mUIInitialized = false;
+        updateUI();
     }
 }

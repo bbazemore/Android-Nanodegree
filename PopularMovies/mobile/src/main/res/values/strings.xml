@@ -71,8 +71,10 @@
     <string name="tab_title_trailer">TRAILER</string>
     <string name="favorite_added">Movie added to favorites</string>
     <string name="review_no_reviews">No reviews found for this movie.</string>
+    <string name="review_error">There was an error fetching the reviews for this movie. </string>
     <string name="tmdb_site_value_YouTube" translatable="false">YouTube</string>
     <string name="video_no_videos">No trailer videos found for this movie.</string>
+    <string name="video_error">There was an error fetching the videos for this movie. </string>
     <string name="video_url_YouTube_watch" translatable="false">http://www.youtube.com/watch?v=%s</string>
     <string name="video_url_YouTube_thumbnail" translatable="false">http://img.youtube.com/vi/%s/0.jpg"</string>
     <string name="video_thumbnail">Movie thumbnail will play the Youtube video trailer</string>
@@ -80,6 +82,8 @@
     </string>
     <string name="detail_no_detail_title">No movie selected</string>
     <string name="detail_no_detail_overview">"If you are in Airplane mode, try selecting 'Favorites' in the settings."</string>
+    <string name="detail_movie_error">"There was an error fetching the details for this movie. "</string>
+    <string name="movie_list_error">"There was an error fetching the movies. You can rotate the device or minimize and reopen to try again. "</string>
 
     <string-array name="settings_image_quality">
         <item name="settings_image_quality_low_label">Low</item>

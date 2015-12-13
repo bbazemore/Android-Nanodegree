@@ -121,6 +121,7 @@ public class TabContainerFragment extends Fragment  {
 
     private void updateTab(TabLayout.Tab tab) {
         mViewHolder.viewPager.setCurrentItem(tab.getPosition());
+        Log.d(TAG, "updateTab " + tab.getPosition());
         switch (tab.getPosition()) {
             case TAB_DETAIL:
                 Log.d(TAG, "Tab select detail");
@@ -218,13 +219,7 @@ public class TabContainerFragment extends Fragment  {
         VideoFragment videoFragment;
 
         DetailTabViewHolder() {
-          /*  if (mTwoPane) {
-                toolbar = (Toolbar) mRootView.findViewById(R.id.toolbar_detail);
-                Log.d(TAG, "DetailTabViewHolder two panes. toolbar_detail from rootView is null? " + Boolean.toString(toolbar == null));
-
-            } else { */
-                toolbar = (Toolbar) mRootView.findViewById(R.id.toolbar);
-           // }
+            toolbar = (Toolbar) mRootView.findViewById(R.id.toolbar);
             Log.d(TAG, "DetailTabViewHolder toolbar findView from rootview is null? " + Boolean.toString(toolbar == null));
 
             viewPager = (ViewPager) mRootView.findViewById(R.id.tabanim_viewpager);
@@ -252,9 +247,10 @@ public class TabContainerFragment extends Fragment  {
 
             if (null != detailFragment) {
                 // cache the locations of the rest of the existing fragments
-                mViewHolder.reviewFragment = (ReviewFragment) fragMan.findFragmentById(R.id.fragment_review);
-                mViewHolder.videoFragment = (VideoFragment) fragMan.findFragmentById(R.id.fragment_video);
+                reviewFragment = (ReviewFragment) fragMan.findFragmentById(R.id.fragment_review);
+                videoFragment = (VideoFragment) fragMan.findFragmentById(R.id.fragment_video);
             }
+            Log.d(TAG, "DetailTabViewHolder reviewFragment is null? " + reviewFragment == null ? "true" : "false");
         /*    tabLayout.post(new Runnable() {
                 @Override
                 public void run() {
@@ -262,11 +258,6 @@ public class TabContainerFragment extends Fragment  {
                     Log.d("TAG", "DetailTabView post-run, poke UI");
                     // Poke the tab to refresh the UI
                     updateTab( tabLayout.getTabAt(tabLayout.getSelectedTabPosition()));
-                    // layout the tabs below the coordinator layout + toolbar at run-time
-                   /*RelativeLayout.LayoutParams belowLayout = new RelativeLayout.LayoutParams(tabLayout.getWidth(),
-                            tabLayout.getHeight());
-                    belowLayout.addRule(RelativeLayout.BELOW, R.id.toolbar);
-                    mRootView.setLayoutParams(belowLayout); * /
                 }
             }); */
         }

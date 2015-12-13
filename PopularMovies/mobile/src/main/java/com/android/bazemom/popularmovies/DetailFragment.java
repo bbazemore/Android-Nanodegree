@@ -107,6 +107,7 @@ public final class DetailFragment extends Fragment implements Observer {
     @Override
     public void onResume() {
         super.onResume();
+        Log.d(TAG, "onResume");
         mUIInitialized = false;
 
         // Make sure we are pointing at the currently selected movie

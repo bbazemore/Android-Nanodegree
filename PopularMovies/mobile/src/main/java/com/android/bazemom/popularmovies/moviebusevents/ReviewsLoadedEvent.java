@@ -32,4 +32,13 @@ public class ReviewsLoadedEvent {
         Log.i(TAG, "ReviewsLoadedEvent created with " + numReviews + " results");
     }
 
+    // Handy constructor for EMPTY or ERROR_REVIEW
+    public ReviewsLoadedEvent(ReviewModel oneReview) {
+        endOfInput = true;
+        currentPage = 1;
+        totalPages = 1;
+        reviewResults = new ArrayList<ReviewModel>();
+        reviewResults.add(oneReview);
+        Log.i(TAG, "ReviewsLoadedEvent created with 1 dummy result");
+    }
 }

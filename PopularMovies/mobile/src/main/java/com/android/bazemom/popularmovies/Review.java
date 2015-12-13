@@ -9,6 +9,7 @@ import com.android.bazemom.popularmovies.moviemodel.ReviewModel;
  * Holds one Movie Review
  */
 public class Review  implements Parcelable{
+    public static final String TAG = "Review";
     final public String id;
     final public String author;
     final public String content;
@@ -25,6 +26,13 @@ public class Review  implements Parcelable{
         author = in.readString();
         content = in.readString();
         url = in.readString();
+    }
+    // Copy constructor
+    public Review(Review in) {
+        id = in.id;
+        author = in.author;
+        content = in.content;
+        url = in.url;
     }
 
     @Override
@@ -46,6 +54,7 @@ public class Review  implements Parcelable{
         }
 
     };
+
     @Override
     public int describeContents() {
         return 0;

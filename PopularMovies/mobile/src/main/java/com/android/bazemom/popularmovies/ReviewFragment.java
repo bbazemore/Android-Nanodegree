@@ -28,6 +28,8 @@ public class ReviewFragment extends Fragment implements Observer {
     private View mRootView;
     private ReviewViewHolder mViewHolder;
     ReviewAdapter adapter;
+    private boolean mLayoutInitialized = false;
+    private boolean mUIInitialized = false;
 
     public ReviewFragment() {
     }
@@ -48,60 +50,75 @@ public class ReviewFragment extends Fragment implements Observer {
         adapter = new ReviewAdapter(data.getReviewList());
         mViewHolder.recyclerView.setAdapter(adapter);
 
-        updateUI();
-
         // If there is anything we need to fix up after the layout is known,
         // do it in the post-layout lambda
-      /*  mRootView.post(new Runnable() {
+        mRootView.post(new Runnable() {
             @Override
             public void run() {
                 Log.d("TAG", "ReviewFragment post-run");
-                // update the UI now we can put the poster up with the right aspect ratio
+                // update the UI when we are likely to have the poster and palette color available
                 updateUI();
             }
-        }); */
+        });
+        mLayoutInitialized = true;
+        updateUI();
         return mRootView;
     }
 
     // Once ReviewList is filled in, get the adapter to fill in the recycler view
     void updateUI() {
+        if (mUIInitialized) return;
 
         MovieDataService data = MovieDataService.getInstance();
         if (null != data && null != mViewHolder) {
             {
-                Log.d(TAG, "updateReviewUI for " + data.getMovie().title);
-                mViewHolder.titleView.setText(data.getMovie().title);
+                Log.d(TAG, "updateReviewUI for " + data.getMovieTitle());
+                mViewHolder.titleView.setText(data.getMovieTitle());
                 mViewHolder.titleBackground.setBackgroundColor(data.getDarkBackground());
                 Utility.updateFavoriteButton(mViewHolder.favoriteButton, data.getFavorite());
 
-                if (data.reviewListComplete()) {
-                    if (adapter == null) {
-                        adapter = new ReviewAdapter(data.getReviewList());
-                    }
-                    mViewHolder.recyclerView.setAdapter(adapter);
-                } else {
-                    data.addObserver(this);
-                }
+               updateReviewList((ArrayList<Review>)data.getReviewList());
             }
         } else {
             Log.d(TAG, "UpdateReviewUI missing data or viewholder");
         }
     }
 
+    protected void updateReviewList(ArrayList<Review> reviewList) {
+        // The first round review may say "no reviews found".
+        // Allow for the real reviews to be loaded on a subsequent round.
+        adapter = new ReviewAdapter(reviewList);
+        mViewHolder.recyclerView.setAdapter(adapter);
+
+        MovieDataService data = MovieDataService.getInstance();
+        if ( data.reviewListComplete() && data.reviewCount() <= adapter.getItemCount()) {
+            data.deleteObserver(this);
+            mUIInitialized = true;
+            Log.d(TAG, "updateReviewUI mission accomplished for " + data.getMovieTitle() + adapter.getItemCount());
+        } else {
+            // Still waiting for more reviews to arrive from the internets
+            Log.d(TAG, "updateReviewUI standing by for more reviews for " + data.getMovieTitle());
+            data.addObserver(this);
+        }
+    }
     // If the data service tells us there are new reviews, pay attention
     @Override
     public void update(Observable observable, Object data) {
         Log.d(TAG, "Review update callback");
+        // If we haven't been initialized, there is nothing to change.
+        if (!mLayoutInitialized) return;
+
         if (data instanceof ArrayList) {
             List list = (ArrayList) data;
             if (!list.isEmpty()) {
                 if (list.get(0) instanceof Review) {
                     Log.d(TAG, "Review update callback with " + list.size() + " reviews");
-                    updateUI();
+                    updateReviewList((ArrayList<Review>) data);
                 }
             }
         }
     }
+
 
     class ReviewViewHolder {
         final TextView titleView;
@@ -127,5 +144,13 @@ public class ReviewFragment extends Fragment implements Observer {
 
         // Don't leave our observer lying around after we're gone
         MovieDataService.getInstance().deleteObserver(this);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume");
+        mUIInitialized = false;
+        updateUI();
     }
 }
