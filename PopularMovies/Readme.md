@@ -3,8 +3,8 @@ ReadMe for Android Nanodegree Popular Movies project
 This application will help you to discover the most popular movies playing.
 Here's an example of what it looks like on a tablet.
 
-![Landscape screenshot](./device-screenshot-detail-landscape.md?raw=true "Tablet Master-Detail landscape")
-![Portrait screenshot](./device-screenshot-detail-landscape.md?raw=true "Tablet Master-Detail portrait")
+[![Landscape screenshot](https://github.com/bbazemore/Android-Nanodegree/blob/master/PopularMovies/device-screenshot-detail-portrait.png?raw=true "Tablet Master-Detail landscape")]
+[![Portrait screenshot](https://github.com/bbazemore/Android-Nanodegree/blob/master/PopularMovies/device-screenshot-detail-landscape.png?raw=true "Tablet Master-Detail portrait")]
 
 Features
 --------
