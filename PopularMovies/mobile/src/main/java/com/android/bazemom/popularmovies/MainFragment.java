@@ -121,7 +121,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
         mRootView.post(new Runnable() {
             @Override
             public void run() {
-                Log.d("TAG", "RootView post-run lambda");
+                Log.d(TAG, "RootView post-run lambda");
                 if (mTwoPane) {
                     updatePosition(mGridviewPosition);
                 }
@@ -132,7 +132,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
             }
         });
 
-        Log.d(TAG, "onCreateView for " + currentSortType + " with " + ((null == mAdapter) ? 0: mAdapter.getCount()) + " movies");
+        //Log.d(TAG, "onCreateView for " + currentSortType + " with " + ((null == mAdapter) ? 0: mAdapter.getCount()) + " movies");
         mGridView.setAdapter(mAdapter);
 
         // In Master-Detail two pane mode, keep the movie in the
@@ -187,7 +187,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        Log.d(TAG, "onViewCreated savedstate null: " + (savedInstanceState == null));
+        //Log.d(TAG, "onViewCreated savedstate null: " + (savedInstanceState == null));
         // The toolbar may be in the detail fragment, which may be laid out after this master.
         // Be patient and fill this in when it is likely to be there
         updateToolbarTitle(Utility.getSortType(getActivity()));
@@ -236,7 +236,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
         // Really starting a new set of movies, rather than restoring the last one
         String sortType = Utility.getSortType(getActivity());
         if (mAdapter == null) {
-            Log.d(TAG, "initMovieList create empty Movie adapter");
+            //Log.d(TAG, "initMovieList create empty Movie adapter");
             mAdapter = new MovieAdapter(getActivity(), sortType, new ArrayList<Movie>());
         } else {
             Log.d(TAG, "initMovieList clear Movie Adapter that had " + mAdapter.getCount() + " movies.");
@@ -303,9 +303,9 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
 
     @Subscribe
     public void onFavoriteChange(FavoriteChangeEvent event) {
-        Log.d(TAG, "onFavoriteChange favorite added? " + event.favoriteAdded);
+       // Log.d(TAG, "onFavoriteChange favorite added? " + event.favoriteAdded);
         if (mAdapter.getFlavor().equals(getString(R.string.settings_sort_favorite))) {
-            Log.d(TAG, "Reset Favorite list in grid");
+           // Log.d(TAG, "Reset Favorite list in grid");
             // clear out current list of favorites
             mAdapter.clear();
 
@@ -330,34 +330,34 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
 
     protected void updateToolbarTitle(String sortType) {
         if (mCurrentlyDisplayedSortType.contentEquals(sortType)) {
-            Log.d(TAG, "updateToolbarTitle - title up to date for " + sortType);
+           // Log.d(TAG, "updateToolbarTitle - title up to date for " + sortType);
             return;
         }
-        Log.d(TAG, "updateToolbarTitle from " + mCurrentlyDisplayedSortType + " to " + sortType);
+       // Log.d(TAG, "updateToolbarTitle from " + mCurrentlyDisplayedSortType + " to " + sortType);
         mCurrentlyDisplayedSortType = ((Callback) getActivity()).updateActivityTitle(sortType);
        }
 
     private void updatePosition(int newPosition) {
         Log.d(TAG, "updatePosition: " + newPosition);
         if (null == mGridView) {
-            Log.d(TAG, "updatePosition: no gridview to process");
+          //  Log.d(TAG, "updatePosition: no gridview to process");
             return;
         }
 
         if (mGridView.getChildCount() == 0) {
-            Log.d(TAG, "updatePosition: no children to process");
+           // Log.d(TAG, "updatePosition: no children to process");
             return;
         }
         // Initialize the detail view in 2pane mode
         if (mTwoPane
                 && !mTwoPaneClicked
                 && mGridView.getFirstVisiblePosition() != GridView.INVALID_POSITION) {
-            Log.d(TAG, "updatePosition 2pane, first visible position is: " + mGridView.getFirstVisiblePosition());
+          //  Log.d(TAG, "updatePosition 2pane, first visible position is: " + mGridView.getFirstVisiblePosition());
             // When 2 pane view starts up, select the first visible movie in the list
             mGridView.performItemClick(mGridView, mGridView.getFirstVisiblePosition(), 0);
             mTwoPaneClicked = true;
         } else if (newPosition != GridView.INVALID_POSITION) {
-            Log.d(TAG, "updatePosition to " + newPosition);
+         //   Log.d(TAG, "updatePosition to " + newPosition);
             // The position we want is different than the position we have
             // Back to where we were in the list the last time the user clicked
             //mGridView.smoothScrollToPosition(newPosition);

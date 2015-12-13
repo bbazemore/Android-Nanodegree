@@ -36,7 +36,8 @@ public class TabContainerFragment extends Fragment  {
     private Movie mMovie;
 
     public TabContainerFragment() {
-    Log.d(TAG, "TabContainerFragment constructor");
+
+        //Log.d(TAG, "TabContainerFragment constructor");
     }
     // Constructor for Master-Detail view
     public static TabContainerFragment newInstance(Movie movie) {
@@ -50,7 +51,7 @@ public class TabContainerFragment extends Fragment  {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d(TAG, "onCreate");
+        //Log.d(TAG, "onCreate");
         if (null != savedInstanceState) {
             // restores state from saved instance
             mMovie = savedInstanceState.getParcelable(MovieData.MOVIE);
@@ -83,7 +84,7 @@ public class TabContainerFragment extends Fragment  {
         }
         // Tab layout set up, if 2pane, 2nd toolbar needs to be activated
         if (mViewHolder.toolbar != null) {
-            Log.d(TAG, "SetSupportActionBar to tabs toolbar");
+            //Log.d(TAG, "SetSupportActionBar to tabs toolbar");
             AppCompatActivity activity = ((AppCompatActivity) getActivity());
             activity.setSupportActionBar(mViewHolder.toolbar);
             if (mTwoPane) {
@@ -121,18 +122,18 @@ public class TabContainerFragment extends Fragment  {
 
     private void updateTab(TabLayout.Tab tab) {
         mViewHolder.viewPager.setCurrentItem(tab.getPosition());
-        Log.d(TAG, "updateTab " + tab.getPosition());
+        //Log.d(TAG, "updateTab " + tab.getPosition());
         switch (tab.getPosition()) {
             case TAB_DETAIL:
-                Log.d(TAG, "Tab select detail");
+              //  Log.d(TAG, "Tab select detail");
                 mViewHolder.detailFragment.updateMovieUI(mMovie);
                 break;
             case TAB_REVIEW:
-                Log.d(TAG, "Tab select review");
+              //  Log.d(TAG, "Tab select review");
                 mViewHolder.reviewFragment.updateUI();
                 break;
             case TAB_VIDEO:
-                Log.d(TAG, "Tab select video");
+              //  Log.d(TAG, "Tab select video");
                 mViewHolder.videoFragment.updateUI();
                 break;
             default:
@@ -220,7 +221,7 @@ public class TabContainerFragment extends Fragment  {
 
         DetailTabViewHolder() {
             toolbar = (Toolbar) mRootView.findViewById(R.id.toolbar);
-            Log.d(TAG, "DetailTabViewHolder toolbar findView from rootview is null? " + Boolean.toString(toolbar == null));
+           // Log.d(TAG, "DetailTabViewHolder toolbar findView from rootview is null? " + Boolean.toString(toolbar == null));
 
             viewPager = (ViewPager) mRootView.findViewById(R.id.tabanim_viewpager);
             tabLayout = (TabLayout) mRootView.findViewById(R.id.tabanim_tabs);
@@ -250,7 +251,7 @@ public class TabContainerFragment extends Fragment  {
                 reviewFragment = (ReviewFragment) fragMan.findFragmentById(R.id.fragment_review);
                 videoFragment = (VideoFragment) fragMan.findFragmentById(R.id.fragment_video);
             }
-            Log.d(TAG, "DetailTabViewHolder reviewFragment is null? " + reviewFragment == null ? "true" : "false");
+            //Log.d(TAG, "DetailTabViewHolder reviewFragment is null? " + reviewFragment == null ? "true" : "false");
         /*    tabLayout.post(new Runnable() {
                 @Override
                 public void run() {

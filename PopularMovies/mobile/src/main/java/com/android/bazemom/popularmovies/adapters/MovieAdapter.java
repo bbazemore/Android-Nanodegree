@@ -93,16 +93,6 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
         // update the UI. The imageview may be bigger than needed and waste memory.
         // hold off on loading the image until we know how big the item in the gridview will be.
         loadPoster(getContext(), posterView, movie.getPosterUrl(getContext()));
-
-        // Wait until the ImageView has a size before filling it in
-     /*   posterView.post(new Runnable() {
-            @Override
-            public void run() {
-                //Log.d("TAG", "MovieAdapter post-run");
-                // update the UI now we can put the poster up with the right aspect ratio
-                //oadPoster(getContext(), posterView, movie.getPosterUrl(getContext()));
-            }});
-   */
         return convertView;
     }
 
@@ -165,20 +155,20 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
     public boolean matches(int movieCount, Movie firstMovie) {
         if (movieCount == 0) {
             if (getCount() == 0) {
-                Log.d(TAG, "Adapter & movie list both empty");
+              //  Log.d(TAG, "Adapter & movie list both empty");
                 return true;
             }
-            Log.d(TAG, "Adapter has " + getCount() + " movies but movieList has none.");
+            //Log.d(TAG, "Adapter has " + getCount() + " movies but movieList has none.");
             return false;
         }
         // Non-zero movie list.
         if (movieCount != getCount()) {
-            Log.d(TAG, "Adapter has " + getCount() + " movies, movieList has " + movieCount);
+           // Log.d(TAG, "Adapter has " + getCount() + " movies, movieList has " + movieCount);
             return false;
         }
         // The sizes are equal. Is the first movie the same?
         if (getItem(0) == firstMovie) {
-            Log.d(TAG, "Adapter and movie list have same size and first object. Assume they match");
+          //  Log.d(TAG, "Adapter and movie list have same size and first object. Assume they match");
             return true;
         }
         Log.d(TAG, "Adapter and movie list have different first object. No match.");

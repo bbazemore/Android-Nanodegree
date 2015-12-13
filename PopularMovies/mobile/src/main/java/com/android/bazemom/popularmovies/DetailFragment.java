@@ -107,7 +107,7 @@ public final class DetailFragment extends Fragment implements Observer {
     @Override
     public void onResume() {
         super.onResume();
-        Log.d(TAG, "onResume");
+       // Log.d(TAG, "onResume");
         mUIInitialized = false;
 
         // Make sure we are pointing at the currently selected movie
@@ -384,7 +384,7 @@ public final class DetailFragment extends Fragment implements Observer {
                 return true;
             }
         }
-        Log.d(TAG, "setMovieDetail: movie details null or out of date, retrieving from MovieDataService");
+        //Log.d(TAG, "setMovieDetail: movie details null or out of date, retrieving from MovieDataService");
         movieDetail = dataService.getMovieDetail();
         boolean haveGoodMovieDetail = dataService.movieDetailComplete();
 

@@ -133,7 +133,7 @@ public class Utility {
         }
         RelativeLayout pb = (RelativeLayout) view.findViewById(R.id.progressHolder);
         if (null != pb) {
-            Log.d(TAG, "progressBarStart " + view.toString());
+          //  Log.d(TAG, "progressBarStart " + view.toString());
             pb.setVisibility(View.VISIBLE);
         }
     }
@@ -144,7 +144,7 @@ public class Utility {
         }
         RelativeLayout pb = (RelativeLayout) view.findViewById(R.id.progressHolder);
         if (null != pb) {
-            Log.d(TAG, "progressBarStop " + view.toString());
+           // Log.d(TAG, "progressBarStop " + view.toString());
             pb.setVisibility(View.GONE);
         }
     }

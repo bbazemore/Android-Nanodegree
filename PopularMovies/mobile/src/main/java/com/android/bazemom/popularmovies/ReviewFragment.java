@@ -36,7 +36,7 @@ public class ReviewFragment extends Fragment implements Observer {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        Log.d(TAG, "ReviewFragment.onCreateView called");
+      //  Log.d(TAG, "ReviewFragment.onCreateView called");
 
         mRootView = inflater.inflate(R.layout.fragment_review, container, false);
         mViewHolder = new ReviewViewHolder();
@@ -72,7 +72,7 @@ public class ReviewFragment extends Fragment implements Observer {
         MovieDataService data = MovieDataService.getInstance();
         if (null != data && null != mViewHolder) {
             {
-                Log.d(TAG, "updateReviewUI for " + data.getMovieTitle());
+              //  Log.d(TAG, "updateReviewUI for " + data.getMovieTitle());
                 mViewHolder.titleView.setText(data.getMovieTitle());
                 mViewHolder.titleBackground.setBackgroundColor(data.getDarkBackground());
                 Utility.updateFavoriteButton(mViewHolder.favoriteButton, data.getFavorite());
@@ -102,7 +102,7 @@ public class ReviewFragment extends Fragment implements Observer {
             Log.d(TAG, "updateReviewUI mission accomplished for " + data.getMovieTitle() + adapter.getItemCount());
         } else {
             // Still waiting for more reviews to arrive from the internets
-            Log.d(TAG, "updateReviewUI standing by for more reviews for " + data.getMovieTitle());
+            //Log.d(TAG, "updateReviewUI standing by for more reviews for " + data.getMovieTitle());
             data.addObserver(this);
             // Start up the progress bar
             Utility.progressBarStart(mRootView);
@@ -112,7 +112,7 @@ public class ReviewFragment extends Fragment implements Observer {
     // If the data service tells us there are new reviews, pay attention
     @Override
     public void update(Observable observable, Object data) {
-        Log.d(TAG, "Review update callback");
+       // Log.d(TAG, "Review update callback");
         // If we haven't been initialized, there is nothing to change.
         if (!mLayoutInitialized) return;
 
@@ -158,7 +158,7 @@ public class ReviewFragment extends Fragment implements Observer {
     @Override
     public void onResume() {
         super.onResume();
-        Log.d(TAG, "onResume");
+       // Log.d(TAG, "onResume");
         mUIInitialized = false;
         updateUI();
     }

@@ -284,7 +284,7 @@ public class MovieDataService extends Observable implements MovieData {
 
     private void setMovieDetail(MovieDetail movieDetail) {
         if (mMovieDetail != movieDetail) {
-            Log.d(TAG, "movie detail changed to " + movieDetail.title);
+            //Log.d(TAG, "movie detail changed to " + movieDetail.title);
             setChanged();
             mMovieDetail = movieDetail;
             notifyObservers(mMovieDetail);
