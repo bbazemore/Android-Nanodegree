@@ -47,7 +47,7 @@ public final class DetailFragment extends Fragment implements Observer {
         Log.d(TAG, "onCreateView");
 
         // Get the layout adjusted to the new orientation / device
-        mRootView = inflater.inflate(R.layout.fragment_detail, container, false);
+        mRootView = inflater.inflate(R.layout.fragment_movie_detail, container, false);
 
         // Get the ids of the View elements so we don't have to fetch them over and over
         mViewHolder = new DetailViewHolder();

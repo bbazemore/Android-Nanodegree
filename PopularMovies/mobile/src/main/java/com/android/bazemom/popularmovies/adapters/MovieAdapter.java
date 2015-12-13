@@ -42,7 +42,7 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
         // going to use this second argument, so it can be any value. Here, we used 0.
         super(context, 0, movieList);
         mFlavor = sortType;
-        Log.d(TAG, "constructor received " + movieList.size() + " movies of type " + mFlavor);
+        Log.d(TAG, "constructor received " + (null == movieList ? 0 : movieList.size()) + " movies of type " + mFlavor);
     }
 
     public String getFlavor() {

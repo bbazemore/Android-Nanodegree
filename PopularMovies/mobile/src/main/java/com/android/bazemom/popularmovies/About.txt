@@ -33,7 +33,7 @@ https://github.com/square/retrofit/blob/master/LICENSE.txt
 https://www.themoviedb.org/documentation/api/terms-of-use?language=en
 
 -----------------------------------------------------------------------
-Application: Popular Movies version 1
+Application: Popular Movies version 2
 
 Purpose: Udacity Android Nanodegree project to get experience with:
 * Build a UI layout for multiple Activities.
@@ -41,6 +41,20 @@ Purpose: Udacity Android Nanodegree project to get experience with:
 * Fetch data from themovieDB API
 
 Author: Barbara Bazemore Kiszka, with borrowed bits attributed in the code
+
+Features:
+  1. Display movie posters in a gridview based on Popular, Top Rated and Now Playing lists
+  from The Movie Database (TMDb).
+  2. When a movie is clicked display the movie release date, rating, and plot overview.
+  In separate tabs display reviews (if any) and video trailers (if any).
+  3. When the trailer is clicked, display it using YouTube or whatever video
+  player is available on the device
+  4. Allow the user to mark a movie as a favorite. Allow the user to display only their
+  favorites instead of the Popular / Top Rated poster view.
+  5. Store the favorites on a database on the device soth user can display the Favorites even
+  when the device is in Airplane mode.
+  6. On tablets and other large devices display both the movie poster grid and the details
+  for the selected movie.
 
 General design and dependencies:
     Display movie posters in a GridView in the main view using a traditional Model View Controller
@@ -55,16 +69,20 @@ General design and dependencies:
     The Otto event bus, http://square.github.io/otto/, is used to efficiently
     communicate between the UI and other threads.  This is implemented in DispatchTMDB.
 
-    Movie data is stored in the mMovieList ArrayList in the MainActivityFragment and is saved
-    in the instance state so that the movie data does not need to be refetched when
-    the View is torn down / rebuilt when switching between portrait and landscape view.
+    Movie data is stored in the MovieAdapter outside of the MainFragment so that
+    the movie data does not need to be refetched when the View is torn down /
+    rebuilt when switching between portrait and landscape view.
 
-    To initialize the mMovieList the MainActivityFragment fetches a page of info containing
+    Favorite movie data is stored in a database on the device. The ContentProvider to
+    the favorites is roughed out, but not complete due to the considerable amount of
+    time trying to get tabs to work in a Master-Detail view.
+
+    To initialize the movie list, the MainFragment requests a page of info containing
     about 20 movies by sending a LoadMovies event via Otto to the DispatchTMDB which
     calls TMDB in a background thread.  DispatchTMDB posts the MoviesLoaded event
-    when the data arrives.  MainActivityFragment is subscribed to this event and
-    updates the mMovieList and the UI when the Movie data arrives in the event.  Picasso
-    is used to efficiently load the movie poster image into the UI View.
+    when the data arrives.  The MainActivity is subscribed to this event and
+    updates the MovieList and the UI when the Movie data arrives in the event.  Picasso
+    is used to efficiently load the movie poster image into the UI View and cache images.
 
     The MainActivityFragment sends another LoadMovies event when the user scrolls within
     two screenfuls of the bottom of the list. The display can in theory hold up to 20,000
@@ -89,15 +107,8 @@ Build Note:
     apiKEY=<your TMDB key #>
 
 Future:
-    The MoviesAvailable event is intended for better performance to fetch whatever is
-    available / cached at the moment when the UI is first started.
-    I did not fully implement this feature.
-
-    The Image Quality setting basically works, however the gridview has a lot of empty space
-    at the lower quality levels.  Since this was not required I decided not to finish this
-    for v1.
-
-    I did not implement: the tv build, favorites is coming in v2.
+    I did not implement: the tv build.
+    It would be nice to add a Search feature to find a specific movie.
 
 -----------------------------------------------------------------------
 
