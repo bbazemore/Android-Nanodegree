@@ -77,7 +77,7 @@ public class ReviewFragment extends Fragment implements Observer {
                 mViewHolder.titleBackground.setBackgroundColor(data.getDarkBackground());
                 Utility.updateFavoriteButton(mViewHolder.favoriteButton, data.getFavorite());
 
-               updateReviewList((ArrayList<Review>)data.getReviewList());
+                updateReviewList((ArrayList<Review>) data.getReviewList());
             }
         } else {
             Log.d(TAG, "UpdateReviewUI missing data or viewholder");
@@ -91,16 +91,24 @@ public class ReviewFragment extends Fragment implements Observer {
         mViewHolder.recyclerView.setAdapter(adapter);
 
         MovieDataService data = MovieDataService.getInstance();
-        if ( data.reviewListComplete() && data.reviewCount() <= adapter.getItemCount()) {
+        if (data.reviewListComplete() && data.reviewCount() <= adapter.getItemCount()) {
+            // We come down this path both for normal operation and if the error handling
+            // sent us a dummy review card.
             data.deleteObserver(this);
             mUIInitialized = true;
+            // we're done with the progress bar/circle
+            Utility.progressBarStop(mRootView);
+
             Log.d(TAG, "updateReviewUI mission accomplished for " + data.getMovieTitle() + adapter.getItemCount());
         } else {
             // Still waiting for more reviews to arrive from the internets
             Log.d(TAG, "updateReviewUI standing by for more reviews for " + data.getMovieTitle());
             data.addObserver(this);
+            // Start up the progress bar
+            Utility.progressBarStart(mRootView);
         }
     }
+
     // If the data service tells us there are new reviews, pay attention
     @Override
     public void update(Observable observable, Object data) {
@@ -142,6 +150,7 @@ public class ReviewFragment extends Fragment implements Observer {
     public void onPause() {
         super.onPause();
 
+        Utility.progressBarStop(mRootView);
         // Don't leave our observer lying around after we're gone
         MovieDataService.getInstance().deleteObserver(this);
     }

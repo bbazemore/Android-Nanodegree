@@ -107,9 +107,12 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
         mCurrentlyDisplayedSortType = ""; // Force Sort type title in toolbar to update
         setOptimalColumnWidth();
 
+        Utility.progressBarStart(mRootView);
+
         // Restore the movie list as we last saw it, or create a whole new list
         // Sets up Adapter
         if (savedInstanceState == null) {
+            // Start up the progress bar
             initMovieList();
         } else
             restoreState(savedInstanceState);
@@ -129,7 +132,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
             }
         });
 
-        Log.d(TAG, "onCreateView for " + currentSortType + " with " + mAdapter.getCount() + " movies");
+        Log.d(TAG, "onCreateView for " + currentSortType + " with " + ((null == mAdapter) ? 0: mAdapter.getCount()) + " movies");
         mGridView.setAdapter(mAdapter);
 
         // In Master-Detail two pane mode, keep the movie in the
@@ -243,6 +246,8 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
         mMoreMoviesToFetch = true;
         mGridviewPosition = GridView.INVALID_POSITION;
         mPageRequest = 1; // start from the beginning of the new movie type
+        // Start up the progress bar
+        Utility.progressBarStart(mRootView);
     }
 
     public void updateMovies() {
@@ -279,6 +284,9 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
             // Mash new movie results into the View that is displayed to user
             mAdapter.addAll(event.movieResults);
 
+            // Start up the progress bar
+            Utility.progressBarStop(mRootView);
+
             // If there is a request outstanding to scroll to a particular position
             // process it now.
             // if (mGridviewPosition > 0)
@@ -310,6 +318,9 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
     public void movieApiError(MovieApiErrorEvent event) {
         if (event.objectTypeName.contentEquals(MovieResults.TAG)) {
             // Something went wrong, display a message to the user
+            // Start up the progress bar
+            Utility.progressBarStop(mRootView);
+
             String errorMessage = getResources().getString(R.string.movie_list_error)
                     .concat(event.error.getLocalizedMessage());
             Toast.makeText(getContext(),errorMessage, Toast.LENGTH_LONG);
@@ -363,6 +374,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
     @Override
     public void onPause() {
         super.onPause();
+        Utility.progressBarStop(mRootView);
 
         // Don't bother processing results when we aren't on display.
         stopReceivingEvents();
@@ -491,6 +503,9 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
         mAdapter.setFlavor(favorite);
         mAdapter.addAll(dbHelper.getMovieFavoritesFromDB());
         mMoreMoviesToFetch = false;
+
+        // Start up the progress bar
+        Utility.progressBarStop(mRootView);
 
         // Give the user a hint if the list is empty
         mHintView.setVisibility(mAdapter.getCount() == 0 ? View.VISIBLE : View.GONE);

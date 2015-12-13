@@ -5,11 +5,11 @@
     android:orientation="vertical"
     android:theme="@style/AppTheme"
     >
-<include
-    android:id="@+id/toolbar"
-    layout="@layout/toolbar" />
-
-<include
-    android:id="@+id/master_container"
-    layout="@layout/fragment_main"/>
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/toolbar"/>
+    <include
+        android:id="@+id/master_container"
+        layout="@layout/fragment_main"/>
+    <include layout="@layout/progress_bar"/>
 </LinearLayout>

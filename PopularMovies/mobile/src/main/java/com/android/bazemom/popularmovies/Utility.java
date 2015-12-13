@@ -17,6 +17,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageButton;
+import android.widget.RelativeLayout;
 
 import com.android.bazemom.popularmovies.moviebusevents.FavoriteChangeEvent;
 import com.android.bazemom.popularmovies.moviemodel.DispatchTMDB;
@@ -119,5 +120,32 @@ public class Utility {
             Log.d(TAG, "Error updateToolbarTitle for " + sortType + " index was " + index);
         }
         return newTitle;
+    }
+
+    public static void progressBarStart(View view) {
+        if (null == view) {
+            Log.d(TAG, "progressBarStart got a null view");
+            return;
+        }
+        if (view.getVisibility() != View.VISIBLE) {
+            Log.d(TAG, "progressBarStart got a hidden parent view");
+            return;
+        }
+        RelativeLayout pb = (RelativeLayout) view.findViewById(R.id.progressHolder);
+        if (null != pb) {
+            Log.d(TAG, "progressBarStart " + view.toString());
+            pb.setVisibility(View.VISIBLE);
+        }
+    }
+    public static void progressBarStop(View view) {
+        if (null == view) {
+            Log.d(TAG, "progressBarStop got a null view");
+            return;
+        }
+        RelativeLayout pb = (RelativeLayout) view.findViewById(R.id.progressHolder);
+        if (null != pb) {
+            Log.d(TAG, "progressBarStop " + view.toString());
+            pb.setVisibility(View.GONE);
+        }
     }
 }

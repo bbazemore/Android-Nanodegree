@@ -90,11 +90,14 @@ public class VideoFragment extends Fragment implements Observer {
         if (data.videoListComplete()  && data.videoCount() <= adapter.getItemCount()) {
             data.deleteObserver(this);
             mUIInitialized = true;
+            // Hide the progress bar
+            Utility.progressBarStop(mRootView);
             Log.d(TAG, "updateVideoUI mission accomplished for " + data.getMovieTitle());
         } else {
             // Still waiting for more video results
             Log.d(TAG, "updateVideoUI standing by for more videos for " + data.getMovieTitle() + adapter.getItemCount());
             mUIInitialized = false;
+            Utility.progressBarStart(mRootView);
             data.addObserver(this);
         }
     }
@@ -173,6 +176,7 @@ public class VideoFragment extends Fragment implements Observer {
     public void onPause() {
         super.onPause();
 
+        Utility.progressBarStop(mRootView);
         // Don't leave our observer lying around after we're gone
         MovieDataService.getInstance().deleteObserver(this);
     }

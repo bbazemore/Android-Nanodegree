@@ -8,7 +8,7 @@
     android:orientation="vertical"
     >
 
-    <!--     android:baselineAligned="false"
+    <!--
   This layout is a two-pane layout for the Items master/detail flow.
   -->
     <!-- Detail view at the top, taking up 1/3 space -->
@@ -69,6 +69,7 @@
                         tools:layout="@layout/fragment_main_two_pane_narrow"
             />
     </LinearLayout>
+    <include layout="@layout/progress_bar"/>
 </LinearLayout>
 
 
