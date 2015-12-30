@@ -416,7 +416,7 @@ public class MovieDataService extends Observable implements MovieData {
             if (mDispatchTMDB == null) {
                 mDispatchTMDB = DispatchTMDB.getInstance();
             }
-            setBus(mDispatchTMDB.shareBus()); // can get fancy with an injector later BusProvider.getInstance();
+            setBus(DispatchTMDB.shareBus()); // can get fancy with an injector later BusProvider.getInstance();
         }
         return mBus;
     }
@@ -565,7 +565,7 @@ public class MovieDataService extends Observable implements MovieData {
     @Subscribe
     public void videosLoaded(VideosLoadedEvent event) {
         Log.d(TAG, "videos Loaded callback! Number of trailers: " + event.trailerResults.size());
-        List<Video> newVideos = new ArrayList<Video>();
+        List<Video> newVideos = new ArrayList<>();
         // load the movie data into our movies list
         for (VideoModel data : event.trailerResults) {
             newVideos.add(new Video(data));
@@ -583,7 +583,11 @@ public class MovieDataService extends Observable implements MovieData {
     @Subscribe
     public void movieApiError(MovieApiErrorEvent event) {
         String eventMessage = "";
-        if (null != event && null != event.error) {
+        if (null == event) {
+            Log.d(TAG, "Null event received in movieApiError");
+            return;
+        }
+        if (null != event.error) {
             eventMessage = event.error.getLocalizedMessage();
             if (eventMessage == null || eventMessage.isEmpty()) {
                 eventMessage = event.error.getMessage();
@@ -621,7 +625,5 @@ public class MovieDataService extends Observable implements MovieData {
             default:
                 Log.d(TAG, "movieApiError: " + event.objectTypeName + " " + eventMessage);
         }
-
-
     }
 }

@@ -388,7 +388,7 @@ public class MainFragment extends Fragment /* implements LoaderManager.LoaderCal
             if (dispatchTMDB == null) {
                 dispatchTMDB = DispatchTMDB.getInstance();
             }
-            setBus(dispatchTMDB.shareBus()); // can get fancy with an injector later BusProvider.getInstance();
+            setBus(DispatchTMDB.shareBus()); // can get fancy with an injector later BusProvider.getInstance();
         }
         return mBus;
     }
