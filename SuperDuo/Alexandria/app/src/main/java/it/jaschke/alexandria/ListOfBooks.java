@@ -7,17 +7,18 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import it.jaschke.alexandria.api.BookListAdapter;
 import it.jaschke.alexandria.api.Callback;
 import it.jaschke.alexandria.data.AlexandriaContract;
+import it.jaschke.alexandria.services.BookService;
 
 
 public class ListOfBooks extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
@@ -26,6 +27,7 @@ public class ListOfBooks extends Fragment implements LoaderManager.LoaderCallbac
     private ListView bookList;
     private int position = ListView.INVALID_POSITION;
     private EditText searchText;
+    private TextView emptyText;
 
     private final int LOADER_ID = 10;
 
@@ -60,8 +62,9 @@ public class ListOfBooks extends Fragment implements LoaderManager.LoaderCallbac
                     }
                 }
         );
-
+        emptyText = (TextView) rootView.findViewById(R.id.listOfBooks_Empty);
         bookList = (ListView) rootView.findViewById(R.id.listOfBooks);
+        bookList.setEmptyView(emptyText);
         bookList.setAdapter(bookListAdapter);
 
         bookList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -76,6 +79,7 @@ public class ListOfBooks extends Fragment implements LoaderManager.LoaderCallbac
             }
         });
 
+        updateEmptyView();
         return rootView;
     }
 
@@ -83,6 +87,21 @@ public class ListOfBooks extends Fragment implements LoaderManager.LoaderCallbac
         getLoaderManager().restartLoader(LOADER_ID, null, this);
     }
 
+
+    private void updateEmptyView() {
+        // If there are no books to show, hide the list view and
+        // give the user a hint about what is going on in a text view
+        if (bookList.getCount() == 0) {
+            int message = R.string.empty_book_list;
+            if (!BookService.isNetworkAvailable(getActivity())) {
+                message = R.string.err_no_network;
+            }
+            emptyText.setText(message);
+            emptyText.setVisibility(View.VISIBLE);
+        } else {
+            emptyText.setVisibility(View.GONE);
+        }
+    }
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
@@ -117,6 +136,7 @@ public class ListOfBooks extends Fragment implements LoaderManager.LoaderCallbac
         if (position != ListView.INVALID_POSITION) {
             bookList.smoothScrollToPosition(position);
         }
+        updateEmptyView();
     }
 
     @Override

@@ -56,6 +56,7 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
         rootView = inflater.inflate(R.layout.fragment_add_book, container, false);
         ean = (EditText) rootView.findViewById(R.id.ean);
 
+
         ean.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -100,6 +101,7 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
                 CharSequence text = "This button should let you scan a book for its barcode!";
                 int duration = Toast.LENGTH_SHORT;
 
+                // TODO: Add scan code here using library
                 Toast toast = Toast.makeText(context, text, duration);
                 toast.show();
 
@@ -129,13 +131,22 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
             ean.setHint("");
         }
 
+        networkCheck();
         return rootView;
     }
 
     private void restartLoader(){
-        getLoaderManager().restartLoader(LOADER_ID, null, this);
+        if (BookService.isNetworkAvailable(getActivity())) {
+            getLoaderManager().restartLoader(LOADER_ID, null, this);
+        }
     }
 
+    private void networkCheck() {
+        // Don't even try to fetch the book if we have no network.
+        if (!BookService.isNetworkAvailable(getActivity())) {
+            ean.setHint(R.string.err_no_network_to_add_book);
+        }
+    }
     @Override
     public android.support.v4.content.Loader<Cursor> onCreateLoader(int id, Bundle args) {
         if(ean.getText().length()==0){
@@ -158,6 +169,7 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
     @Override
     public void onLoadFinished(android.support.v4.content.Loader<Cursor> loader, Cursor data) {
         if (!data.moveToFirst()) {
+            networkCheck();
             return;
         }
 

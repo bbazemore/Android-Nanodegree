@@ -45,7 +45,17 @@
                   android:layout_alignParentStart="true"
                   android:layout_toRightOf="@id/searchButton"/>
 
-
+        <TextView android:id="@+id/listOfBooks_Empty"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  android:layout_alignParentLeft="true"
+                  android:layout_marginLeft="0dp"
+                  android:layout_below="@+id/searchText"
+                  android:layout_alignRight="@id/searchButton"
+                  android:layout_alignParentRight="true"
+                  android:layout_alignParentStart="true"
+                  android:layout_toRightOf="@id/searchButton"
+            />
 
     </RelativeLayout>
 

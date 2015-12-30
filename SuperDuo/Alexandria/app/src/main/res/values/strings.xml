@@ -24,8 +24,12 @@
     <string name="action_share">Share</string>
     <string name="back_button">go back</string>
     <string name="share_text">A must read book: </string>
+    <string name="empty_book_list">You have not entered any books. Add a book to begin.</string>
+    <string name="err_no_network">The internet is not available. Your books will display when the internet connection is restored.</string>
+    <string name="err_no_network_to_add_book">No internet.</string>
+    <string name="err_provide_all_digits">Please provide all 13 digits of the ISBN number.</string>
 
-<!-- TODO: Remove or change this placeholder text -->
     <string name="about_text">This application gets book information from a Google API. All titles, cover images, and author information come from there.
-    The original version of this app was built by Sascha Jaschke, and a modified version is given to students in the Udacity Android Nanodegree program. </string>
+        The original version of this app was built by Sascha Jaschke, and a modified version is given to students in the Udacity Android Nanodegree program.
+        Barbara Bazemore Kiszka, a Udacity Student, updated this application to support scanning, translation, and better error handling.</string>
 </resources>

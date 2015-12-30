@@ -2,8 +2,11 @@ package it.jaschke.alexandria.services;
 
 import android.app.IntentService;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -72,7 +75,14 @@ public class BookService extends IntentService {
      */
     private void fetchBook(String ean) {
 
+        // Don't even try to fetch the book if we have no network.
+        if (!BookService.isNetworkAvailable(getApplicationContext())) {
+            Log.d(LOG_TAG, "No network to add book.");
+            return;
+        }
+
         if(ean.length()!=13){
+            Log.d(LOG_TAG, "Not enough ISBN digits provided. Need 13, have " + ean.length());
             return;
         }
 
@@ -229,5 +239,19 @@ public class BookService extends IntentService {
             getContentResolver().insert(AlexandriaContract.CategoryEntry.CONTENT_URI, values);
             values= new ContentValues();
         }
+    }
+    /**
+     * Returns true if the network is available or about to become available.
+     *
+     * @param c Context used to get the ConnectivityManager
+     * @return returns true if the network is available
+     */
+    static public boolean isNetworkAvailable(Context c) {
+        ConnectivityManager cm =
+                (ConnectivityManager) c.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null &&
+                activeNetwork.isConnectedOrConnecting();
     }
  }
