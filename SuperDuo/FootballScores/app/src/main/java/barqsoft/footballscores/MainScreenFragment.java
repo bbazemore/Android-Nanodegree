@@ -12,8 +12,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import barqsoft.footballscores.service.myFetchService;
+import butterknife.Bind;
+import butterknife.ButterKnife;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -25,6 +28,10 @@ public class MainScreenFragment extends Fragment implements LoaderManager.Loader
     private String[] fragmentdate = new String[1];
     private int last_selected_item = -1;
 
+    // ViewHolder using ButterKnife
+    @Bind(R.id.scores_list) ListView score_list;
+    @Bind(R.id.scores_list_empty) TextView empty_text;
+
     public MainScreenFragment()
     {
     }
@@ -33,6 +40,20 @@ public class MainScreenFragment extends Fragment implements LoaderManager.Loader
     {
         Intent service_start = new Intent(getActivity(), myFetchService.class);
         getActivity().startService(service_start);
+    }
+    private void updateEmptyView() {
+        // If there are no books to show, hide the list view and
+        // give the user a hint about what is going on in a text view
+        if (score_list.getCount() == 0) {
+            int message = R.string.err_no_data;
+            if (!Utilies.isNetworkAvailable(getActivity())) {
+                message = R.string.err_no_internet;
+            }
+            empty_text.setText(message);
+            empty_text.setVisibility(View.VISIBLE);
+        } else {
+            empty_text.setVisibility(View.GONE);
+        }
     }
     public void setFragmentDate(String date)
     {
@@ -43,10 +64,11 @@ public class MainScreenFragment extends Fragment implements LoaderManager.Loader
                              final Bundle savedInstanceState) {
         update_scores();
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-        final ListView score_list = (ListView) rootView.findViewById(R.id.scores_list);
+        ButterKnife.bind(this, rootView);
+
         mAdapter = new scoresAdapter(getActivity(),null,0);
         score_list.setAdapter(mAdapter);
-        getLoaderManager().initLoader(SCORES_LOADER,null,this);
+        getLoaderManager().initLoader(SCORES_LOADER, null, this);
         mAdapter.detail_match_id = MainActivity.selected_match_id;
         score_list.setOnItemClickListener(new AdapterView.OnItemClickListener()
         {
@@ -59,6 +81,7 @@ public class MainScreenFragment extends Fragment implements LoaderManager.Loader
                 mAdapter.notifyDataSetChanged();
             }
         });
+        updateEmptyView();
         return rootView;
     }
 
@@ -92,6 +115,8 @@ public class MainScreenFragment extends Fragment implements LoaderManager.Loader
         //Log.v(FetchScoreTask.LOG_TAG,"Loader query: " + String.valueOf(i));
         mAdapter.swapCursor(cursor);
         //mAdapter.notifyDataSetChanged();
+
+        updateEmptyView();
     }
 
     @Override

@@ -24,8 +24,10 @@ import java.util.Vector;
 
 import barqsoft.footballscores.DatabaseContract;
 import barqsoft.footballscores.R;
+import barqsoft.footballscores.Utilies;
 
 /**
+ * Background service to fetch futbal data from api.football-data.org
  * Created by yehya khaled on 3/2/2015.
  */
 public class myFetchService extends IntentService
@@ -39,10 +41,13 @@ public class myFetchService extends IntentService
     @Override
     protected void onHandleIntent(Intent intent)
     {
-        getData("n2");
-        getData("p2");
-
-        return;
+        if (Utilies.isNetworkAvailable(getApplicationContext())) {
+            Log.d(LOG_TAG, "onHandleIntent" + intent.getType());
+            getData("n2");
+            getData("p2");
+        } else {
+            Log.d(LOG_TAG, "onHandleIntent no network available. Skip getting data");
+        }
     }
 
     private void getData (String timeFrame)
