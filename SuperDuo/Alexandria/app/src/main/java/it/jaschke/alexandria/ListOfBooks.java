@@ -15,6 +15,10 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import butterknife.OnItemClick;
 import it.jaschke.alexandria.api.BookListAdapter;
 import it.jaschke.alexandria.api.Callback;
 import it.jaschke.alexandria.data.AlexandriaContract;
@@ -24,12 +28,14 @@ import it.jaschke.alexandria.services.BookService;
 public class ListOfBooks extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private BookListAdapter bookListAdapter;
-    private ListView bookList;
     private int position = ListView.INVALID_POSITION;
-    private EditText searchText;
-    private TextView emptyText;
 
     private final int LOADER_ID = 10;
+
+    @Bind(R.id.searchText) EditText searchText;
+    @Bind(R.id.searchButton) View searchButton;
+    @Bind(R.id.listOfBooks_Empty) TextView emptyText;
+    @Bind(R.id.listOfBooks) ListView bookList;
 
     public ListOfBooks() {
     }
@@ -53,17 +59,8 @@ public class ListOfBooks extends Fragment implements LoaderManager.LoaderCallbac
 
         bookListAdapter = new BookListAdapter(getActivity(), cursor, 0);
         View rootView = inflater.inflate(R.layout.fragment_list_of_books, container, false);
-        searchText = (EditText) rootView.findViewById(R.id.searchText);
-        rootView.findViewById(R.id.searchButton).setOnClickListener(
-                new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        ListOfBooks.this.restartLoader();
-                    }
-                }
-        );
-        emptyText = (TextView) rootView.findViewById(R.id.listOfBooks_Empty);
-        bookList = (ListView) rootView.findViewById(R.id.listOfBooks);
+        ButterKnife.bind(this, rootView);
+
         bookList.setEmptyView(emptyText);
         bookList.setAdapter(bookListAdapter);
 
@@ -81,6 +78,20 @@ public class ListOfBooks extends Fragment implements LoaderManager.LoaderCallbac
 
         updateEmptyView();
         return rootView;
+    }
+
+    @OnClick(R.id.searchButton)
+        public void onSearch(View v) {
+            ListOfBooks.this.restartLoader();
+        }
+
+    @OnItemClick(R.id.listOfBooks)
+        public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+        Cursor cursor = bookListAdapter.getCursor();
+        if (cursor != null && cursor.moveToPosition(position)) {
+            ((Callback) getActivity())
+                    .onItemSelected(cursor.getString(cursor.getColumnIndex(AlexandriaContract.BookEntry._ID)));
+        }
     }
 
     private void restartLoader(){
